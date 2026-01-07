@@ -13,26 +13,22 @@
                         HorizontalAlignment="Center"
                         MaxWidth="600">
 
-                <TextBlock TextAlignment="Center"
+                <TextBlock Style="{StaticResource Txt.H1}"
+                           TextAlignment="Center"
                            TextWrapping="NoWrap"
-                           FontSize="22"
-                           FontWeight="SemiBold"
                            Margin="0,0,0,18">
                     Добро пожаловать в универсальный мастер настройки!
                 </TextBlock>
 
-                <TextBlock TextAlignment="Center"
-                           TextWrapping="Wrap"
-                           FontSize="15"
-                           LineHeight="22"
+                <TextBlock Style="{StaticResource Txt.Body14}"
+                           TextAlignment="Center"
                            Foreground="{StaticResource Brush.TextSecondary}">
                     Данный мастер предназначен для подготовки системы и применения настроек после стадии OOBE. В процессе вы сможете выбрать параметры оформления системы, твики для неё и установить дополнительные компоненты в дальнейшем с помощью удобного Toolbox на рабочем столе. Рекомендуется внимательно ознакомиться с каждым этапом настройки, так как некоторые изменения могут повлиять на удобство дальнейшего взаимодействия с системой. Перед началом убедитесь, что имя вашей учётной записи не содержит символов кириллицы.
                 </TextBlock>
 
-                <TextBlock TextAlignment="Center"
-                           Margin="0,26,0,0"
-                           FontSize="15"
-                           Foreground="{StaticResource Brush.TextMuted}">
+                                <TextBlock Style="{StaticResource Txt.BlinkPrompt}"
+                           TextAlignment="Center"
+                           Margin="0,26,0,0">
                     Нажмите «Далее», чтобы продолжить настройку.
                 </TextBlock>
 
@@ -51,7 +47,6 @@
 
                 <TextBlock Grid.Column="0"
                            Style="{StaticResource FooterNoteText}"
-                           TextWrapping="NoWrap"
                            Margin="0,0,12,0">
                     <Run Text="Примечание: не пропускайте настройку, провести её в будущем будет невозможно."/>
                     <LineBreak/>

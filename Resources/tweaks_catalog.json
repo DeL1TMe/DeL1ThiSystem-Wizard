@@ -215,7 +215,7 @@
             "10",
             "11"
           ],
-          "default": false,
+          "default": true,
           "stage": "tweak"
         },
         {
@@ -391,7 +391,7 @@
             "10",
             "11"
           ],
-          "default": false,
+          "default": true,
           "stage": "tweak"
         },
         {
@@ -402,7 +402,7 @@
             "10",
             "11"
           ],
-          "default": false,
+          "default": true,
           "stage": "tweak"
         },
         {
@@ -413,7 +413,7 @@
             "10",
             "11"
           ],
-          "default": false,
+          "default": true,
           "stage": "tweak"
         }
       ]

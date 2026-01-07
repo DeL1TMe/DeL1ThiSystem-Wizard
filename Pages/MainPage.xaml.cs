@@ -1,6 +1,7 @@
-using System;
+﻿﻿﻿using System;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -125,8 +126,21 @@ public partial class MainPage : Page
             }
         }
 
-        MessageBox.Show("Применение твиков будет реализовано на следующем этапе (окно прогресса).",
-            "DeL1ThiSystem", MessageBoxButton.OK, MessageBoxImage.Information);
+        var steps = TweakGroups
+            .SelectMany(g => g.Children)
+            .Where(i => i.IsChecked)
+            .Select(i => (i.Id, i.Title))
+            .ToArray();
+
+        if (steps.Length == 0)
+            steps = new[] { ("noop", "Применяем выбранные настройки") };
+
+        string footerNote =
+            "Примечание: используйте Toolbox для продолжения настройки системы.\n" +
+            "Перед продолжением создайте резервную копию в AOMEI Backuper.";
+
+        ((MainWindow)Application.Current.MainWindow).Frame.Navigate(
+            new ProgressPage(steps, "Применяем твики", showFooter: true, showReboot: true, footerText: footerNote));
     }
 
     private void Toggle_Checked(object sender, RoutedEventArgs e)

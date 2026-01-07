@@ -4,10 +4,23 @@
       Background="Transparent">
 
     <Page.Resources>
-        <Style x:Key="ProgressFooterText" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Foreground" Value="#A7B1C2"/>
-            <Setter Property="LineHeight" Value="16"/>
+        <Style x:Key="ProgressBlinkText" TargetType="TextBlock" BasedOn="{StaticResource Txt.Body14}">
+            <Setter Property="Foreground" Value="{StaticResource Brush.TextSecondary}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                    <DataTrigger.EnterActions>
+                        <BeginStoryboard x:Name="BlinkStoryboard">
+                            <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                 From="1" To="0.35" Duration="0:0:1.1"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </DataTrigger.EnterActions>
+                    <DataTrigger.ExitActions>
+                        <StopStoryboard BeginStoryboardName="BlinkStoryboard"/>
+                    </DataTrigger.ExitActions>
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
 
         <Style x:Key="ProgressRebootButton" TargetType="Button">
@@ -26,13 +39,27 @@
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#36405A"/>
-                                <Setter Property="BorderBrush" Value="#4A5A7A"/>
+                            <Trigger Property="IsEnabled" Value="True">
+                                <Setter Property="Background" Value="{StaticResource Brush.Accent}"/>
+                                <Setter Property="BorderBrush" Value="Transparent"/>
+                                <Setter Property="BorderThickness" Value="0"/>
                             </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="#1F2636"/>
-                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsEnabled" Value="True"/>
+                                    <Condition Property="IsMouseOver" Value="True"/>
+                                </MultiTrigger.Conditions>
+                                <Setter Property="Background" Value="#2D6FDC"/>
+                                <Setter Property="BorderBrush" Value="#2D6FDC"/>
+                            </MultiTrigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsEnabled" Value="True"/>
+                                    <Condition Property="IsPressed" Value="True"/>
+                                </MultiTrigger.Conditions>
+                                <Setter Property="Background" Value="#1C56B8"/>
+                                <Setter Property="BorderBrush" Value="#1C56B8"/>
+                            </MultiTrigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Opacity" Value="0.5"/>
                             </Trigger>
@@ -53,18 +80,19 @@
         <Grid Grid.Row="0" VerticalAlignment="Center">
             <!-- Figma: progress bar 630x17, radius 8 -->
             <StackPanel HorizontalAlignment="Center" Width="630">
-                <TextBlock FontSize="20" FontWeight="SemiBold" Foreground="White"
+                <TextBlock Style="{StaticResource Txt.H1}"
                            Text="{Binding HeaderText}" TextAlignment="Center" Margin="0,0,0,8"/>
 
-                <TextBlock FontSize="14" Foreground="#C9D1DE"
-                           Text="{Binding CurrentStepText}" TextAlignment="Center" Opacity="0.95" Margin="0,0,0,18"/>
+                <TextBlock Style="{StaticResource ProgressBlinkText}"
+                           Text="{Binding CurrentStepText}" TextAlignment="Center" Margin="0,0,0,18"/>
 
                 <!--
                     Keep radii equal to half of the bar height to avoid awkward clipping.
                     The visual target is the pill‑style bar from the concept.
                 -->
-                <!-- Progress (630x17, radius 8) -->
-                <Grid Margin="0,0,0,10" Width="630" Height="17" SnapsToDevicePixels="True" UseLayoutRounding="True">
+                <!-- Progress (630x16, radius 6) -->
+                <Grid Margin="0,0,0,10" Width="630" Height="16" SnapsToDevicePixels="True" UseLayoutRounding="True"
+                      Visibility="{Binding ProgressVisibility}">
                     <!--
                         WPF strokes are centered on the edge, so they always eat into the fill.
                         To make the outline *read* as an outer stroke (as in the Figma concept),
@@ -72,40 +100,43 @@
                     -->
 
                     <!-- Outer outline (more expressed, hides edge roughness) -->
-                    <Rectangle RadiusX="8" RadiusY="8" Stroke="#6B7C93" StrokeThickness="3" Fill="Transparent" SnapsToDevicePixels="True"/>
+                    <Rectangle RadiusX="6" RadiusY="6" Stroke="#6B7C93" StrokeThickness="2" Fill="Transparent" SnapsToDevicePixels="True"/>
 
                     <!-- Track + fill, inset so the outline visually sits outside -->
-                    <Grid Margin="2" SnapsToDevicePixels="True">
+                    <Grid Margin="1" SnapsToDevicePixels="True">
                         <Grid.Clip>
-                            <RectangleGeometry Rect="0,0,626,13" RadiusX="6.5" RadiusY="6.5"/>
+                            <RectangleGeometry Rect="0,0,628,14" RadiusX="6" RadiusY="6"/>
                         </Grid.Clip>
 
-                        <Rectangle RadiusX="6.5" RadiusY="6.5" Fill="#D9D9D9"/>
-                        <Rectangle RadiusX="6.5" RadiusY="6.5" Fill="#0078D4"
+                        <Rectangle RadiusX="6" RadiusY="6" Fill="#D9D9D9"/>
+                        <Rectangle RadiusX="6" RadiusY="6" Fill="#0078D4"
                                    HorizontalAlignment="Left" Width="{Binding ProgressWidth}"/>
                     </Grid>
                 </Grid>
 
-                <TextBlock FontSize="14" Foreground="#C9D1DE"
-                           Text="{Binding PercentText}" TextAlignment="Center" Opacity="0.9"/>
+                <TextBlock Style="{StaticResource Txt.Body14}"
+                           Text="{Binding PercentText}" TextAlignment="Center" Opacity="0.9"
+                           Visibility="{Binding ProgressVisibility}"/>
             </StackPanel>
         </Grid>
 
         <!-- Footer -->
-        <Border Grid.Row="1" Height="60" Background="#141A2B" Opacity="0.95"
+        <Border Grid.Row="1" Background="{StaticResource Brush.FooterBar}"
+                CornerRadius="0,0,16,16" Padding="18,12"
                 Visibility="{Binding FooterVisible}">
-            <Grid Margin="18,10">
+            <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Column="0" Style="{StaticResource ProgressFooterText}"
+                <TextBlock Grid.Column="0" Style="{StaticResource FooterNoteText}"
                            Text="{Binding FooterText}" TextWrapping="Wrap" VerticalAlignment="Center"/>
 
                 <Button Grid.Column="1" Content="Перезагрузить" Width="130" Height="34" Margin="16,0,0,0"
                         Style="{StaticResource ProgressRebootButton}"
                         Visibility="{Binding RebootVisible}"
+                        IsEnabled="{Binding RebootEnabled}"
                         Click="Reboot_Click"/>
             </Grid>
         </Border>

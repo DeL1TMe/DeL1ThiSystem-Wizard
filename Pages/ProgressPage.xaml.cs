@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -14,11 +14,12 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
     private readonly (string Id, string Title)[] _steps;
     private readonly bool _showFooter;
     private readonly bool _showReboot;
-
-    private string _headerText = "Применяем изменения…";
+    private string _headerText = "Подготавливаем всё для дальнейшей работы...";
     private string _currentStepText = "";
     private string _percentText = "0%";
     private double _progressWidth = 0;
+    private bool _rebootEnabled = false;
+    private bool _isCompleted = false;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -26,14 +27,27 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
     public string CurrentStepText { get => _currentStepText; set { _currentStepText = value; OnPropertyChanged(); } }
     public string PercentText { get => _percentText; set { _percentText = value; OnPropertyChanged(); } }
     public double ProgressWidth { get => _progressWidth; set { _progressWidth = value; OnPropertyChanged(); } }
+    public bool RebootEnabled { get => _rebootEnabled; set { _rebootEnabled = value; OnPropertyChanged(); } }
+    public bool IsCompleted
+    {
+        get => _isCompleted;
+        set
+        {
+            _isCompleted = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(ProgressVisibility));
+        }
+    }
+    public Visibility ProgressVisibility => _isCompleted ? Visibility.Collapsed : Visibility.Visible;
 
     public Visibility FooterVisible => _showFooter ? Visibility.Visible : Visibility.Collapsed;
     public Visibility RebootVisible => _showReboot ? Visibility.Visible : Visibility.Collapsed;
 
     public string FooterText { get; set; } =
-        "Примечание: используйте Toolbox для продолжения настройки системы.\nПосле рекомендуется создать резервную копию с помощью AOMEI Backuper.";
+        "Примечание: используйте Toolbox для продолжения настройки системы.\n" +
+        "Перед продолжением создайте резервную копию в AOMEI Backuper.";
 
-    public ProgressPage((string Id, string Title)[] steps, string headerText, bool showFooter, bool showReboot)
+    public ProgressPage((string Id, string Title)[] steps, string headerText, bool showFooter, bool showReboot, string? footerText = null)
     {
         InitializeComponent();
 
@@ -43,6 +57,8 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
         _showReboot = showReboot;
 
         HeaderText = headerText;
+        if (!string.IsNullOrWhiteSpace(footerText))
+            FooterText = footerText;
         DataContext = this;
 
         Loaded += async (_, __) => await RunAsync();
@@ -62,6 +78,14 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
         }
 
         SetProgress(1);
+        if (_showReboot)
+            RebootEnabled = true;
+        if (_showFooter)
+        {
+            HeaderText = "Задача выполнена";
+            CurrentStepText = "Требуется перезагрузка";
+            IsCompleted = true;
+        }
 
         // Navigation behavior:
         if (!_showFooter)
@@ -75,8 +99,8 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
     private void SetProgress(double p)
     {
         p = Math.Clamp(p, 0, 1);
-        // Inner fill width after 3px outline and 2px inset per side.
-        ProgressWidth = 626 * p;
+        // Inner fill width after 2px outline and 1px inset per side.
+        ProgressWidth = 628 * p;
         PercentText = $"{(int)Math.Round(p * 100)}%";
     }
 
