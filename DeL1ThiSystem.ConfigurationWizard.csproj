@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon>Assets\app-icon.ico</ApplicationIcon>
+
+    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\**\*.*" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\tweaks_catalog.json" />
+    <EmbeddedResource Include="Resources\bootstrap_steps.json" />
+  </ItemGroup>
+
+</Project>

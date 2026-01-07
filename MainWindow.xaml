@@ -1,0 +1,92 @@
+<Window x:Class="DeL1ThiSystem.ConfigurationWizard.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="DeL1ThiSystem Configuration Wizard"
+        Width="720" Height="800"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        AllowsTransparency="True"
+        Background="Transparent"
+        SnapsToDevicePixels="True"
+        UseLayoutRounding="True"
+        Loaded="Window_Loaded"
+        Closing="Window_Closing"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown">
+
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="0"
+                            CornerRadius="14"
+                            GlassFrameThickness="0"
+                            ResizeBorderThickness="0"/>
+    </shell:WindowChrome.WindowChrome>
+
+
+    <Border CornerRadius="14"
+            Background="{StaticResource Brush.WindowBg}"
+            BorderBrush="#2A3345"
+            BorderThickness="1"
+            ClipToBounds="True"
+            SnapsToDevicePixels="True"
+            UseLayoutRounding="True">
+        <Grid>
+        <Grid x:Name="MainContent" Margin="12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Margin="0,0,0,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Image x:Name="HeaderLogo"
+                       Width="290" Height="80"
+                       HorizontalAlignment="Left"
+                       Stretch="Uniform"/>
+
+                <Button Grid.Column="1"
+                        Style="{StaticResource HeaderCloseButton}"
+                        Content="&#xE8BB;"
+                        FontFamily="Segoe MDL2 Assets"
+                        VerticalAlignment="Top"
+                        Click="Close_Click"/>
+            </Grid>
+
+            <Border Grid.Row="1"
+                    Background="{StaticResource Brush.CardBg}"
+                    CornerRadius="16"
+                    Padding="0">
+                <Frame x:Name="Frame" NavigationUIVisibility="Hidden"/>
+            </Border>
+        </Grid>
+
+        <Grid x:Name="ExitConfirmOverlay" Visibility="Collapsed" Background="Transparent" ClipToBounds="True" SnapsToDevicePixels="True" UseLayoutRounding="True">
+            <Border Background="#AA0F1320" CornerRadius="14" SnapsToDevicePixels="True" UseLayoutRounding="True"/>
+            <Border Background="{StaticResource Brush.CardBg}"
+                    BorderBrush="#263147"
+                    BorderThickness="1"
+                    CornerRadius="14"
+                    Padding="24"
+                    Width="520"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource Txt.H1}" Text="Вы действительно хотите выйти?"/>
+                    <TextBlock Style="{StaticResource Txt.Body14}" Margin="0,10,0,18"
+                               Text="Мы настоятельно рекомендуем завершить настройку сейчас, внесение изменений в систему может помешать настроить её повторно."/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Отмена" Style="{StaticResource ConceptSecondaryButton}"
+                                Margin="0,0,10,0" Click="ExitConfirmCancel_Click"/>
+                        <Button Content="Выйти" Style="{StaticResource ConceptPrimaryButton}"
+                                Click="ExitConfirmExit_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+    </Border>
+</Window>
