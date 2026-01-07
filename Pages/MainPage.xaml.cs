@@ -131,7 +131,7 @@ public partial class MainPage : Page
 
         string footerNote =
             "Примечание: используйте Toolbox для продолжения настройки системы.\n" +
-            "Перед продолжением создайте резервную копию в AOMEI Backuper.";
+            "Когда закончите — создайте резервную копию в AOMEI Backuper.";
 
         ((MainWindow)Application.Current.MainWindow).Frame.Navigate(
             new ProgressPage(steps, "Применяем твики", showFooter: true, showReboot: true, footerText: footerNote));

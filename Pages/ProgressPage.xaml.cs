@@ -48,7 +48,7 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
 
     public string FooterText { get; set; } =
         "Примечание: используйте Toolbox для продолжения настройки системы.\n" +
-        "Перед продолжением создайте резервную копию в AOMEI Backuper.";
+        "Когда закончите — создайте резервную копию в AOMEI Backuper.";
 
     public ProgressPage((string Id, string Title)[] steps, string headerText, bool showFooter, bool showReboot, string? footerText = null, bool autoNavigate = false)
     {
