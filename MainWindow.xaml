@@ -9,6 +9,7 @@
         ResizeMode="NoResize"
         Background="{StaticResource Brush.WindowBg}"
         Loaded="Window_Loaded"
+        Closing="Window_Closing"
         MouseLeftButtonDown="Window_MouseLeftButtonDown">
 
     <shell:WindowChrome.WindowChrome>
@@ -18,36 +19,61 @@
                             ResizeBorderThickness="0"/>
     </shell:WindowChrome.WindowChrome>
 
-    <Grid Margin="12">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <Grid>
+        <Grid x:Name="MainContent" Margin="12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0" Margin="0,0,0,14">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
+            <Grid Grid.Row="0" Margin="0,0,0,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
 
-            <Image x:Name="HeaderLogo"
-                   Width="290" Height="80"
-                   HorizontalAlignment="Left"
-                   Stretch="Uniform"/>
+                <Image x:Name="HeaderLogo"
+                       Width="290" Height="80"
+                       HorizontalAlignment="Left"
+                       Stretch="Uniform"/>
 
-            <Button Grid.Column="1"
-                    Style="{StaticResource HeaderCloseButton}"
-                    Content="&#xE8BB;"
-                    FontFamily="Segoe MDL2 Assets"
-                    VerticalAlignment="Top"
-                    Click="Close_Click"/>
+                <Button Grid.Column="1"
+                        Style="{StaticResource HeaderCloseButton}"
+                        Content="&#xE8BB;"
+                        FontFamily="Segoe MDL2 Assets"
+                        VerticalAlignment="Top"
+                        Click="Close_Click"/>
+            </Grid>
+
+            <Border Grid.Row="1"
+                    Background="{StaticResource Brush.CardBg}"
+                    CornerRadius="16"
+                    Padding="0">
+                <Frame x:Name="Frame" NavigationUIVisibility="Hidden"/>
+            </Border>
         </Grid>
 
-        <Border Grid.Row="1"
-                Background="{StaticResource Brush.CardBg}"
-                CornerRadius="16"
-                Padding="0">
-            <Frame x:Name="Frame" NavigationUIVisibility="Hidden"/>
-        </Border>
+        <Grid x:Name="ExitConfirmOverlay" Visibility="Collapsed" Background="#AA0F1320">
+            <Border Background="{StaticResource Brush.CardBg}"
+                    BorderBrush="#263147"
+                    BorderThickness="1"
+                    CornerRadius="14"
+                    Padding="24"
+                    Width="520"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource Txt.H1}" Text="Вы действительно хотите выйти?"/>
+                    <TextBlock Style="{StaticResource Txt.Body14}" Margin="0,10,0,18"
+                               Text="Мы настоятельно рекомендуем завершить настройку сейчас, так как внесение изменений в систему может помешать настроить её повторно."/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Отмена" Style="{StaticResource ConceptSecondaryButton}"
+                                Margin="0,0,10,0" Click="ExitConfirmCancel_Click"/>
+                        <Button Content="Выйти" Style="{StaticResource ConceptPrimaryButton}"
+                                Click="ExitConfirmExit_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
     </Grid>
 </Window>

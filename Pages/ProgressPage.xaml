@@ -72,16 +72,16 @@
                     -->
 
                     <!-- Outer outline (more expressed, hides edge roughness) -->
-                    <Rectangle RadiusX="8" RadiusY="8" Stroke="#6B7C93" StrokeThickness="2" Fill="Transparent" SnapsToDevicePixels="True"/>
+                    <Rectangle RadiusX="8" RadiusY="8" Stroke="#6B7C93" StrokeThickness="3" Fill="Transparent" SnapsToDevicePixels="True"/>
 
                     <!-- Track + fill, inset so the outline visually sits outside -->
-                    <Grid Margin="1" SnapsToDevicePixels="True">
+                    <Grid Margin="2" SnapsToDevicePixels="True">
                         <Grid.Clip>
-                            <RectangleGeometry Rect="0,0,628,15" RadiusX="7" RadiusY="7"/>
+                            <RectangleGeometry Rect="0,0,626,13" RadiusX="6.5" RadiusY="6.5"/>
                         </Grid.Clip>
 
-                        <Rectangle RadiusX="7" RadiusY="7" Fill="#D9D9D9"/>
-                        <Rectangle RadiusX="7" RadiusY="7" Fill="#0078D4"
+                        <Rectangle RadiusX="6.5" RadiusY="6.5" Fill="#D9D9D9"/>
+                        <Rectangle RadiusX="6.5" RadiusY="6.5" Fill="#0078D4"
                                    HorizontalAlignment="Left" Width="{Binding ProgressWidth}"/>
                     </Grid>
                 </Grid>

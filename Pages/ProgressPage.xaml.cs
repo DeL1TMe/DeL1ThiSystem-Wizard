@@ -75,8 +75,8 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
     private void SetProgress(double p)
     {
         p = Math.Clamp(p, 0, 1);
-        // Bar max width equals 630 (Figma)
-        ProgressWidth = 630 * p;
+        // Inner fill width after 3px outline and 2px inset per side.
+        ProgressWidth = 626 * p;
         PercentText = $"{(int)Math.Round(p * 100)}%";
     }
 
