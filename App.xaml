@@ -5,10 +5,10 @@
              StartupUri="MainWindow.xaml">
     <Application.Resources>
 
-        <!-- Converters -->
+        
         <local:NullToVisibilityConverter x:Key="NullToVisibility" />
 
-        <!-- Base palette -->
+        
         <Color x:Key="C.WindowBg">#171826</Color>
         <Color x:Key="C.CardBg">#1A1E2D</Color>
         <Color x:Key="C.FooterBar">#121622</Color>
@@ -30,7 +30,7 @@
         <SolidColorBrush x:Key="Brush.TextSecondary" Color="{StaticResource C.TextSecondary}"/>
         <SolidColorBrush x:Key="Brush.TextMuted" Color="{StaticResource C.TextMuted}"/>
 
-        <!-- Fade overlays -->
+        
         <LinearGradientBrush x:Key="Brush.BottomFade" StartPoint="0,0" EndPoint="0,1">
             <GradientStop Color="{StaticResource C.CardBg_00}" Offset="0"/>
             <GradientStop Color="{StaticResource C.CardBg_FF}" Offset="1"/>
@@ -41,7 +41,7 @@
             <GradientStop Color="{StaticResource C.CardBg_FF}" Offset="1"/>
         </LinearGradientBrush>
 
-        <!-- HARD-KILL focus rectangles everywhere (Tab) -->
+        
         <Style x:Key="{x:Static SystemParameters.FocusVisualStyleKey}" TargetType="{x:Type Control}">
             <Setter Property="Template">
                 <Setter.Value>
@@ -50,7 +50,7 @@
             </Setter>
         </Style>
 
-        <!-- Typography -->
+        
         <Style x:Key="Txt.H1" TargetType="{x:Type TextBlock}">
             <Setter Property="FontSize" Value="22"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
@@ -59,7 +59,7 @@
             <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
         </Style>
 
-        <!-- Increased line height for better readability -->
+        
         <Style x:Key="Txt.Body14" TargetType="{x:Type TextBlock}">
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="Foreground" Value="{StaticResource Brush.TextSecondary}"/>
@@ -84,7 +84,7 @@
             <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
         </Style>
 
-        <!-- Add a small gap between title and description + larger line height -->
+        
         <Style x:Key="Txt.ItemDesc" TargetType="{x:Type TextBlock}">
             <Setter Property="FontSize" Value="12.5"/>
             <Setter Property="Foreground" Value="{StaticResource Brush.TextSecondary}"/>
@@ -117,7 +117,7 @@
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
 
-        <!-- Also enforce sane defaults on all TextBlocks -->
+        
         <Style TargetType="{x:Type TextBlock}">
             <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
             <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
@@ -125,7 +125,7 @@
             <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
         </Style>
 
-        <!-- Buttons -->
+        
         <Style x:Key="ConceptPrimaryButton" TargetType="{x:Type Button}">
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="Background" Value="{StaticResource Brush.Accent}"/>
@@ -164,7 +164,7 @@
             <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
         </Style>
 
-        <!-- Close button -->
+        
         <Style x:Key="HeaderCloseButton" TargetType="{x:Type Button}">
             <Setter Property="Foreground" Value="{StaticResource Brush.TextSecondary}"/>
             <Setter Property="Background" Value="Transparent"/>

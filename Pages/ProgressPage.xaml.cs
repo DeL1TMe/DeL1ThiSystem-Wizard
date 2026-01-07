@@ -14,7 +14,9 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
     private readonly (string Id, string Title)[] _steps;
     private readonly bool _showFooter;
     private readonly bool _showReboot;
-    private string _headerText = "Подготавливаем всё для дальнейшей работы...";
+    private readonly bool _autoNavigate;
+    private bool _footerDismissed = false;
+    private string _headerText = "Ведётся подготовка ОС для дальнейшей настройки…";
     private string _currentStepText = "";
     private string _percentText = "0%";
     private double _progressWidth = 0;
@@ -40,14 +42,15 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
     }
     public Visibility ProgressVisibility => _isCompleted ? Visibility.Collapsed : Visibility.Visible;
 
-    public Visibility FooterVisible => _showFooter ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility FooterVisibility => (_showFooter && !_footerDismissed) ? Visibility.Visible : Visibility.Collapsed;
     public Visibility RebootVisible => _showReboot ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility FooterDismissVisible => (_showFooter && !_showReboot) ? Visibility.Visible : Visibility.Collapsed;
 
     public string FooterText { get; set; } =
         "Примечание: используйте Toolbox для продолжения настройки системы.\n" +
         "Перед продолжением создайте резервную копию в AOMEI Backuper.";
 
-    public ProgressPage((string Id, string Title)[] steps, string headerText, bool showFooter, bool showReboot, string? footerText = null)
+    public ProgressPage((string Id, string Title)[] steps, string headerText, bool showFooter, bool showReboot, string? footerText = null, bool autoNavigate = false)
     {
         InitializeComponent();
 
@@ -55,6 +58,7 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
         _steps = steps;
         _showFooter = showFooter;
         _showReboot = showReboot;
+        _autoNavigate = autoNavigate;
 
         HeaderText = headerText;
         if (!string.IsNullOrWhiteSpace(footerText))
@@ -66,7 +70,6 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
 
     private async Task RunAsync()
     {
-        // UI-only progress simulation. Actual tweak execution is wired in next stage.
         int total = Math.Max(1, _steps.Length);
 
         for (int i = 0; i < _steps.Length; i++)
@@ -87,10 +90,8 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
             IsCompleted = true;
         }
 
-        // Navigation behavior:
-        if (!_showFooter)
+        if (!_showFooter || _autoNavigate)
         {
-            // Bootstrap stage finished -> go to welcome/disclaimer
             _state.BootstrapApplied = true;
             ((MainWindow)Application.Current.MainWindow).NavigateToDisclaimer();
         }
@@ -99,7 +100,6 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
     private void SetProgress(double p)
     {
         p = Math.Clamp(p, 0, 1);
-        // Inner fill width after 2px outline and 1px inset per side.
         ProgressWidth = 628 * p;
         PercentText = $"{(int)Math.Round(p * 100)}%";
     }
@@ -120,6 +120,12 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
         {
             MessageBox.Show("Не удалось выполнить перезагрузку.", "DeL1ThiSystem", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
+    }
+
+    private void HideFooter_Click(object sender, RoutedEventArgs e)
+    {
+        _footerDismissed = true;
+        OnPropertyChanged(nameof(FooterVisibility));
     }
 
     private void OnPropertyChanged([CallerMemberName] string? name = null) =>

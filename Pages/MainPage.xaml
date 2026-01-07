@@ -3,7 +3,6 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <Page.Resources>
-        <!-- Guaranteed scrollbar style (local) -->
         <Style x:Key="LocalConceptScrollBar" TargetType="{x:Type ScrollBar}">
             <Setter Property="Width" Value="8"/>
             <Setter Property="Background" Value="Transparent"/>
@@ -73,7 +72,19 @@
             </Setter>
         </Style>
 
-        <!-- Toggle animation template -->
+        <Style x:Key="InfoIcon" TargetType="{x:Type TextBlock}">
+            <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush.TextMuted}"/>
+            <Setter Property="Margin" Value="0,1,8,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="InfoPopupText" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource Txt.Body14}">
+            <Setter Property="Foreground" Value="{StaticResource Brush.TextSecondary}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
+
         <Style x:Key="ConceptToggle" TargetType="{x:Type ToggleButton}">
             <Setter Property="Width" Value="52"/>
             <Setter Property="Height" Value="26"/>
@@ -160,7 +171,6 @@
                           Margin="24,24,10,0"
                           Padding="0"
                           ScrollChanged="MainScroll_ScrollChanged">
-                <!-- right padding so content doesn't touch the scrollbar -->
                 <StackPanel Margin="0,0,16,0">
 
                     <TextBlock Style="{StaticResource Txt.H1}" Margin="0,0,0,0">
@@ -180,7 +190,6 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
-                        <!-- Card: inset image + stroke overlay -->
                         <Grid Grid.Column="0" Height="172" Cursor="Hand" MouseLeftButtonDown="ThemeLight_Click">
                             <Border CornerRadius="14" Background="#0FFFFFFF"/>
                             <Border x:Name="ThemeLightClip"
@@ -188,12 +197,6 @@
                                     ClipToBounds="True"
                                     SnapsToDevicePixels="True"
                                     UseLayoutRounding="True">
-                                <!--
-                                    IMPORTANT:
-                                    Border CornerRadius does NOT clip child content in WPF.
-                                    To get truly rounded wallpaper thumbnails we paint them via ImageBrush.
-                                -->
-                                <!-- Rectangle provides reliable rounded clipping for the wallpaper thumbnails -->
                                 <Rectangle x:Name="ThemeLightInset" Margin="1.2" RadiusX="14" RadiusY="14" SnapsToDevicePixels="True">
                                     <Rectangle.Fill>
                                         <ImageBrush x:Name="ThemeLightBrush" Stretch="UniformToFill"/>
@@ -246,45 +249,71 @@
                         Выберите необходимые твики:
                     </TextBlock>
 
-                    <ItemsControl x:Name="TweaksList" ItemsSource="{Binding TweakGroups}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Margin="0,0,0,18">
-                                <TextBlock Style="{StaticResource Txt.Section}" Text="{Binding Title}" Margin="0,0,0,6"/>
-
-                                <TextBlock Style="{StaticResource Txt.Body14}" Text="{Binding Description}"
-                                           Opacity="0.75" TextWrapping="Wrap" Margin="0,0,0,10"
-                                           Visibility="{Binding Description, Converter={StaticResource NullToVisibility}}"/>
-
-                                <ItemsControl ItemsSource="{Binding Children}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Grid Margin="0,0,0,12">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                </Grid.ColumnDefinitions>
+                    <ItemsControl x:Name="TweaksList" ItemsSource="{Binding TweakItems}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
 
                                                 <StackPanel Grid.Column="0" Margin="0,0,18,0">
-                                                    <TextBlock Style="{StaticResource Txt.ItemTitle}" Text="{Binding Title}" Margin="0,0,0,2"/>
-                                                    <TextBlock Style="{StaticResource Txt.ItemDesc}" Text="{Binding Description}"
-                                                               Opacity="0.8" TextWrapping="Wrap" />
+                                                    <Grid>
+                                                        <Border x:Name="InfoHit" Padding="4,4,8,4"
+                                                                MouseEnter="InfoHit_MouseEnter"
+                                                                MouseLeave="InfoHit_MouseLeave">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <TextBlock Style="{StaticResource InfoIcon}" Text="&#xE946;"/>
+                                                                <TextBlock Style="{StaticResource Txt.ItemTitle}" Text="{Binding Title}"/>
+                                                            </StackPanel>
+                                                        </Border>
+
+                                                        <Popup x:Name="InfoPopup"
+                                                               Placement="Bottom"
+                                                               PlacementTarget="{Binding ElementName=InfoHit}"
+                                                               HorizontalOffset="0"
+                                                               VerticalOffset="4"
+                                                               AllowsTransparency="True"
+                                                               IsHitTestVisible="False"
+                                                               StaysOpen="True"
+                                                               IsOpen="False">
+                                                            <Border Background="Transparent" Padding="8">
+                                                                <Border x:Name="InfoPopupBorder"
+                                                                        Background="#1A1E2D"
+                                                                        BorderBrush="#2A3345"
+                                                                        BorderThickness="1"
+                                                                        CornerRadius="12"
+                                                                        Padding="18,14"
+                                                                        SnapsToDevicePixels="True"
+                                                                        UseLayoutRounding="True"
+                                                                        Opacity="0">
+                                                                        <Border.Effect>
+                                                                            <DropShadowEffect Color="#000000"
+                                                                                              BlurRadius="18"
+                                                                                              ShadowDepth="0"
+                                                                                              Opacity="0.26"
+                                                                                              RenderingBias="Quality"/>
+                                                                        </Border.Effect>
+                                                                    <TextBlock Style="{StaticResource InfoPopupText}"
+                                                                               MaxWidth="520"
+                                                                               Text="{Binding Description}"/>
+                                                                </Border>
+                                                            </Border>
+                                                        </Popup>
+                                                    </Grid>
                                                 </StackPanel>
 
-                                                <ToggleButton Grid.Column="1"
-                                                              Style="{StaticResource ConceptToggle}"
-                                                              IsChecked="{Binding IsChecked}"
-                                                              IsEnabled="{Binding IsEnabled}"
-                                                              Checked="Toggle_Checked"
-                                                              Unchecked="Toggle_Checked"/>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                                    <ToggleButton Grid.Column="1"
+                                                  Style="{StaticResource ConceptToggle}"
+                                                  IsChecked="{Binding IsChecked}"
+                                                  IsEnabled="{Binding IsEnabled}"
+                                                  Checked="Toggle_Checked"
+                                                  Unchecked="Toggle_Checked"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
 
                 </StackPanel>
             </ScrollViewer>
@@ -320,7 +349,7 @@
 
                 <TextBlock Grid.Column="0"
                            Style="{StaticResource FooterNoteText}">
-                    Примечание: пользовательские твики применяются к текущему профилю. Настройте локальную учётную запись заранее.
+                    Примечание: пользовательские твики применяются к текущему профилю. Пожалуйста, настройте собственную локальную учётную запись заранее.
                 </TextBlock>
 
                 <Button Grid.Column="1"

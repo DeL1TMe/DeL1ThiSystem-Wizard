@@ -7,7 +7,8 @@
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         ResizeMode="NoResize"
-        Background="{StaticResource Brush.WindowBg}"
+        AllowsTransparency="True"
+        Background="Transparent"
         SnapsToDevicePixels="True"
         UseLayoutRounding="True"
         Loaded="Window_Loaded"
@@ -24,6 +25,8 @@
 
     <Border CornerRadius="14"
             Background="{StaticResource Brush.WindowBg}"
+            BorderBrush="#2A3345"
+            BorderThickness="1"
             ClipToBounds="True"
             SnapsToDevicePixels="True"
             UseLayoutRounding="True">
@@ -61,7 +64,8 @@
             </Border>
         </Grid>
 
-        <Grid x:Name="ExitConfirmOverlay" Visibility="Collapsed" Background="#AA0F1320">
+        <Grid x:Name="ExitConfirmOverlay" Visibility="Collapsed" Background="Transparent" ClipToBounds="True" SnapsToDevicePixels="True" UseLayoutRounding="True">
+            <Border Background="#AA0F1320" CornerRadius="14" SnapsToDevicePixels="True" UseLayoutRounding="True"/>
             <Border Background="{StaticResource Brush.CardBg}"
                     BorderBrush="#263147"
                     BorderThickness="1"

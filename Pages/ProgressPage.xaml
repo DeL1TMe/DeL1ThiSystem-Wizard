@@ -76,9 +76,9 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- Main -->
+        
         <Grid Grid.Row="0" VerticalAlignment="Center">
-            <!-- Figma: progress bar 630x17, radius 8 -->
+            
             <StackPanel HorizontalAlignment="Center" Width="630">
                 <TextBlock Style="{StaticResource Txt.H1}"
                            Text="{Binding HeaderText}" TextAlignment="Center" Margin="0,0,0,8"/>
@@ -86,23 +86,16 @@
                 <TextBlock Style="{StaticResource ProgressBlinkText}"
                            Text="{Binding CurrentStepText}" TextAlignment="Center" Margin="0,0,0,18"/>
 
-                <!--
-                    Keep radii equal to half of the bar height to avoid awkward clipping.
-                    The visual target is the pill‑style bar from the concept.
-                -->
-                <!-- Progress (630x16, radius 6) -->
+                
+                
                 <Grid Margin="0,0,0,10" Width="630" Height="16" SnapsToDevicePixels="True" UseLayoutRounding="True"
                       Visibility="{Binding ProgressVisibility}">
-                    <!--
-                        WPF strokes are centered on the edge, so they always eat into the fill.
-                        To make the outline *read* as an outer stroke (as in the Figma concept),
-                        we inset the track/fill by half the stroke thickness.
-                    -->
+                    
 
-                    <!-- Outer outline (more expressed, hides edge roughness) -->
+                    
                     <Rectangle RadiusX="6" RadiusY="6" Stroke="#6B7C93" StrokeThickness="2" Fill="Transparent" SnapsToDevicePixels="True"/>
 
-                    <!-- Track + fill, inset so the outline visually sits outside -->
+                    
                     <Grid Margin="1" SnapsToDevicePixels="True">
                         <Grid.Clip>
                             <RectangleGeometry Rect="0,0,628,14" RadiusX="6" RadiusY="6"/>
@@ -120,10 +113,10 @@
             </StackPanel>
         </Grid>
 
-        <!-- Footer -->
+        
         <Border Grid.Row="1" Background="{StaticResource Brush.FooterBar}"
                 CornerRadius="0,0,16,16" Padding="18,12"
-                Visibility="{Binding FooterVisible}">
+                Visibility="{Binding FooterVisibility}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -133,7 +126,12 @@
                 <TextBlock Grid.Column="0" Style="{StaticResource FooterNoteText}"
                            Text="{Binding FooterText}" TextWrapping="Wrap" VerticalAlignment="Center"/>
 
-                <Button Grid.Column="1" Content="Перезагрузить" Width="130" Height="34" Margin="16,0,0,0"
+                <Button Grid.Column="1" Content="Понятно" Width="130" Height="34" Margin="8,0,0,0"
+                        Style="{StaticResource ConceptPrimaryButton}"
+                        Visibility="{Binding FooterDismissVisible}"
+                        Click="HideFooter_Click"/>
+
+                <Button Grid.Column="1" Content="Перезагрузить" Width="130" Height="34" Margin="0,0,0,0"
                         Style="{StaticResource ProgressRebootButton}"
                         Visibility="{Binding RebootVisible}"
                         IsEnabled="{Binding RebootEnabled}"

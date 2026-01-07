@@ -1,7 +1,7 @@
 using System;
-using System.IO;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 using DeL1ThiSystem.ConfigurationWizard.Pages;
 using DeL1ThiSystem.ConfigurationWizard.Tweaks;
@@ -16,16 +16,23 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         LoadHeaderLogo();
+        LoadAppIcon();
     }
 
     private void LoadHeaderLogo()
     {
         try
         {
-            string assetsRoot = @"C:\ProgramData\DeL1ThiSystem\Wizard\Assets";
-            string logo = Path.Combine(assetsRoot, "logo.png");
-            if (File.Exists(logo))
-                HeaderLogo.Source = new BitmapImage(new Uri(logo, UriKind.Absolute));
+            HeaderLogo.Source = new BitmapImage(new Uri("pack://application:,,,/Assets/logo.png", UriKind.Absolute));
+        }
+        catch { }
+    }
+
+    private void LoadAppIcon()
+    {
+        try
+        {
+            Icon = new BitmapImage(new Uri("pack://application:,,,/Assets/app-icon.png", UriKind.Absolute));
         }
         catch { }
     }
@@ -34,11 +41,16 @@ public partial class MainWindow : Window
     {
         var app = (App)Application.Current;
 
-        // Bootstrap stage (before welcome/disclaimer)
         if (!app.State.BootstrapApplied)
         {
             var boot = TweaksJsonLoader.LoadBootstrapSteps();
-            Frame.Navigate(new ProgressPage(boot.Steps, boot.Title, showFooter: false, showReboot: false));
+            Frame.Navigate(new ProgressPage(
+                boot.Steps,
+                boot.Title,
+                showFooter: true,
+                showReboot: false,
+                footerText: "Появился вопрос? Задай его напрямую через официальный веб‑сайт: del1t.me.\nИстория изменений проекта доступна по адресу: system.del1t.me/changelog.",
+                autoNavigate: true));
             return;
         }
 
@@ -66,6 +78,7 @@ public partial class MainWindow : Window
             return;
 
         MainContent.IsEnabled = false;
+        MainContent.Effect = new BlurEffect { Radius = 6 };
         ExitConfirmOverlay.Visibility = Visibility.Visible;
     }
 
@@ -73,6 +86,7 @@ public partial class MainWindow : Window
     {
         ExitConfirmOverlay.Visibility = Visibility.Collapsed;
         MainContent.IsEnabled = true;
+        MainContent.Effect = null;
     }
 
     private void ExitConfirmExit_Click(object sender, RoutedEventArgs e)

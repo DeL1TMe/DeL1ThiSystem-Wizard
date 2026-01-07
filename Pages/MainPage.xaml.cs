@@ -1,11 +1,10 @@
 ﻿﻿﻿using System;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using DeL1ThiSystem.ConfigurationWizard.Tweaks;
 
@@ -14,12 +13,13 @@ namespace DeL1ThiSystem.ConfigurationWizard.Pages;
 public partial class MainPage : Page
 {
     private readonly WizardState _state;
+    private Popup? _openInfoPopup;
+    private Border? _openInfoPopupBorder;
 
-    public ObservableCollection<TweakNode> TweakGroups { get; } = new();
+    public ObservableCollection<TweakNode> TweakItems { get; } = new();
 
     public MainPage()
     {
-        // Ensure non-nullable field is always initialized (avoids CS8618 warnings)
         _state = ((App)Application.Current).State;
 
         try
@@ -42,12 +42,18 @@ public partial class MainPage : Page
 
     private void LoadTweaksCatalog()
     {
-        TweakGroups.Clear();
+        TweakItems.Clear();
         var nodes = TweaksJsonLoader.LoadAsNodes(_state.OsFamily);
-        foreach (var n in nodes) TweakGroups.Add(n);
+        foreach (var group in nodes)
+        {
+            foreach (var item in group.Children)
+            {
+                if (!string.Equals(item.Stage, "bootstrap", StringComparison.OrdinalIgnoreCase))
+                    TweakItems.Add(item);
+            }
+        }
 
-        // Initialize state dict with defaults
-        foreach (var group in TweakGroups)
+        foreach (var group in nodes)
         {
             foreach (var item in group.Children)
             {
@@ -59,15 +65,12 @@ public partial class MainPage : Page
 
     private void LoadThemeImages()
     {
-        // Assets path from user requirement
-        string assetsRoot = @"C:\ProgramData\DeL1ThiSystem\Wizard\Assets";
-        string light = Path.Combine(assetsRoot, "theme_light.png");
-        string dark = Path.Combine(assetsRoot, "theme_dark.png");
-
-        if (File.Exists(light))
-            ThemeLightBrush.ImageSource = new BitmapImage(new Uri(light, UriKind.Absolute));
-        if (File.Exists(dark))
-            ThemeDarkBrush.ImageSource = new BitmapImage(new Uri(dark, UriKind.Absolute));
+        try
+        {
+            ThemeLightBrush.ImageSource = new BitmapImage(new Uri("pack://application:,,,/Assets/theme_light.png", UriKind.Absolute));
+            ThemeDarkBrush.ImageSource = new BitmapImage(new Uri("pack://application:,,,/Assets/theme_dark.png", UriKind.Absolute));
+        }
+        catch { }
     }
 
     private void ApplyThemeSelectionVisuals()
@@ -82,14 +85,12 @@ public partial class MainPage : Page
     {
         _state.ThemeChoice = "light";
         ApplyThemeSelectionVisuals();
-        // TODO: apply wallpaper/lockscreen + refresh explorer on click
     }
 
     private void ThemeDark_Click(object sender, RoutedEventArgs e)
     {
         _state.ThemeChoice = "dark";
         ApplyThemeSelectionVisuals();
-        // TODO: apply wallpaper/lockscreen + refresh explorer on click
     }
 
     private void UpdateFadeOverlays()
@@ -97,17 +98,15 @@ public partial class MainPage : Page
         double max = MainScroll.ScrollableHeight;
         double y = MainScroll.VerticalOffset;
 
-        // Top fade appears after user scrolls down a bit
         TopFadeOverlay.Opacity = y <= 1 ? 0 : 1;
 
-        // Bottom fade disappears when scrolled to bottom
         BottomFadeOverlay.Opacity = (max <= 1 || y >= max - 1) ? 0 : 1;
     }
 
-    // XAML hook: ScrollViewer.ScrollChanged="MainScroll_ScrollChanged"
     private void MainScroll_ScrollChanged(object sender, ScrollChangedEventArgs e)
     {
         UpdateFadeOverlays();
+        CloseInfoPopup();
     }
 
     private void Back_Click(object sender, RoutedEventArgs e)
@@ -117,17 +116,12 @@ public partial class MainPage : Page
 
     private void Apply_Click(object sender, RoutedEventArgs e)
     {
-        // Persist current selection
-        foreach (var group in TweakGroups)
+        foreach (var item in TweakItems)
         {
-            foreach (var item in group.Children)
-            {
-                _state.Tweaks[item.Id] = item.IsChecked;
-            }
+            _state.Tweaks[item.Id] = item.IsChecked;
         }
 
-        var steps = TweakGroups
-            .SelectMany(g => g.Children)
+        var steps = TweakItems
             .Where(i => i.IsChecked)
             .Select(i => (i.Id, i.Title))
             .ToArray();
@@ -149,5 +143,82 @@ public partial class MainPage : Page
         if (!n.IsEnabled) { t.IsChecked = false; return; }
         n.IsChecked = t.IsChecked == true;
         _state.Tweaks[n.Id] = n.IsChecked;
+    }
+
+    private void InfoHit_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (sender is not FrameworkElement hit)
+            return;
+
+        if (!FindPopupParts(hit, out Popup? popup, out Border? border)
+            || popup == null || border == null)
+            return;
+
+        if (_openInfoPopup != null && _openInfoPopup != popup)
+            CloseInfoPopup();
+
+        _openInfoPopup = popup;
+        _openInfoPopupBorder = border;
+        _openInfoPopup.IsOpen = true;
+        AnimateOpacity(_openInfoPopupBorder, 1.0, 0.12);
+    }
+
+    private void InfoHit_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (sender is not FrameworkElement hit)
+            return;
+
+        if (!FindPopupParts(hit, out Popup? popup, out Border? border)
+            || popup == null || border == null)
+            return;
+
+        var anim = AnimateOpacity(border, 0.0, 0.12);
+        anim.Completed += (_, __) =>
+        {
+            popup.IsOpen = false;
+            if (_openInfoPopup == popup)
+            {
+                _openInfoPopup = null;
+                _openInfoPopupBorder = null;
+            }
+        };
+    }
+
+    private static bool FindPopupParts(FrameworkElement hit, out Popup? popup, out Border? border)
+    {
+        popup = null;
+        border = null;
+
+        if (hit.Parent is not FrameworkElement parent)
+            return false;
+
+        popup = parent.FindName("InfoPopup") as Popup;
+        border = parent.FindName("InfoPopupBorder") as Border;
+
+        return popup != null && border != null;
+    }
+
+    private static DoubleAnimation AnimateOpacity(UIElement target, double to, double seconds)
+    {
+        var anim = new DoubleAnimation
+        {
+            To = to,
+            Duration = TimeSpan.FromSeconds(seconds),
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+        };
+        target.BeginAnimation(UIElement.OpacityProperty, anim);
+        return anim;
+    }
+
+    private void CloseInfoPopup()
+    {
+        if (_openInfoPopupBorder != null)
+            _openInfoPopupBorder.BeginAnimation(UIElement.OpacityProperty, null);
+
+        if (_openInfoPopup != null)
+            _openInfoPopup.IsOpen = false;
+
+        _openInfoPopup = null;
+        _openInfoPopupBorder = null;
     }
 }

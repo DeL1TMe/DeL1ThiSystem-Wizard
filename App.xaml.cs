@@ -11,7 +11,6 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
-        // Prevent "silent" app exits on unhandled UI exceptions.
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         TaskScheduler.UnobservedTaskException += (_, ex) =>
         {
@@ -20,7 +19,7 @@ public partial class App : Application
                 MessageBox.Show(ex.Exception.ToString(), "DeL1ThiSystem - Unobserved exception",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            catch { /* ignore */ }
+            catch { }
 
             ex.SetObserved();
         };
@@ -35,9 +34,7 @@ public partial class App : Application
             MessageBox.Show(e.Exception.ToString(), "DeL1ThiSystem - Crash",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
-        catch { /* ignore */ }
-
-        // Mark handled so the process doesn't terminate immediately.
+        catch { }
         e.Handled = true;
     }
 }

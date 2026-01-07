@@ -144,30 +144,13 @@
       ]
     },
     {
-      "id": "appearance",
-      "title": "Оформление",
-      "items": [
-        {
-          "id": "appearance.theme_choice",
-          "title": "Цветовая тема",
-          "description": "Выбор Light/Dark влияет на обои рабочего стола и экран блокировки. Проводник обновляется «на лету».",
-          "appliesTo": [
-            "10",
-            "11"
-          ],
-          "default": true,
-          "stage": "ui"
-        }
-      ]
-    },
-    {
       "id": "apps",
       "title": "Приложения",
       "items": [
         {
           "id": "apps.remove_uwp",
           "title": "Удаление UWP-приложений",
-          "description": "Рекомендуемый набор: 3D Viewer, BingSearch, Clipchamp, Copilot, DevHome, Family, FeedbackHub, GetHelp/GetStarted, BingNews, OfficeHub, OneNote, Outlook (new), Paint, Solitaire, StickyNotes, Teams (MicrosoftTeams/MSTeams), ToDo, Wallet, Weather, Movies&TV, Xbox (TCUI/XboxApp/GameOverlay/GamingOverlay/IdentityProvider/SpeechToTextOverlay/GamingApp).",
+          "description": "3D Viewer, BingSearch, Clipchamp, Copilot, DevHome, Family, FeedbackHub, GetHelp/GetStarted, BingNews, OfficeHub, OneNote, Outlook (new), Paint, Solitaire, StickyNotes, Teams (MicrosoftTeams/MSTeams), ToDo, Wallet, Weather, Movies&TV, Xbox (TCUI/XboxApp/GameOverlay/GamingOverlay/IdentityProvider/SpeechToTextOverlay/GamingApp).",
           "appliesTo": [
             "10",
             "11"
@@ -178,7 +161,7 @@
         {
           "id": "apps.remove_capabilities",
           "title": "Удаление Capabilities",
-          "description": "OneSync, Quick Assist, Steps Recorder (состав может отличаться).",
+          "description": "OneSync, Quick Assist, Steps Recorder.",
           "appliesTo": [
             "10",
             "11"
@@ -189,7 +172,7 @@
         {
           "id": "apps.remove_features",
           "title": "Удаление Features",
-          "description": "Recall (и др. по версии ОС).",
+          "description": "Recall и др.",
           "appliesTo": [
             "11"
           ],
@@ -282,7 +265,7 @@
         {
           "id": "updates.widgets_disable",
           "title": "Отключить News & Interests / Widgets",
-          "description": "Отключает виджеты/новости (в зависимости от ОС).",
+          "description": "Отключает виджеты/новости.",
           "appliesTo": [
             "10",
             "11"
@@ -316,7 +299,7 @@
         {
           "id": "shell.classic_context_menu",
           "title": "Классическое контекстное меню",
-          "description": "Включает классическое контекстное меню (актуально для Windows 11).",
+          "description": "Включает классическое контекстное меню.",
           "appliesTo": [
             "11"
           ],
@@ -386,7 +369,7 @@
         {
           "id": "extras.install_apps",
           "title": "Установка рекомендуемого ПО",
-          "description": "AOMEI Backupper, Uninstall Tool, RustDesk.",
+          "description": "AOMEI Backupper, Uninstall Tool, RustDesk, 7-Zip.",
           "appliesTo": [
             "10",
             "11"
@@ -408,7 +391,7 @@
         {
           "id": "extras.activate_hwid",
           "title": "Активация Windows по HWID",
-          "description": "Требуется интернет. Запуск один раз «при появлении интернета» (Scheduled Task: NetworkProfile/OnConnect + задержка).",
+          "description": "Требуется интернет. Запускается один раз при появлении интернета\n(Scheduled Task: NetworkProfile/OnConnect).",
           "appliesTo": [
             "10",
             "11"
