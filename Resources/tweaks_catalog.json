@@ -1,0 +1,422 @@
+{
+  "version": 1,
+  "groups": [
+    {
+      "id": "system_bootstrap",
+      "title": "Подготовка системы",
+      "note": "Будет применено автоматически при первом запуске мастера.",
+      "items": [
+        {
+          "id": "bootstrap.uac_disable",
+          "title": "Отключить UAC",
+          "description": "Отключает контроль учётных записей, чтобы не мешал запуску компонентов.",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "bootstrap",
+          "oobePreferred": true
+        },
+        {
+          "id": "bootstrap.defender_disable",
+          "title": "Отключить Microsoft Defender",
+          "description": "Отключает Defender и скрывает значок/уведомления.",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "bootstrap",
+          "oobePreferred": true
+        },
+        {
+          "id": "bootstrap.smartscreen_disable",
+          "title": "Отключить SmartScreen",
+          "description": "Убирает проверки SmartScreen, чтобы не мешали запуску .exe.",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "bootstrap",
+          "oobePreferred": true
+        },
+        {
+          "id": "bootstrap.webcontent_eval_disable",
+          "title": "Отключить Web Content Evaluation",
+          "description": "Отключает оценку веб-контента (WCE).",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "bootstrap",
+          "oobePreferred": true
+        },
+        {
+          "id": "bootstrap.executionpolicy_remotesigned",
+          "title": "ExecutionPolicy: RemoteSigned",
+          "description": "Устанавливает политику PowerShell RemoteSigned для LocalMachine.",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "bootstrap"
+        },
+        {
+          "id": "bootstrap.remote_access_enable",
+          "title": "Remote Access",
+          "description": "Включает необходимые компоненты удалённого доступа (заглушка логики).",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "bootstrap"
+        },
+        {
+          "id": "bootstrap.long_paths_enable",
+          "title": "Включить длинные пути",
+          "description": "Включает поддержку длинных путей Win32 (LongPathsEnabled).",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "bootstrap"
+        },
+        {
+          "id": "bootstrap.rdp_enable",
+          "title": "Включить RDP + правило Firewall",
+          "description": "Включает удалённый рабочий стол и открывает порт в брандмауэре.",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "bootstrap"
+        },
+        {
+          "id": "bootstrap.visualfx_profile",
+          "title": "Профиль визуальных эффектов",
+          "description": "Настраивает профиль визуальных эффектов (заглушка логики).",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "bootstrap"
+        },
+        {
+          "id": "bootstrap.sticky_keys_disable",
+          "title": "Отключить Sticky Keys",
+          "description": "Отключает залипание клавиш и связанные хоткеи.",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "bootstrap"
+        },
+        {
+          "id": "bootstrap.enhance_pointer_precision_disable",
+          "title": "Отключить Enhance pointer precision",
+          "description": "Отключает ускорение мыши.",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "bootstrap"
+        },
+        {
+          "id": "bootstrap.start_pins",
+          "title": "Пины Start",
+          "description": "Применяет рекомендуемую раскладку закреплений Start (заглушка логики).",
+          "appliesTo": [
+            "11"
+          ],
+          "default": true,
+          "stage": "bootstrap"
+        }
+      ]
+    },
+    {
+      "id": "appearance",
+      "title": "Оформление",
+      "items": [
+        {
+          "id": "appearance.theme_choice",
+          "title": "Цветовая тема",
+          "description": "Выбор Light/Dark влияет на обои рабочего стола и экран блокировки. Проводник обновляется «на лету».",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "ui"
+        }
+      ]
+    },
+    {
+      "id": "apps",
+      "title": "Приложения",
+      "items": [
+        {
+          "id": "apps.remove_uwp",
+          "title": "Удаление UWP-приложений",
+          "description": "Рекомендуемый набор: 3D Viewer, BingSearch, Clipchamp, Copilot, DevHome, Family, FeedbackHub, GetHelp/GetStarted, BingNews, OfficeHub, OneNote, Outlook (new), Paint, Solitaire, StickyNotes, Teams (MicrosoftTeams/MSTeams), ToDo, Wallet, Weather, Movies&TV, Xbox (TCUI/XboxApp/GameOverlay/GamingOverlay/IdentityProvider/SpeechToTextOverlay/GamingApp).",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "tweak"
+        },
+        {
+          "id": "apps.remove_capabilities",
+          "title": "Удаление Capabilities",
+          "description": "OneSync, Quick Assist, Steps Recorder (состав может отличаться).",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "tweak"
+        },
+        {
+          "id": "apps.remove_features",
+          "title": "Удаление Features",
+          "description": "Recall (и др. по версии ОС).",
+          "appliesTo": [
+            "11"
+          ],
+          "default": true,
+          "stage": "tweak"
+        },
+        {
+          "id": "apps.onedrive_remove",
+          "title": "Удаление и отключение OneDrive",
+          "description": "Убирает установщик/автозапуск и связанные ярлыки.",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "tweak"
+        },
+        {
+          "id": "apps.edge_make_uninstallable",
+          "title": "Сделать Microsoft Edge удаляемым",
+          "description": "Позволяет удалить Edge через «Установка и удаление программ».",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": false,
+          "stage": "tweak"
+        },
+        {
+          "id": "apps.edge_background_disable",
+          "title": "Отключить фоновую работу Microsoft Edge",
+          "description": "Запрещает фоновое выполнение Edge.",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "tweak"
+        },
+        {
+          "id": "apps.edge_startup_boost_disable",
+          "title": "Отключить Startup Boost для Microsoft Edge",
+          "description": "Отключает Startup Boost.",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "tweak"
+        }
+      ]
+    },
+    {
+      "id": "updates",
+      "title": "Обновления",
+      "items": [
+        {
+          "id": "updates.pause_policy_task",
+          "title": "Пауза + политика обновлений",
+          "description": "Мягкое отключение обновлений: задача PauseWindowsUpdate продлевает паузу на неделю циклически.",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "tweak"
+        },
+        {
+          "id": "updates.consumer_features_disable",
+          "title": "Отключить Consumer Features / рекомендации",
+          "description": "Отключает потребительские рекомендации и предложения.",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "tweak"
+        },
+        {
+          "id": "updates.search_suggestions_disable",
+          "title": "Отключить подсказки / рекомендации в поиске",
+          "description": "Убирает web/suggest контент в поиске.",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "tweak"
+        },
+        {
+          "id": "updates.widgets_disable",
+          "title": "Отключить News & Interests / Widgets",
+          "description": "Отключает виджеты/новости (в зависимости от ОС).",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "tweak"
+        }
+      ]
+    },
+    {
+      "id": "performance",
+      "title": "Производительность",
+      "items": [
+        {
+          "id": "perf.fast_startup_disable",
+          "title": "Отключить Fast Startup",
+          "description": "Отключает гибридное завершение работы (Fast Startup).",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "tweak"
+        }
+      ]
+    },
+    {
+      "id": "shell",
+      "title": "Интерфейс",
+      "items": [
+        {
+          "id": "shell.classic_context_menu",
+          "title": "Классическое контекстное меню",
+          "description": "Включает классическое контекстное меню (актуально для Windows 11).",
+          "appliesTo": [
+            "11"
+          ],
+          "default": true,
+          "stage": "tweak"
+        },
+        {
+          "id": "shell.show_file_extensions",
+          "title": "Показывать расширения файлов",
+          "description": "Включает отображение расширений в Проводнике.",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "tweak"
+        },
+        {
+          "id": "shell.hide_task_view",
+          "title": "Скрыть кнопку Task View",
+          "description": "Скрывает кнопку Task View на панели задач.",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "tweak"
+        },
+        {
+          "id": "shell.search_box_mode",
+          "title": "Режим поля поиска на панели задач",
+          "description": "Сворачивает поиск до иконки вместо длинной строки.",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "tweak"
+        },
+        {
+          "id": "shell.taskbar_end_task",
+          "title": "Добавить «Завершить задачу»",
+          "description": "Добавляет пункт завершения задачи в контекстное меню на панели задач.",
+          "appliesTo": [
+            "11"
+          ],
+          "default": true,
+          "stage": "tweak"
+        },
+        {
+          "id": "shell.tray_show_all_icons",
+          "title": "Показывать все иконки в трее",
+          "description": "Отключает скрытие значков в области уведомлений.",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "tweak"
+        }
+      ]
+    },
+    {
+      "id": "extras",
+      "title": "Дополнительно",
+      "items": [
+        {
+          "id": "extras.install_apps",
+          "title": "Установка рекомендуемого ПО",
+          "description": "AOMEI Backupper, Uninstall Tool, RustDesk.",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": false,
+          "stage": "tweak"
+        },
+        {
+          "id": "extras.install_toolbox",
+          "title": "Установка Toolbox",
+          "description": "Удобный инструмент для дальнейшей настройки системы.",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": false,
+          "stage": "tweak"
+        },
+        {
+          "id": "extras.activate_hwid",
+          "title": "Активация Windows по HWID",
+          "description": "Требуется интернет. Запуск один раз «при появлении интернета» (Scheduled Task: NetworkProfile/OnConnect + задержка).",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": false,
+          "stage": "tweak"
+        }
+      ]
+    }
+  ]
+}

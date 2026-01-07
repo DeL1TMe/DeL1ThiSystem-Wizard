@@ -1,0 +1,69 @@
+<Page x:Class="DeL1ThiSystem.ConfigurationWizard.Pages.DisclaimerPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="24">
+            <StackPanel VerticalAlignment="Center"
+                        HorizontalAlignment="Center"
+                        MaxWidth="600">
+
+                <TextBlock TextAlignment="Center"
+                           TextWrapping="NoWrap"
+                           FontSize="22"
+                           FontWeight="SemiBold"
+                           Margin="0,0,0,18">
+                    Добро пожаловать в универсальный мастер настройки!
+                </TextBlock>
+
+                <TextBlock TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           FontSize="15"
+                           LineHeight="22"
+                           Foreground="{StaticResource Brush.TextSecondary}">
+                    Данный мастер предназначен для подготовки системы и применения настроек после стадии OOBE. В процессе вы сможете выбрать параметры оформления системы, твики для неё и установить дополнительные компоненты в дальнейшем с помощью удобного Toolbox на рабочем столе. Рекомендуется внимательно ознакомиться с каждым этапом настройки, так как некоторые изменения могут повлиять на удобство дальнейшего взаимодействия с системой. Перед началом убедитесь, что имя вашей учётной записи не содержит символов кириллицы.
+                </TextBlock>
+
+                <TextBlock TextAlignment="Center"
+                           Margin="0,26,0,0"
+                           FontSize="15"
+                           Foreground="{StaticResource Brush.TextMuted}">
+                    Нажмите «Далее», чтобы продолжить настройку.
+                </TextBlock>
+
+            </StackPanel>
+        </Grid>
+
+        <Border Grid.Row="1"
+                Background="{StaticResource Brush.FooterBar}"
+                CornerRadius="0,0,16,16"
+                Padding="18,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0"
+                           Style="{StaticResource FooterNoteText}"
+                           TextWrapping="NoWrap"
+                           Margin="0,0,12,0">
+                    <Run Text="Примечание: не пропускайте настройку, провести её в будущем будет невозможно."/>
+                    <LineBreak/>
+                    <Run Text="Некоторые изменения будут применены после перезагрузки."/>
+                </TextBlock>
+
+                <Button Grid.Column="1"
+                        Style="{StaticResource ConceptPrimaryButton}"
+                        Content="Далее"
+                        VerticalAlignment="Center"
+                        Click="Next_Click"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Page>

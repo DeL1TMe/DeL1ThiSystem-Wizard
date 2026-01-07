@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "title": "Подготавливаем всё для дальнейшей работы…",
+  "steps": [
+    {
+      "id": "bootstrap.uac_disable",
+      "title": "Отключить UAC"
+    },
+    {
+      "id": "bootstrap.defender_disable",
+      "title": "Отключить Microsoft Defender"
+    },
+    {
+      "id": "bootstrap.smartscreen_disable",
+      "title": "Отключить SmartScreen"
+    },
+    {
+      "id": "bootstrap.webcontent_eval_disable",
+      "title": "Отключить Web Content Evaluation"
+    },
+    {
+      "id": "bootstrap.executionpolicy_remotesigned",
+      "title": "ExecutionPolicy: RemoteSigned"
+    },
+    {
+      "id": "bootstrap.remote_access_enable",
+      "title": "Remote Access"
+    },
+    {
+      "id": "bootstrap.long_paths_enable",
+      "title": "Включить длинные пути"
+    },
+    {
+      "id": "bootstrap.rdp_enable",
+      "title": "Включить RDP + правило Firewall"
+    },
+    {
+      "id": "bootstrap.visualfx_profile",
+      "title": "Профиль визуальных эффектов"
+    },
+    {
+      "id": "bootstrap.sticky_keys_disable",
+      "title": "Отключить Sticky Keys"
+    },
+    {
+      "id": "bootstrap.enhance_pointer_precision_disable",
+      "title": "Отключить Enhance pointer precision"
+    },
+    {
+      "id": "bootstrap.start_pins",
+      "title": "Пины Start"
+    }
+  ]
+}

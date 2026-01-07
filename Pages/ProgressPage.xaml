@@ -1,0 +1,113 @@
+<Page x:Class="DeL1ThiSystem.ConfigurationWizard.Pages.ProgressPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Background="Transparent">
+
+    <Page.Resources>
+        <Style x:Key="ProgressFooterText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="#A7B1C2"/>
+            <Setter Property="LineHeight" Value="16"/>
+        </Style>
+
+        <Style x:Key="ProgressRebootButton" TargetType="Button">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="#2A3345"/>
+            <Setter Property="BorderBrush" Value="#3A445A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border CornerRadius="6"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#36405A"/>
+                                <Setter Property="BorderBrush" Value="#4A5A7A"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#1F2636"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Page.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Main -->
+        <Grid Grid.Row="0" VerticalAlignment="Center">
+            <!-- Figma: progress bar 630x17, radius 8 -->
+            <StackPanel HorizontalAlignment="Center" Width="630">
+                <TextBlock FontSize="20" FontWeight="SemiBold" Foreground="White"
+                           Text="{Binding HeaderText}" TextAlignment="Center" Margin="0,0,0,8"/>
+
+                <TextBlock FontSize="14" Foreground="#C9D1DE"
+                           Text="{Binding CurrentStepText}" TextAlignment="Center" Opacity="0.95" Margin="0,0,0,18"/>
+
+                <!--
+                    Keep radii equal to half of the bar height to avoid awkward clipping.
+                    The visual target is the pill‑style bar from the concept.
+                -->
+                <!-- Progress (630x17, radius 8) -->
+                <Grid Margin="0,0,0,10" Width="630" Height="17" SnapsToDevicePixels="True" UseLayoutRounding="True">
+                    <!--
+                        WPF strokes are centered on the edge, so they always eat into the fill.
+                        To make the outline *read* as an outer stroke (as in the Figma concept),
+                        we inset the track/fill by half the stroke thickness.
+                    -->
+
+                    <!-- Outer outline (more expressed, hides edge roughness) -->
+                    <Rectangle RadiusX="8" RadiusY="8" Stroke="#6B7C93" StrokeThickness="2" Fill="Transparent" SnapsToDevicePixels="True"/>
+
+                    <!-- Track + fill, inset so the outline visually sits outside -->
+                    <Grid Margin="1" SnapsToDevicePixels="True">
+                        <Grid.Clip>
+                            <RectangleGeometry Rect="0,0,628,15" RadiusX="7" RadiusY="7"/>
+                        </Grid.Clip>
+
+                        <Rectangle RadiusX="7" RadiusY="7" Fill="#D9D9D9"/>
+                        <Rectangle RadiusX="7" RadiusY="7" Fill="#0078D4"
+                                   HorizontalAlignment="Left" Width="{Binding ProgressWidth}"/>
+                    </Grid>
+                </Grid>
+
+                <TextBlock FontSize="14" Foreground="#C9D1DE"
+                           Text="{Binding PercentText}" TextAlignment="Center" Opacity="0.9"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Footer -->
+        <Border Grid.Row="1" Height="60" Background="#141A2B" Opacity="0.95"
+                Visibility="{Binding FooterVisible}">
+            <Grid Margin="18,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" Style="{StaticResource ProgressFooterText}"
+                           Text="{Binding FooterText}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+
+                <Button Grid.Column="1" Content="Перезагрузить" Width="130" Height="34" Margin="16,0,0,0"
+                        Style="{StaticResource ProgressRebootButton}"
+                        Visibility="{Binding RebootVisible}"
+                        Click="Reboot_Click"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Page>

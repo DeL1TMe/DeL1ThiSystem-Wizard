@@ -1,0 +1,338 @@
+<Page x:Class="DeL1ThiSystem.ConfigurationWizard.Pages.MainPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Page.Resources>
+        <!-- Guaranteed scrollbar style (local) -->
+        <Style x:Key="LocalConceptScrollBar" TargetType="{x:Type ScrollBar}">
+            <Setter Property="Width" Value="8"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ScrollBar}">
+                        <Grid Margin="0,8,0,8" Background="Transparent" Width="{TemplateBinding Width}">
+                            <Border CornerRadius="4" Background="#1EFFFFFF" Margin="1,0,1,0"/>
+                            <Track x:Name="PART_Track" IsDirectionReversed="True">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.LineUpCommand" Opacity="0" IsHitTestVisible="False"/>
+                                </Track.DecreaseRepeatButton>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.LineDownCommand" Opacity="0" IsHitTestVisible="False"/>
+                                </Track.IncreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb>
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="{x:Type Thumb}">
+                                                <Border x:Name="bd" CornerRadius="4" Background="#80FFFFFF" Margin="1"/>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="bd" Property="Background" Value="#A0FFFFFF"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsDragging" Value="True">
+                                                        <Setter TargetName="bd" Property="Background" Value="#B0FFFFFF"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="LocalConceptScrollViewer" TargetType="{x:Type ScrollViewer}">
+            <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="HorizontalScrollBarVisibility" Value="Disabled"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ScrollViewer}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <ScrollContentPresenter Grid.Column="0"
+                                                    Margin="{TemplateBinding Padding}"/>
+
+                            <ScrollBar x:Name="PART_VerticalScrollBar"
+                                       Grid.Column="1"
+                                       Orientation="Vertical"
+                                       Maximum="{TemplateBinding ScrollableHeight}"
+                                       ViewportSize="{TemplateBinding ViewportHeight}"
+                                       Value="{TemplateBinding VerticalOffset}"
+                                       Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"
+                                       Style="{StaticResource LocalConceptScrollBar}"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Toggle animation template -->
+        <Style x:Key="ConceptToggle" TargetType="{x:Type ToggleButton}">
+            <Setter Property="Width" Value="52"/>
+            <Setter Property="Height" Value="26"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                        <Grid>
+                            <Border x:Name="Track" CornerRadius="13">
+                                <Border.Background>
+                                    <SolidColorBrush x:Name="TrackBrush" Color="#2AFFFFFF"/>
+                                </Border.Background>
+                            </Border>
+
+                            <Ellipse x:Name="Knob" Width="20" Height="20" Fill="#FFFFFFFF"
+                                     HorizontalAlignment="Left" Margin="3,0,0,0">
+                                <Ellipse.RenderTransform>
+                                    <TranslateTransform x:Name="KnobX" X="0"/>
+                                </Ellipse.RenderTransform>
+                            </Ellipse>
+                        </Grid>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="KnobX"
+                                                             Storyboard.TargetProperty="X"
+                                                             To="26" Duration="0:0:0.14">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <ColorAnimation Storyboard.TargetName="TrackBrush"
+                                                            Storyboard.TargetProperty="Color"
+                                                            To="#2064CD" Duration="0:0:0.14"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="KnobX"
+                                                             Storyboard.TargetProperty="X"
+                                                             To="0" Duration="0:0:0.14">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <ColorAnimation Storyboard.TargetName="TrackBrush"
+                                                            Storyboard.TargetProperty="Color"
+                                                            To="#2AFFFFFF" Duration="0:0:0.14"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Knob" Property="Opacity" Value="0.96"/>
+                            </Trigger>
+
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Track" Property="Opacity" Value="0.4"/>
+                                <Setter TargetName="Knob" Property="Opacity" Value="0.6"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Page.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+
+            <ScrollViewer x:Name="MainScroll"
+                          Style="{StaticResource LocalConceptScrollViewer}"
+                          Margin="24,24,10,0"
+                          Padding="0"
+                          ScrollChanged="MainScroll_ScrollChanged">
+                <!-- right padding so content doesn't touch the scrollbar -->
+                <StackPanel Margin="0,0,16,0">
+
+                    <TextBlock Style="{StaticResource Txt.H1}" Margin="0,0,0,0">
+                        Благодарим за установку!
+                    </TextBlock>
+
+                    <TextBlock Style="{StaticResource Txt.Body14}" Margin="0,0,0,18">
+                        Выберите параметры, которые необходимо применить к системе.
+                    </TextBlock>
+
+                    <TextBlock Style="{StaticResource Txt.Section}" Margin="0,0,0,10">Выберите тему:</TextBlock>
+
+                    <Grid Margin="0,0,0,22">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="18"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Card: inset image + stroke overlay -->
+                        <Grid Grid.Column="0" Height="172" Cursor="Hand" MouseLeftButtonDown="ThemeLight_Click">
+                            <Border CornerRadius="14" Background="#0FFFFFFF"/>
+                            <Border x:Name="ThemeLightClip"
+                                    CornerRadius="14"
+                                    ClipToBounds="True"
+                                    SnapsToDevicePixels="True"
+                                    UseLayoutRounding="True">
+                                <!--
+                                    IMPORTANT:
+                                    Border CornerRadius does NOT clip child content in WPF.
+                                    To get truly rounded wallpaper thumbnails we paint them via ImageBrush.
+                                -->
+                                <!-- Rectangle provides reliable rounded clipping for the wallpaper thumbnails -->
+                                <Rectangle x:Name="ThemeLightInset" Margin="1.2" RadiusX="14" RadiusY="14" SnapsToDevicePixels="True">
+                                    <Rectangle.Fill>
+                                        <ImageBrush x:Name="ThemeLightBrush" Stretch="UniformToFill"/>
+                                    </Rectangle.Fill>
+                                </Rectangle>
+                            </Border>
+                            <Border CornerRadius="14"
+                                    BorderThickness="2"
+                                    BorderBrush="#20FFFFFF"
+                                    Background="Transparent"
+                                    IsHitTestVisible="False"/>
+                            <Border x:Name="ThemeLightStroke"
+                                    CornerRadius="14"
+                                    BorderThickness="2"
+                                    BorderBrush="{StaticResource Brush.Accent}"
+                                    Opacity="0"
+                                    Background="Transparent"
+                                    IsHitTestVisible="False"/>
+                        </Grid>
+
+                        <Grid Grid.Column="2" Height="172" Cursor="Hand" MouseLeftButtonDown="ThemeDark_Click">
+                            <Border CornerRadius="14" Background="#0FFFFFFF"/>
+                            <Border x:Name="ThemeDarkClip"
+                                    CornerRadius="14"
+                                    ClipToBounds="True"
+                                    SnapsToDevicePixels="True"
+                                    UseLayoutRounding="True">
+                                <Rectangle x:Name="ThemeDarkInset" Margin="1.2" RadiusX="14" RadiusY="14" SnapsToDevicePixels="True">
+                                    <Rectangle.Fill>
+                                        <ImageBrush x:Name="ThemeDarkBrush" Stretch="UniformToFill"/>
+                                    </Rectangle.Fill>
+                                </Rectangle>
+                            </Border>
+                            <Border CornerRadius="14"
+                                    BorderThickness="2"
+                                    BorderBrush="#20FFFFFF"
+                                    Background="Transparent"
+                                    IsHitTestVisible="False"/>
+                            <Border x:Name="ThemeDarkStroke"
+                                    CornerRadius="14"
+                                    BorderThickness="2"
+                                    BorderBrush="{StaticResource Brush.Accent}"
+                                    Opacity="0"
+                                    Background="Transparent"
+                                    IsHitTestVisible="False"/>
+                        </Grid>
+                    </Grid>
+
+                    <TextBlock Style="{StaticResource Txt.Section}" Margin="0,0,0,10">
+                        Выберите необходимые твики:
+                    </TextBlock>
+
+                    <ItemsControl x:Name="TweaksList" ItemsSource="{Binding TweakGroups}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="0,0,0,18">
+                                <TextBlock Style="{StaticResource Txt.Section}" Text="{Binding Title}" Margin="0,0,0,6"/>
+
+                                <TextBlock Style="{StaticResource Txt.Body14}" Text="{Binding Description}"
+                                           Opacity="0.75" TextWrapping="Wrap" Margin="0,0,0,10"
+                                           Visibility="{Binding Description, Converter={StaticResource NullToVisibility}}"/>
+
+                                <ItemsControl ItemsSource="{Binding Children}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,0,0,12">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <StackPanel Grid.Column="0" Margin="0,0,18,0">
+                                                    <TextBlock Style="{StaticResource Txt.ItemTitle}" Text="{Binding Title}" Margin="0,0,0,2"/>
+                                                    <TextBlock Style="{StaticResource Txt.ItemDesc}" Text="{Binding Description}"
+                                                               Opacity="0.8" TextWrapping="Wrap" />
+                                                </StackPanel>
+
+                                                <ToggleButton Grid.Column="1"
+                                                              Style="{StaticResource ConceptToggle}"
+                                                              IsChecked="{Binding IsChecked}"
+                                                              IsEnabled="{Binding IsEnabled}"
+                                                              Checked="Toggle_Checked"
+                                                              Unchecked="Toggle_Checked"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                </StackPanel>
+            </ScrollViewer>
+
+            <Border x:Name="TopFadeOverlay"
+                    Height="84"
+                    VerticalAlignment="Top"
+                    IsHitTestVisible="False"
+                    Margin="0,24,28,0"
+                    Background="{StaticResource Brush.TopFade}"
+                    Opacity="0"/>
+
+            <Border x:Name="BottomFadeOverlay"
+                    Height="140"
+                    VerticalAlignment="Bottom"
+                    IsHitTestVisible="False"
+                    Margin="0,0,28,0"
+                    Background="{StaticResource Brush.BottomFade}"
+                    Opacity="1"/>
+        </Grid>
+
+        <Border Grid.Row="1"
+                Background="{StaticResource Brush.FooterBar}"
+                CornerRadius="0,0,16,16"
+                Padding="18,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0"
+                           Style="{StaticResource FooterNoteText}">
+                    Примечание: пользовательские твики применяются к текущему профилю. Настройте локальную учётную запись заранее.
+                </TextBlock>
+
+                <Button Grid.Column="1"
+                        Style="{StaticResource ConceptSecondaryButton}"
+                        Content="Назад"
+                        Click="Back_Click"/>
+
+                <Button Grid.Column="3"
+                        Style="{StaticResource ConceptPrimaryButton}"
+                        Content="Применить"
+                        Click="Apply_Click"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Page>
