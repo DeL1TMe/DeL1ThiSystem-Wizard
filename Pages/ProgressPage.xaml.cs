@@ -71,16 +71,21 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
     private async Task RunAsync()
     {
         int total = Math.Max(1, _steps.Length);
+        var start = DateTime.UtcNow;
+        int stepDelay = Math.Clamp(7000 / total, 400, 1000);
 
         for (int i = 0; i < _steps.Length; i++)
         {
             CurrentStepText = _steps[i].Title;
             double p = (double)(i) / total;
             SetProgress(p);
-            await Task.Delay(120);
+            await Task.Delay(stepDelay);
         }
 
         SetProgress(1);
+        var elapsed = (int)(DateTime.UtcNow - start).TotalMilliseconds;
+        if (elapsed < 6000)
+            await Task.Delay(6000 - elapsed);
         if (_showReboot)
             RebootEnabled = true;
         if (_showFooter)
