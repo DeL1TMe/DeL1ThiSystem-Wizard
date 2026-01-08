@@ -2,9 +2,14 @@
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.IO;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Threading;
+using System.Windows.Media.Animation;
+using DeL1ThiSystem.ConfigurationWizard.Tweaks;
 
 namespace DeL1ThiSystem.ConfigurationWizard.Pages;
 
@@ -22,6 +27,16 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
     private double _progressWidth = 0;
     private bool _rebootEnabled = false;
     private bool _isCompleted = false;
+    private readonly DispatcherTimer _waitTimer;
+    private CancellationTokenSource? _slowStepCts;
+    private bool _slowNoticeShown;
+    private readonly string _headerTextBase;
+    private readonly string _internetWaitMarker = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+        "DeL1ThiSystem",
+        "Wizard",
+        "waiting_internet.marker");
+    private string _currentStepTitleBase = "";
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -61,9 +76,24 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
         _autoNavigate = autoNavigate;
 
         HeaderText = headerText;
+        _headerTextBase = headerText;
         if (!string.IsNullOrWhiteSpace(footerText))
             FooterText = footerText;
         DataContext = this;
+
+        _waitTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(500)
+        };
+        _waitTimer.Tick += (_, __) =>
+        {
+            if (IsCompleted || string.IsNullOrWhiteSpace(_currentStepTitleBase))
+                return;
+            if (File.Exists(_internetWaitMarker))
+                CurrentStepText = $"{_currentStepTitleBase} (ожидание интернета...)";
+            else
+                CurrentStepText = _currentStepTitleBase;
+        };
 
         Loaded += async (_, __) => await RunAsync();
     }
@@ -72,33 +102,52 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
     {
         int total = Math.Max(1, _steps.Length);
         var start = DateTime.UtcNow;
-        int stepDelay = Math.Clamp(7000 / total, 400, 1000);
-
-        for (int i = 0; i < _steps.Length; i++)
+        try
         {
-            CurrentStepText = _steps[i].Title;
-            double p = (double)(i) / total;
-            SetProgress(p);
-            await Task.Delay(stepDelay);
+            _waitTimer.Start();
+            for (int i = 0; i < _steps.Length; i++)
+            {
+                _currentStepTitleBase = _steps[i].Title;
+                CurrentStepText = _currentStepTitleBase;
+                StartSlowNoticeTimer();
+                double p = (double)(i) / total;
+                SetProgress(p);
+                if (!string.Equals(_steps[i].Id, "noop", StringComparison.OrdinalIgnoreCase))
+                {
+                    await Task.Run(() => TweakExecutor.Execute(_steps[i].Id, _state.OsFamily, _state.ThemeChoice));
+                }
+                StopSlowNoticeTimer();
+                await Task.Delay(150);
+            }
+
+            SetProgress(1);
+            var elapsed = (int)(DateTime.UtcNow - start).TotalMilliseconds;
+            if (elapsed < 800)
+                await Task.Delay(800 - elapsed);
+            if (_showReboot)
+                RebootEnabled = true;
+            if (_showFooter)
+            {
+                HeaderText = "Задача выполнена";
+                CurrentStepText = "Требуется перезагрузка";
+                IsCompleted = true;
+                if (_showReboot)
+                {
+                    TryWriteCompletionMarker();
+                    TryDeleteWizardTask();
+                }
+            }
+
+            if (!_showFooter || _autoNavigate)
+            {
+                _state.BootstrapApplied = true;
+                ((MainWindow)Application.Current.MainWindow).NavigateToDisclaimer();
+            }
         }
-
-        SetProgress(1);
-        var elapsed = (int)(DateTime.UtcNow - start).TotalMilliseconds;
-        if (elapsed < 6000)
-            await Task.Delay(6000 - elapsed);
-        if (_showReboot)
-            RebootEnabled = true;
-        if (_showFooter)
+        finally
         {
-            HeaderText = "Задача выполнена";
-            CurrentStepText = "Требуется перезагрузка";
-            IsCompleted = true;
-        }
-
-        if (!_showFooter || _autoNavigate)
-        {
-            _state.BootstrapApplied = true;
-            ((MainWindow)Application.Current.MainWindow).NavigateToDisclaimer();
+            _waitTimer.Stop();
+            StopSlowNoticeTimer();
         }
     }
 
@@ -135,4 +184,105 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
 
     private void OnPropertyChanged([CallerMemberName] string? name = null) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
+    private void StartSlowNoticeTimer()
+    {
+        _slowNoticeShown = false;
+        _slowStepCts?.Cancel();
+        _slowStepCts?.Dispose();
+        _slowStepCts = new CancellationTokenSource();
+        var token = _slowStepCts.Token;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(30), token);
+            }
+            catch
+            {
+                return;
+            }
+
+            if (token.IsCancellationRequested)
+                return;
+
+            Dispatcher.Invoke(() =>
+            {
+                if (IsCompleted)
+                    return;
+                _slowNoticeShown = true;
+                FadeHeaderText("Нет, мы не зависли — ожидайте...");
+            });
+        });
+    }
+
+    private void StopSlowNoticeTimer()
+    {
+        _slowStepCts?.Cancel();
+        _slowStepCts?.Dispose();
+        _slowStepCts = null;
+
+        if (_slowNoticeShown && !IsCompleted)
+        {
+            FadeHeaderText(_headerTextBase, force: true);
+            _slowNoticeShown = false;
+        }
+    }
+
+    private void FadeHeaderText(string newText, bool force = false)
+    {
+        if (HeaderTextBlock == null || (!force && string.Equals(HeaderText, newText, StringComparison.Ordinal)))
+        {
+            HeaderText = newText;
+            return;
+        }
+
+        var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromSeconds(0.18));
+        fadeOut.Completed += (_, __) =>
+        {
+            HeaderText = newText;
+            var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromSeconds(0.18));
+            HeaderTextBlock.BeginAnimation(UIElement.OpacityProperty, fadeIn);
+        };
+        HeaderTextBlock.BeginAnimation(UIElement.OpacityProperty, fadeOut);
+    }
+
+    private static void TryWriteCompletionMarker()
+    {
+        try
+        {
+            var baseDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+                "DeL1ThiSystem",
+                "Wizard");
+            Directory.CreateDirectory(baseDir);
+            var marker = Path.Combine(baseDir, $"completed_{Environment.UserName}.marker");
+            if (!File.Exists(marker))
+                File.WriteAllText(marker, DateTime.UtcNow.ToString("O"));
+        }
+        catch
+        {
+        }
+    }
+
+    private static void TryDeleteWizardTask()
+    {
+        try
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = "schtasks.exe",
+                Arguments = "/Delete /TN \"DeL1ThiSystem\\Wizard\" /F",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden
+            };
+            using var proc = Process.Start(psi);
+            proc?.WaitForExit(3000);
+        }
+        catch
+        {
+        }
+    }
 }

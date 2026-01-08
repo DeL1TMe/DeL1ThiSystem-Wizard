@@ -32,13 +32,15 @@ public static class TweaksJsonLoader
             foreach (var it in g.Items)
             {
                 bool compatible = it.AppliesTo == null || it.AppliesTo.Count == 0 || it.AppliesTo.Contains(osFamily);
+                bool supported = IsTweakSupported(it, out var supportNote);
+                var description = BuildDescription(it, osFamily, compatible, supported, supportNote);
                 groupNode.Children.Add(new TweakNode
                 {
                     Id = it.Id,
                     Title = it.Title,
-                    Description = it.Description,
-                    IsChecked = it.Default,
-                    IsEnabled = compatible,
+                    Description = description,
+                    IsChecked = compatible && supported && it.Default,
+                    IsEnabled = compatible && supported,
                     AppliesTo = string.Join(",", it.AppliesTo ?? new()),
                     Stage = it.Stage
                 });
@@ -71,5 +73,40 @@ public static class TweaksJsonLoader
             ?? throw new FileNotFoundException($"Embedded resource not found: {resourceName}");
         using var r = new StreamReader(s);
         return r.ReadToEnd();
+    }
+
+    private static string BuildDescription(TweakItemJson item, string osFamily, bool compatible, bool supported, string supportNote)
+    {
+        var description = item.Description ?? string.Empty;
+        var notes = new List<string>();
+
+        if (!compatible)
+        {
+            var targetOs = osFamily == "11" ? "Windows 11" : "Windows 10";
+            var allowed = item.AppliesTo == null || item.AppliesTo.Count == 0
+                ? string.Empty
+                : string.Join(", ", item.AppliesTo.Select(x => x == "11" ? "Windows 11" : "Windows 10"));
+            var reason = string.IsNullOrWhiteSpace(allowed)
+                ? $"Недоступно для {targetOs}."
+                : $"Недоступно для {targetOs}. Доступно только для {allowed}.";
+            notes.Add(reason);
+        }
+
+        if (!supported && !string.IsNullOrWhiteSpace(supportNote))
+            notes.Add(supportNote);
+
+        if (notes.Count == 0)
+            return description;
+
+        if (string.IsNullOrWhiteSpace(description))
+            return string.Join("\n", notes);
+
+        return $"{description}\n{string.Join("\n", notes)}";
+    }
+
+    private static bool IsTweakSupported(TweakItemJson item, out string note)
+    {
+        note = "";
+        return true;
     }
 }

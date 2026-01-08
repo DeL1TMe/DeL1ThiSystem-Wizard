@@ -3,10 +3,6 @@
   "title": "Ведётся подготовка ОС для дальнейшей настройки…",
   "steps": [
     {
-      "id": "bootstrap.uac_disable",
-      "title": "Отключить UAC"
-    },
-    {
       "id": "bootstrap.defender_disable",
       "title": "Отключить Microsoft Defender"
     },
@@ -43,12 +39,16 @@
       "title": "Отключить Sticky Keys"
     },
     {
+      "id": "bootstrap.restore_disable_cleanup",
+      "title": "Отключить восстановление и очистить Windows.old"
+    },
+    {
       "id": "bootstrap.enhance_pointer_precision_disable",
       "title": "Отключить Enhance pointer precision"
     },
     {
-      "id": "bootstrap.start_pins",
-      "title": "Пины Start"
+      "id": "bootstrap.wallpaper_quality_100",
+      "title": "Качество обоев 100%"
     }
   ]
 }

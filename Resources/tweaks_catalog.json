@@ -7,18 +7,6 @@
       "note": "Будет применено автоматически при первом запуске мастера.",
       "items": [
         {
-          "id": "bootstrap.uac_disable",
-          "title": "Отключить UAC",
-          "description": "Отключает контроль учётных записей, чтобы не мешал запуску компонентов.",
-          "appliesTo": [
-            "10",
-            "11"
-          ],
-          "default": true,
-          "stage": "bootstrap",
-          "oobePreferred": true
-        },
-        {
           "id": "bootstrap.defender_disable",
           "title": "Отключить Microsoft Defender",
           "description": "Отключает Defender и скрывает значок/уведомления.",
@@ -132,10 +120,22 @@
           "stage": "bootstrap"
         },
         {
-          "id": "bootstrap.start_pins",
-          "title": "Пины Start",
-          "description": "Применяет рекомендуемую раскладку закреплений Start (заглушка логики).",
+          "id": "bootstrap.wallpaper_quality_100",
+          "title": "Качество обоев 100%",
+          "description": "Устанавливает качество JPEG для обоев (JPEGImportQuality=100).",
           "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "bootstrap"
+        },
+        {
+          "id": "bootstrap.start_pins",
+          "title": "Очистить плитки Пуска",
+          "description": "Очищает плитки и применяет пустую раскладку Start.",
+          "appliesTo": [
+            "10",
             "11"
           ],
           "default": true,
@@ -150,7 +150,7 @@
         {
           "id": "apps.remove_uwp",
           "title": "Удаление UWP-приложений",
-          "description": "3D Viewer, BingSearch, Clipchamp, Copilot, DevHome, Family, FeedbackHub, GetHelp/GetStarted, BingNews, OfficeHub, OneNote, Outlook (new), Paint, Solitaire, StickyNotes, Teams (MicrosoftTeams/MSTeams), ToDo, Wallet, Weather, Movies&TV, Xbox (TCUI/XboxApp/GameOverlay/GamingOverlay/IdentityProvider/SpeechToTextOverlay/GamingApp).",
+          "description": "Microsoft Store, 3D Viewer, BingSearch, Clipchamp, Copilot, DevHome, Family, FeedbackHub, GetHelp/GetStarted, BingNews, OfficeHub, OneNote, Outlook (new), Paint, Solitaire, StickyNotes, Teams (MicrosoftTeams/MSTeams), ToDo, Wallet, Weather, Movies&TV, Xbox (TCUI/XboxApp/GameOverlay/GamingOverlay/IdentityProvider/SpeechToTextOverlay/GamingApp), Yandex Music.",
           "appliesTo": [
             "10",
             "11"
@@ -334,6 +334,71 @@
           "description": "Сворачивает поиск до иконки вместо длинной строки.",
           "appliesTo": [
             "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "tweak"
+        },
+        {
+          "id": "shell.start_tiles_clear",
+          "title": "Очистить плитки Пуска",
+          "description": "Очищает плитки и применяет пустую раскладку Start.",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "tweak"
+        },
+        {
+          "id": "shell.explorer_launch_to_this_pc",
+          "title": "Проводник открывается в «Этот компьютер»",
+          "description": "Открывает Проводник в «Этот компьютер» вместо «Быстрого доступа».",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "tweak"
+        },
+        {
+          "id": "shell.desktop_icons_minimal",
+          "title": "Иконки рабочего стола: Этот компьютер + Корзина",
+          "description": "Оставляет на рабочем столе только «Этот компьютер» и «Корзину».",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "tweak"
+        },
+        {
+          "id": "shell.remove_edge_desktop_shortcut",
+          "title": "Удалить ярлык Microsoft Edge с рабочего стола",
+          "description": "Удаляет ярлык Edge на рабочем столе пользователя и Public.",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "tweak"
+        },
+        {
+          "id": "shell.taskbar_clear_pins",
+          "title": "Очистить закреплённые иконки панели задач",
+          "description": "Удаляет все закрепления на панели задач для текущего пользователя.",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "tweak"
+        },
+        {
+          "id": "shell.win11_start_recommended_disable",
+          "title": "Скрытие рекомендаций и недавнего",
+          "description": "Скрывает рекомендации в Пуске, ставит режим \"Больше закреплённых\", убирает недавние в Проводнике.",
+          "appliesTo": [
             "11"
           ],
           "default": true,

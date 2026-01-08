@@ -1,4 +1,4 @@
-<Page x:Class="DeL1ThiSystem.ConfigurationWizard.Pages.DisclaimerPage"
+﻿<Page x:Class="DeL1ThiSystem.ConfigurationWizard.Pages.DisclaimerPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
@@ -22,7 +22,7 @@
 
                 <TextBlock Style="{StaticResource Txt.Body14}"
                            TextAlignment="Center"
-                           Foreground="{StaticResource Brush.TextSecondary}">
+                           Foreground="{DynamicResource Brush.TextSecondary}">
                     Данный мастер предназначен для подготовки системы и применения настроек после стадии OOBE. В процессе вы сможете выбрать параметры оформления системы, твики для неё и установить дополнительные компоненты в дальнейшем с помощью удобного Toolbox на рабочем столе. Рекомендуем внимательно ознакомиться с каждым этапом настройки, так как некоторые изменения могут повлиять на удобство взаимодействия с системой. Перед началом убедитесь, что имя учётной записи не содержит символов кириллицы.
                 </TextBlock>
 
@@ -36,7 +36,7 @@
         </Grid>
 
         <Border Grid.Row="1"
-                Background="{StaticResource Brush.FooterBar}"
+                Background="{DynamicResource Brush.FooterBar}"
                 CornerRadius="0,0,16,16"
                 Padding="18,12">
             <Grid>
@@ -61,3 +61,4 @@
         </Border>
     </Grid>
 </Page>
+

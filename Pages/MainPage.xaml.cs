@@ -85,12 +85,18 @@ public partial class MainPage : Page
     {
         _state.ThemeChoice = "light";
         ApplyThemeSelectionVisuals();
+        ThemeManager.ApplyTheme(_state.ThemeChoice);
+        WallpaperManager.ApplyTheme(_state.ThemeChoice);
+        TweakExecutor.ApplyWindowsTheme(_state.ThemeChoice);
     }
 
     private void ThemeDark_Click(object sender, RoutedEventArgs e)
     {
         _state.ThemeChoice = "dark";
         ApplyThemeSelectionVisuals();
+        ThemeManager.ApplyTheme(_state.ThemeChoice);
+        WallpaperManager.ApplyTheme(_state.ThemeChoice);
+        TweakExecutor.ApplyWindowsTheme(_state.ThemeChoice);
     }
 
     private void UpdateFadeOverlays()
@@ -126,15 +132,19 @@ public partial class MainPage : Page
             .Select(i => (i.Id, i.Title))
             .ToArray();
 
+        var themeStep = ("ui.color_theme", "Применяем тему");
+        if (!steps.Any(s => string.Equals(s.Id, themeStep.Item1, StringComparison.OrdinalIgnoreCase)))
+            steps = new[] { themeStep }.Concat(steps).ToArray();
+
         if (steps.Length == 0)
-            steps = new[] { ("noop", "Применяем выбранные настройки") };
+            steps = new[] { ("noop", "Применяем твики") };
 
         string footerNote =
             "Примечание: используйте Toolbox для продолжения настройки системы.\n" +
             "Когда закончите — создайте резервную копию в AOMEI Backuper.";
 
         ((MainWindow)Application.Current.MainWindow).Frame.Navigate(
-            new ProgressPage(steps, "Применяем твики", showFooter: true, showReboot: true, footerText: footerNote));
+            new ProgressPage(steps, "Применяем выбранные настройки", showFooter: true, showReboot: true, footerText: footerNote));
     }
 
     private void Toggle_Checked(object sender, RoutedEventArgs e)
