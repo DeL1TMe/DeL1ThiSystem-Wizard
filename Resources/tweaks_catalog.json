@@ -7,18 +7,6 @@
       "note": "Будет применено автоматически при первом запуске мастера.",
       "items": [
         {
-          "id": "bootstrap.uac_disable",
-          "title": "Отключить UAC",
-          "description": "Отключает контроль учётных записей, чтобы не мешал запуску компонентов.",
-          "appliesTo": [
-            "10",
-            "11"
-          ],
-          "default": true,
-          "stage": "bootstrap",
-          "oobePreferred": true
-        },
-        {
           "id": "bootstrap.defender_disable",
           "title": "Отключить Microsoft Defender",
           "description": "Отключает Defender и скрывает значок/уведомления.",

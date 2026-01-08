@@ -3,10 +3,6 @@
   "title": "Ведётся подготовка ОС для дальнейшей настройки…",
   "steps": [
     {
-      "id": "bootstrap.uac_disable",
-      "title": "Отключить UAC"
-    },
-    {
       "id": "bootstrap.defender_disable",
       "title": "Отключить Microsoft Defender"
     },
