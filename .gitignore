@@ -401,3 +401,4 @@ FodyWeavers.xsd
 *.sln.iml
 /publish-framework
 /publish-selfcontained
+/source_windows
