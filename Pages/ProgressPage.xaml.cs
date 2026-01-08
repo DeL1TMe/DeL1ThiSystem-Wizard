@@ -75,41 +75,49 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
     {
         int total = Math.Max(1, _steps.Length);
         var start = DateTime.UtcNow;
+        var mainWindow = Application.Current.MainWindow as MainWindow;
+        mainWindow?.SetExecutionLock(true);
 
-        for (int i = 0; i < _steps.Length; i++)
+        try
         {
-            CurrentStepText = _steps[i].Title;
-            double p = (double)(i) / total;
-            SetProgress(p);
-            if (!string.Equals(_steps[i].Id, "noop", StringComparison.OrdinalIgnoreCase))
+            for (int i = 0; i < _steps.Length; i++)
             {
-                await Task.Run(() => TweakExecutor.Execute(_steps[i].Id, _state.OsFamily));
+                CurrentStepText = _steps[i].Title;
+                double p = (double)(i) / total;
+                SetProgress(p);
+                if (!string.Equals(_steps[i].Id, "noop", StringComparison.OrdinalIgnoreCase))
+                {
+                    await Task.Run(() => TweakExecutor.Execute(_steps[i].Id, _state.OsFamily));
+                }
+                await Task.Delay(150);
             }
-            await Task.Delay(150);
-        }
 
-        SetProgress(1);
-        var elapsed = (int)(DateTime.UtcNow - start).TotalMilliseconds;
-        if (elapsed < 800)
-            await Task.Delay(800 - elapsed);
-        if (_showReboot)
-            RebootEnabled = true;
-        if (_showFooter)
-        {
-            HeaderText = "Задача выполнена";
-            CurrentStepText = "Требуется перезагрузка";
-            IsCompleted = true;
+            SetProgress(1);
+            var elapsed = (int)(DateTime.UtcNow - start).TotalMilliseconds;
+            if (elapsed < 800)
+                await Task.Delay(800 - elapsed);
             if (_showReboot)
+                RebootEnabled = true;
+            if (_showFooter)
             {
-                TryWriteCompletionMarker();
-                TryDeleteWizardTask();
+                HeaderText = "Задача выполнена";
+                CurrentStepText = "Требуется перезагрузка";
+                IsCompleted = true;
+                if (_showReboot)
+                {
+                    TryWriteCompletionMarker();
+                    TryDeleteWizardTask();
+                }
+            }
+
+            if (!_showFooter || _autoNavigate)
+            {
+                _state.BootstrapApplied = true;
+                ((MainWindow)Application.Current.MainWindow).NavigateToDisclaimer();
             }
         }
-
-        if (!_showFooter || _autoNavigate)
+        finally
         {
-            _state.BootstrapApplied = true;
-            ((MainWindow)Application.Current.MainWindow).NavigateToDisclaimer();
         }
     }
 

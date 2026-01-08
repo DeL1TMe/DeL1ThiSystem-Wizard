@@ -12,8 +12,7 @@
         SnapsToDevicePixels="True"
         UseLayoutRounding="True"
         Loaded="Window_Loaded"
-        Closing="Window_Closing"
-        MouseLeftButtonDown="Window_MouseLeftButtonDown">
+        Closing="Window_Closing">
 
     <shell:WindowChrome.WindowChrome>
         <shell:WindowChrome CaptionHeight="0"
@@ -23,15 +22,23 @@
     </shell:WindowChrome.WindowChrome>
 
 
-    <Border CornerRadius="14"
-            Background="{StaticResource Brush.WindowBg}"
-            BorderBrush="#2A3345"
-            BorderThickness="1"
-            ClipToBounds="True"
-            SnapsToDevicePixels="True"
-            UseLayoutRounding="True">
-        <Grid>
-        <Grid x:Name="MainContent" Margin="12">
+    <Grid x:Name="RootGrid" Background="Transparent">
+        <Grid x:Name="InteractionBlocker" Visibility="Collapsed" Background="Transparent" IsHitTestVisible="True"/>
+
+        <Border x:Name="WindowCard"
+                Width="720"
+                Height="800"
+                CornerRadius="14"
+                Background="{StaticResource Brush.WindowBg}"
+                BorderBrush="#2A3345"
+                BorderThickness="1"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                ClipToBounds="True"
+                SnapsToDevicePixels="True"
+                UseLayoutRounding="True">
+            <Grid>
+            <Grid x:Name="MainContent" Margin="12">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
@@ -48,7 +55,8 @@
                        HorizontalAlignment="Left"
                        Stretch="Uniform"/>
 
-                <Button Grid.Column="1"
+                <Button x:Name="HeaderCloseButton"
+                        Grid.Column="1"
                         Style="{StaticResource HeaderCloseButton}"
                         Content="&#xE8BB;"
                         FontFamily="Segoe MDL2 Assets"
@@ -89,4 +97,5 @@
         </Grid>
     </Grid>
     </Border>
+    </Grid>
 </Window>

@@ -1,8 +1,8 @@
 using System;
 using System.Windows;
-using System.Windows.Input;
 using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
+using System.Windows.Media;
 using DeL1ThiSystem.ConfigurationWizard.Pages;
 using DeL1ThiSystem.ConfigurationWizard.Tweaks;
 
@@ -11,6 +11,9 @@ namespace DeL1ThiSystem.ConfigurationWizard;
 public partial class MainWindow : Window
 {
     private bool _allowClose;
+    private bool _executionLock;
+    private WindowState _prevState;
+    private bool _prevTopmost;
 
     public MainWindow()
     {
@@ -39,6 +42,7 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
+        SetExecutionLock(true);
         var app = (App)Application.Current;
 
         if (!app.State.BootstrapApplied)
@@ -95,9 +99,28 @@ public partial class MainWindow : Window
         Close();
     }
 
-    private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    public void SetExecutionLock(bool enabled)
     {
-        if (e.ButtonState == MouseButtonState.Pressed)
-            DragMove();
+        if (_executionLock == enabled)
+            return;
+
+        _executionLock = enabled;
+
+        if (enabled)
+        {
+            _prevState = WindowState;
+            _prevTopmost = Topmost;
+            WindowState = WindowState.Maximized;
+            Topmost = true;
+            RootGrid.Background = new SolidColorBrush(Color.FromArgb(180, 0, 0, 0));
+            InteractionBlocker.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            WindowState = _prevState;
+            Topmost = _prevTopmost;
+            RootGrid.Background = Brushes.Transparent;
+            InteractionBlocker.Visibility = Visibility.Collapsed;
+        }
     }
 }
