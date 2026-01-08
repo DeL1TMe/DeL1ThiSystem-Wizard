@@ -2,6 +2,8 @@
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.IO;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -93,6 +95,11 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
             HeaderText = "Задача выполнена";
             CurrentStepText = "Требуется перезагрузка";
             IsCompleted = true;
+            if (_showReboot)
+            {
+                TryWriteCompletionMarker();
+                TryDeleteWizardTask();
+            }
         }
 
         if (!_showFooter || _autoNavigate)
@@ -135,4 +142,42 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
 
     private void OnPropertyChanged([CallerMemberName] string? name = null) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
+    private static void TryWriteCompletionMarker()
+    {
+        try
+        {
+            var baseDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+                "DeL1ThiSystem",
+                "Wizard");
+            Directory.CreateDirectory(baseDir);
+            var marker = Path.Combine(baseDir, $"completed_{Environment.UserName}.marker");
+            if (!File.Exists(marker))
+                File.WriteAllText(marker, DateTime.UtcNow.ToString("O"));
+        }
+        catch
+        {
+        }
+    }
+
+    private static void TryDeleteWizardTask()
+    {
+        try
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = "schtasks.exe",
+                Arguments = "/Delete /TN \"DeL1ThiSystem\\Wizard\" /F",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden
+            };
+            using var proc = Process.Start(psi);
+            proc?.WaitForExit(3000);
+        }
+        catch
+        {
+        }
+    }
 }
