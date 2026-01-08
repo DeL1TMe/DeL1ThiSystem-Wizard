@@ -32,12 +32,13 @@ public static class TweaksJsonLoader
             foreach (var it in g.Items)
             {
                 bool compatible = it.AppliesTo == null || it.AppliesTo.Count == 0 || it.AppliesTo.Contains(osFamily);
+                var description = BuildDescription(it, osFamily, compatible);
                 groupNode.Children.Add(new TweakNode
                 {
                     Id = it.Id,
                     Title = it.Title,
-                    Description = it.Description,
-                    IsChecked = it.Default,
+                    Description = description,
+                    IsChecked = compatible && it.Default,
                     IsEnabled = compatible,
                     AppliesTo = string.Join(",", it.AppliesTo ?? new()),
                     Stage = it.Stage
@@ -71,5 +72,26 @@ public static class TweaksJsonLoader
             ?? throw new FileNotFoundException($"Embedded resource not found: {resourceName}");
         using var r = new StreamReader(s);
         return r.ReadToEnd();
+    }
+
+    private static string BuildDescription(TweakItemJson item, string osFamily, bool compatible)
+    {
+        var description = item.Description ?? string.Empty;
+        if (compatible)
+            return description;
+
+        var targetOs = osFamily == "11" ? "Windows 11" : "Windows 10";
+        var allowed = item.AppliesTo == null || item.AppliesTo.Count == 0
+            ? string.Empty
+            : string.Join(", ", item.AppliesTo.Select(x => x == "11" ? "Windows 11" : "Windows 10"));
+
+        var reason = string.IsNullOrWhiteSpace(allowed)
+            ? $"Недоступно для {targetOs}."
+            : $"Недоступно для {targetOs}. Доступно только для {allowed}.";
+
+        if (string.IsNullOrWhiteSpace(description))
+            return reason;
+
+        return $"{description}\n{reason}";
     }
 }
