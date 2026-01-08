@@ -32,14 +32,15 @@ public static class TweaksJsonLoader
             foreach (var it in g.Items)
             {
                 bool compatible = it.AppliesTo == null || it.AppliesTo.Count == 0 || it.AppliesTo.Contains(osFamily);
-                var description = BuildDescription(it, osFamily, compatible);
+                bool supported = IsTweakSupported(it, out var supportNote);
+                var description = BuildDescription(it, osFamily, compatible, supported, supportNote);
                 groupNode.Children.Add(new TweakNode
                 {
                     Id = it.Id,
                     Title = it.Title,
                     Description = description,
-                    IsChecked = compatible && it.Default,
-                    IsEnabled = compatible,
+                    IsChecked = compatible && supported && it.Default,
+                    IsEnabled = compatible && supported,
                     AppliesTo = string.Join(",", it.AppliesTo ?? new()),
                     Stage = it.Stage
                 });
@@ -74,24 +75,47 @@ public static class TweaksJsonLoader
         return r.ReadToEnd();
     }
 
-    private static string BuildDescription(TweakItemJson item, string osFamily, bool compatible)
+    private static string BuildDescription(TweakItemJson item, string osFamily, bool compatible, bool supported, string supportNote)
     {
         var description = item.Description ?? string.Empty;
-        if (compatible)
+        var notes = new List<string>();
+
+        if (!compatible)
+        {
+            var targetOs = osFamily == "11" ? "Windows 11" : "Windows 10";
+            var allowed = item.AppliesTo == null || item.AppliesTo.Count == 0
+                ? string.Empty
+                : string.Join(", ", item.AppliesTo.Select(x => x == "11" ? "Windows 11" : "Windows 10"));
+            var reason = string.IsNullOrWhiteSpace(allowed)
+                ? $"Недоступно для {targetOs}."
+                : $"Недоступно для {targetOs}. Доступно только для {allowed}.";
+            notes.Add(reason);
+        }
+
+        if (!supported && !string.IsNullOrWhiteSpace(supportNote))
+            notes.Add(supportNote);
+
+        if (notes.Count == 0)
             return description;
 
-        var targetOs = osFamily == "11" ? "Windows 11" : "Windows 10";
-        var allowed = item.AppliesTo == null || item.AppliesTo.Count == 0
-            ? string.Empty
-            : string.Join(", ", item.AppliesTo.Select(x => x == "11" ? "Windows 11" : "Windows 10"));
-
-        var reason = string.IsNullOrWhiteSpace(allowed)
-            ? $"Недоступно для {targetOs}."
-            : $"Недоступно для {targetOs}. Доступно только для {allowed}.";
-
         if (string.IsNullOrWhiteSpace(description))
-            return reason;
+            return string.Join("\n", notes);
 
-        return $"{description}\n{reason}";
+        return $"{description}\n{string.Join("\n", notes)}";
+    }
+
+    private static bool IsTweakSupported(TweakItemJson item, out string note)
+    {
+        note = "";
+        switch (item.Id)
+        {
+            case "extras.install_apps":
+            case "extras.install_toolbox":
+            case "extras.activate_hwid":
+                note = "Недоступно: функция пока не перенесена в .exe.";
+                return false;
+            default:
+                return true;
+        }
     }
 }
