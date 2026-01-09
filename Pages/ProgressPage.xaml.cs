@@ -75,8 +75,6 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
     {
         int total = Math.Max(1, _steps.Length);
         var start = DateTime.UtcNow;
-        StopExplorer();
-
         try
         {
             for (int i = 0; i < _steps.Length; i++)
@@ -180,26 +178,6 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
             {
                 FileName = "schtasks.exe",
                 Arguments = "/Delete /TN \"DeL1ThiSystem\\Wizard\" /F",
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                WindowStyle = ProcessWindowStyle.Hidden
-            };
-            using var proc = Process.Start(psi);
-            proc?.WaitForExit(3000);
-        }
-        catch
-        {
-        }
-    }
-
-    private static void StopExplorer()
-    {
-        try
-        {
-            var psi = new ProcessStartInfo
-            {
-                FileName = "cmd.exe",
-                Arguments = "/c taskkill /f /im explorer.exe",
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Hidden

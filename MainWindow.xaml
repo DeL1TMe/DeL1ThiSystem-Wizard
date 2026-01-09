@@ -1,4 +1,4 @@
-<Window x:Class="DeL1ThiSystem.ConfigurationWizard.MainWindow"
+﻿<Window x:Class="DeL1ThiSystem.ConfigurationWizard.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
@@ -27,8 +27,8 @@
                 Width="720"
                 Height="800"
                 CornerRadius="14"
-                Background="{StaticResource Brush.WindowBg}"
-                BorderBrush="#2A3345"
+                Background="{DynamicResource Brush.WindowBg}"
+                BorderBrush="{DynamicResource Brush.WindowBorder}"
                 BorderThickness="1"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
@@ -63,7 +63,7 @@
             </Grid>
 
             <Border Grid.Row="1"
-                    Background="{StaticResource Brush.CardBg}"
+                    Background="{DynamicResource Brush.CardBg}"
                     CornerRadius="16"
                     Padding="0">
                 <Frame x:Name="Frame" NavigationUIVisibility="Hidden"/>
@@ -72,8 +72,8 @@
 
         <Grid x:Name="ExitConfirmOverlay" Visibility="Collapsed" Background="Transparent" ClipToBounds="True" SnapsToDevicePixels="True" UseLayoutRounding="True">
             <Border Background="#AA0F1320" CornerRadius="14" SnapsToDevicePixels="True" UseLayoutRounding="True"/>
-            <Border Background="{StaticResource Brush.CardBg}"
-                    BorderBrush="#263147"
+            <Border Background="{DynamicResource Brush.CardBg}"
+                    BorderBrush="{DynamicResource Brush.PopupBorder}"
                     BorderThickness="1"
                     CornerRadius="14"
                     Padding="24"
@@ -85,7 +85,7 @@
                     <TextBlock Style="{StaticResource Txt.Body14}" Margin="0,10,0,18"
                                Text="Мы настоятельно рекомендуем завершить настройку сейчас, внесение изменений в систему может помешать настроить её повторно."/>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Content="Отмена" Style="{StaticResource ConceptSecondaryButton}"
+                        <Button Content="Отмена" Style="{StaticResource ConceptSecondaryButton}" Opacity="0.88"
                                 Margin="0,0,10,0" Click="ExitConfirmCancel_Click"/>
                         <Button Content="Выйти" Style="{StaticResource ConceptPrimaryButton}"
                                 Click="ExitConfirmExit_Click"/>
@@ -97,3 +97,4 @@
     </Border>
     </Grid>
 </Window>
+
