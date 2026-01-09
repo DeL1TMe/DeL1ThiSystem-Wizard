@@ -75,8 +75,7 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
     {
         int total = Math.Max(1, _steps.Length);
         var start = DateTime.UtcNow;
-        var mainWindow = Application.Current.MainWindow as MainWindow;
-        mainWindow?.SetExecutionLock(true);
+        StopExplorer();
 
         try
         {
@@ -87,7 +86,7 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
                 SetProgress(p);
                 if (!string.Equals(_steps[i].Id, "noop", StringComparison.OrdinalIgnoreCase))
                 {
-                    await Task.Run(() => TweakExecutor.Execute(_steps[i].Id, _state.OsFamily));
+                    await Task.Run(() => TweakExecutor.Execute(_steps[i].Id, _state.OsFamily, _state.ThemeChoice));
                 }
                 await Task.Delay(150);
             }
@@ -181,6 +180,26 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
             {
                 FileName = "schtasks.exe",
                 Arguments = "/Delete /TN \"DeL1ThiSystem\\Wizard\" /F",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden
+            };
+            using var proc = Process.Start(psi);
+            proc?.WaitForExit(3000);
+        }
+        catch
+        {
+        }
+    }
+
+    private static void StopExplorer()
+    {
+        try
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = "cmd.exe",
+                Arguments = "/c taskkill /f /im explorer.exe",
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Hidden

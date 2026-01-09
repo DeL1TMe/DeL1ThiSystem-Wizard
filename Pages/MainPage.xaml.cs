@@ -85,12 +85,16 @@ public partial class MainPage : Page
     {
         _state.ThemeChoice = "light";
         ApplyThemeSelectionVisuals();
+        ThemeManager.ApplyTheme(_state.ThemeChoice);
+        WallpaperManager.ApplyTheme(_state.ThemeChoice);
     }
 
     private void ThemeDark_Click(object sender, RoutedEventArgs e)
     {
         _state.ThemeChoice = "dark";
         ApplyThemeSelectionVisuals();
+        ThemeManager.ApplyTheme(_state.ThemeChoice);
+        WallpaperManager.ApplyTheme(_state.ThemeChoice);
     }
 
     private void UpdateFadeOverlays()

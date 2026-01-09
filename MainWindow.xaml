@@ -23,8 +23,6 @@
 
 
     <Grid x:Name="RootGrid" Background="Transparent">
-        <Grid x:Name="InteractionBlocker" Visibility="Collapsed" Background="Transparent" IsHitTestVisible="True"/>
-
         <Border x:Name="WindowCard"
                 Width="720"
                 Height="800"

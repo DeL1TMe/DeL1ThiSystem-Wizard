@@ -2,7 +2,7 @@ using System;
 using System.Windows;
 using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
-using System.Windows.Media;
+using System.Diagnostics;
 using DeL1ThiSystem.ConfigurationWizard.Pages;
 using DeL1ThiSystem.ConfigurationWizard.Tweaks;
 
@@ -11,9 +11,6 @@ namespace DeL1ThiSystem.ConfigurationWizard;
 public partial class MainWindow : Window
 {
     private bool _allowClose;
-    private bool _executionLock;
-    private WindowState _prevState;
-    private bool _prevTopmost;
 
     public MainWindow()
     {
@@ -42,7 +39,6 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        SetExecutionLock(true);
         var app = (App)Application.Current;
 
         if (!app.State.BootstrapApplied)
@@ -95,32 +91,26 @@ public partial class MainWindow : Window
 
     private void ExitConfirmExit_Click(object sender, RoutedEventArgs e)
     {
+        StartExplorer();
         _allowClose = true;
         Close();
     }
 
-    public void SetExecutionLock(bool enabled)
+    private static void StartExplorer()
     {
-        if (_executionLock == enabled)
-            return;
-
-        _executionLock = enabled;
-
-        if (enabled)
+        try
         {
-            _prevState = WindowState;
-            _prevTopmost = Topmost;
-            WindowState = WindowState.Maximized;
-            Topmost = true;
-            RootGrid.Background = new SolidColorBrush(Color.FromArgb(180, 0, 0, 0));
-            InteractionBlocker.Visibility = Visibility.Visible;
+            var psi = new ProcessStartInfo
+            {
+                FileName = "explorer.exe",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden
+            };
+            using var proc = Process.Start(psi);
         }
-        else
+        catch
         {
-            WindowState = _prevState;
-            Topmost = _prevTopmost;
-            RootGrid.Background = Brushes.Transparent;
-            InteractionBlocker.Visibility = Visibility.Collapsed;
         }
     }
 }

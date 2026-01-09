@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Drawing;
 using Microsoft.Win32;
 
 namespace DeL1ThiSystem.ConfigurationWizard.Tweaks;
@@ -92,7 +93,7 @@ public static class TweakExecutor
         "Recall"
     };
 
-    public static void Execute(string id, string osFamily)
+    public static void Execute(string id, string osFamily, string themeChoice)
     {
         EnsureLogDir();
         Log($"START {id}");
@@ -154,6 +155,9 @@ public static class TweakExecutor
                 case "apps.edge_startup_boost_disable":
                     SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Edge\Recommended", "StartupBoostEnabled", 0);
                     break;
+                case "ui.color_theme":
+                    ApplyWindowsTheme(themeChoice);
+                    break;
                 case "updates.pause_policy_task":
                     PauseWindowsUpdate();
                     break;
@@ -164,7 +168,7 @@ public static class TweakExecutor
                     SetDword(RegistryHive.CurrentUser, @"Software\Policies\Microsoft\Windows\Explorer", "DisableSearchBoxSuggestions", 1);
                     break;
                 case "updates.widgets_disable":
-                    SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Dsh", "AllowNewsAndInterests", 0);
+                    DisableWidgetsAndNews();
                     break;
                 case "perf.fast_startup_disable":
                     SetDword(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Power", "HiberbootEnabled", 0);
@@ -320,7 +324,12 @@ public static class TweakExecutor
             return;
 
         const string json = "{\"pinnedList\":[]}";
-        SetString(RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\PolicyManager\current\device\Start", "ConfigureStartPins", json);
+        var key = @"SOFTWARE\Microsoft\PolicyManager\current\device\Start";
+        SetString(RegistryHive.LocalMachine, key, "ConfigureStartPins", json);
+        SetDword(RegistryHive.LocalMachine, key, "ConfigureStartPins_ProviderSet", 1);
+        SetQword(RegistryHive.LocalMachine, key, "ConfigureStartPins_LastWrite", DateTime.UtcNow.ToFileTimeUtc());
+        SetString(RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\PolicyManager\default\device\Start", "ConfigureStartPins", json);
+        RunProcess("cmd.exe", "/c taskkill /f /im explorer.exe & start explorer.exe");
     }
 
     private static void RemoveAppxPackages()
@@ -343,6 +352,7 @@ public static class TweakExecutor
             "  } " +
             "}";
         RunPowerShell(script);
+        DisableCortana();
     }
 
     private static void RemoveCapabilities()
@@ -370,8 +380,10 @@ public static class TweakExecutor
     private static void RemoveOneDriveArtifacts()
     {
         TryDelete(@"C:\Users\Default\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\OneDrive.lnk");
-        TryDelete(@"C:\Windows\System32\OneDriveSetup.exe");
-        TryDelete(@"C:\Windows\SysWOW64\OneDriveSetup.exe");
+        RunProcess("cmd.exe", "/c \"%SystemRoot%\\System32\\OneDriveSetup.exe\" /uninstall");
+        RunProcess("cmd.exe", "/c \"%SystemRoot%\\SysWOW64\\OneDriveSetup.exe\" /uninstall");
+        ForceDelete(@"C:\Windows\System32\OneDriveSetup.exe");
+        ForceDelete(@"C:\Windows\SysWOW64\OneDriveSetup.exe");
     }
 
     private static void MakeEdgeUninstallable()
@@ -433,6 +445,66 @@ public static class TweakExecutor
         SetDefaultValue(RegistryHive.CurrentUser, key, "");
     }
 
+    private static void DisableWidgetsAndNews()
+    {
+        SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Dsh", "AllowNewsAndInterests", 0);
+        SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Dsh", "AllowWidgets", 0);
+        SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "TaskbarDa", 0);
+    }
+
+    private static void DisableCortana()
+    {
+        SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\Windows Search", "AllowCortana", 0);
+        SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "ShowCortanaButton", 0);
+    }
+
+    private static void ApplyWindowsTheme(string themeChoice)
+    {
+        bool light = string.Equals(themeChoice, "light", StringComparison.OrdinalIgnoreCase);
+        int lightValue = light ? 1 : 0;
+
+        SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize", "SystemUsesLightTheme", lightValue);
+        SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize", "AppsUseLightTheme", lightValue);
+        SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize", "ColorPrevalence", 0);
+        SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize", "EnableTransparency", 1);
+
+        const string htmlAccentColor = "#0078D4";
+        var accentColor = ColorTranslator.FromHtml(htmlAccentColor);
+
+        uint ConvertToDword(Color color)
+        {
+            byte[] bytes = { color.R, color.G, color.B, color.A };
+            return BitConverter.ToUInt32(bytes, 0);
+        }
+
+        var startColor = Color.FromArgb(0xD2, accentColor);
+        SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Accent", "StartColorMenu", unchecked((int)ConvertToDword(startColor)));
+        SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Accent", "AccentColorMenu", unchecked((int)ConvertToDword(accentColor)));
+        SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\DWM", "AccentColor", unchecked((int)ConvertToDword(accentColor)));
+
+        try
+        {
+            using var baseKey = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry64);
+            using var key = baseKey.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Explorer\Accent", writable: true);
+            var palette = key?.GetValue("AccentPalette") as byte[];
+            if (palette != null && palette.Length >= 24)
+            {
+                int index = 20;
+                palette[index++] = accentColor.R;
+                palette[index++] = accentColor.G;
+                palette[index++] = accentColor.B;
+                palette[index++] = accentColor.A;
+                key?.SetValue("AccentPalette", palette, RegistryValueKind.Binary);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log($"Accent palette update failed: {ex.Message}");
+        }
+
+        DeL1ThiSystem.ConfigurationWizard.WallpaperManager.ApplyTheme(themeChoice);
+    }
+
     private static void ShowAllTrayIcons()
     {
         if (Environment.OSVersion.Version.Build < 22000)
@@ -485,5 +557,27 @@ public static class TweakExecutor
         {
             Log($"Delete failed: {path} ({ex.Message})");
         }
+    }
+
+    private static void ForceDelete(string path)
+    {
+        try
+        {
+            if (!File.Exists(path))
+                return;
+            var cmd = $"takeown /f \"{path}\" /a & icacls \"{path}\" /grant Administrators:F /c & del /f /q \"{path}\"";
+            RunProcess("cmd.exe", "/c " + cmd);
+        }
+        catch (Exception ex)
+        {
+            Log($"Force delete failed: {path} ({ex.Message})");
+        }
+    }
+
+    private static void SetQword(RegistryHive hive, string subKey, string name, long value)
+    {
+        using var baseKey = RegistryKey.OpenBaseKey(hive, RegistryView.Registry64);
+        using var key = baseKey.CreateSubKey(subKey, true);
+        key?.SetValue(name, value, RegistryValueKind.QWord);
     }
 }

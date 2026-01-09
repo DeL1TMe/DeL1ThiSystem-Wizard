@@ -4,97 +4,67 @@
              xmlns:local="clr-namespace:DeL1ThiSystem.ConfigurationWizard"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/Theme.Dark.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <local:NullToVisibilityConverter x:Key="NullToVisibility" />
+
+            
+            <Style x:Key="{x:Static SystemParameters.FocusVisualStyleKey}" TargetType="{x:Type Control}">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate />
+                    </Setter.Value>
+                </Setter>
+            </Style>
 
         
-        <local:NullToVisibilityConverter x:Key="NullToVisibility" />
-
-        
-        <Color x:Key="C.WindowBg">#171826</Color>
-        <Color x:Key="C.CardBg">#1A1E2D</Color>
-        <Color x:Key="C.FooterBar">#121622</Color>
-        <Color x:Key="C.Accent">#2064CD</Color>
-
-        <Color x:Key="C.CardBg_00">#001A1E2D</Color>
-        <Color x:Key="C.CardBg_FF">#FF1A1E2D</Color>
-
-        <Color x:Key="C.TextPrimary">#FFFFFF</Color>
-        <Color x:Key="C.TextSecondary">#B8C0CC</Color>
-        <Color x:Key="C.TextMuted">#8A93A3</Color>
-
-        <SolidColorBrush x:Key="Brush.WindowBg" Color="{StaticResource C.WindowBg}"/>
-        <SolidColorBrush x:Key="Brush.CardBg" Color="{StaticResource C.CardBg}"/>
-        <SolidColorBrush x:Key="Brush.FooterBar" Color="{StaticResource C.FooterBar}"/>
-        <SolidColorBrush x:Key="Brush.Accent" Color="{StaticResource C.Accent}"/>
-
-        <SolidColorBrush x:Key="Brush.TextPrimary" Color="{StaticResource C.TextPrimary}"/>
-        <SolidColorBrush x:Key="Brush.TextSecondary" Color="{StaticResource C.TextSecondary}"/>
-        <SolidColorBrush x:Key="Brush.TextMuted" Color="{StaticResource C.TextMuted}"/>
-
-        
-        <LinearGradientBrush x:Key="Brush.BottomFade" StartPoint="0,0" EndPoint="0,1">
-            <GradientStop Color="{StaticResource C.CardBg_00}" Offset="0"/>
-            <GradientStop Color="{StaticResource C.CardBg_FF}" Offset="1"/>
-        </LinearGradientBrush>
-
-        <LinearGradientBrush x:Key="Brush.TopFade" StartPoint="0,1" EndPoint="0,0">
-            <GradientStop Color="{StaticResource C.CardBg_00}" Offset="0"/>
-            <GradientStop Color="{StaticResource C.CardBg_FF}" Offset="1"/>
-        </LinearGradientBrush>
-
-        
-        <Style x:Key="{x:Static SystemParameters.FocusVisualStyleKey}" TargetType="{x:Type Control}">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate />
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        
-        <Style x:Key="Txt.H1" TargetType="{x:Type TextBlock}">
+            <Style x:Key="Txt.H1" TargetType="{x:Type TextBlock}">
             <Setter Property="FontSize" Value="22"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
             <Setter Property="LineHeight" Value="28"/>
             <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
-        </Style>
+            </Style>
 
         
-        <Style x:Key="Txt.Body14" TargetType="{x:Type TextBlock}">
+            <Style x:Key="Txt.Body14" TargetType="{x:Type TextBlock}">
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="Foreground" Value="{StaticResource Brush.TextSecondary}"/>
             <Setter Property="LineHeight" Value="22"/>
             <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
-        </Style>
+            </Style>
 
-        <Style x:Key="Txt.Section" TargetType="{x:Type TextBlock}">
+            <Style x:Key="Txt.Section" TargetType="{x:Type TextBlock}">
             <Setter Property="FontSize" Value="16"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
             <Setter Property="LineHeight" Value="24"/>
             <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
-        </Style>
+            </Style>
 
-        <Style x:Key="Txt.ItemTitle" TargetType="{x:Type TextBlock}">
+            <Style x:Key="Txt.ItemTitle" TargetType="{x:Type TextBlock}">
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
             <Setter Property="LineHeight" Value="22"/>
             <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
-        </Style>
+            </Style>
 
         
-        <Style x:Key="Txt.ItemDesc" TargetType="{x:Type TextBlock}">
+            <Style x:Key="Txt.ItemDesc" TargetType="{x:Type TextBlock}">
             <Setter Property="FontSize" Value="12.5"/>
             <Setter Property="Foreground" Value="{StaticResource Brush.TextSecondary}"/>
             <Setter Property="Margin" Value="0,3,0,0"/>
             <Setter Property="LineHeight" Value="20"/>
             <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
-        </Style>
+            </Style>
 
-        <Style x:Key="Txt.BlinkPrompt" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource Txt.Body14}">
+            <Style x:Key="Txt.BlinkPrompt" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource Txt.Body14}">
             <Setter Property="Foreground" Value="{StaticResource Brush.TextSecondary}"/>
             <Style.Triggers>
                 <EventTrigger RoutedEvent="FrameworkElement.Loaded">
@@ -106,27 +76,27 @@
                     </BeginStoryboard>
                 </EventTrigger>
             </Style.Triggers>
-        </Style>
+            </Style>
 
-        <Style x:Key="FooterNoteText" TargetType="{x:Type TextBlock}">
+            <Style x:Key="FooterNoteText" TargetType="{x:Type TextBlock}">
             <Setter Property="FontSize" Value="12.5"/>
             <Setter Property="Foreground" Value="{StaticResource Brush.TextMuted}"/>
             <Setter Property="LineHeight" Value="20"/>
             <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
+            </Style>
 
         
-        <Style TargetType="{x:Type TextBlock}">
+            <Style TargetType="{x:Type TextBlock}">
             <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
             <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
             <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
             <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
-        </Style>
+            </Style>
 
         
-        <Style x:Key="ConceptPrimaryButton" TargetType="{x:Type Button}">
+            <Style x:Key="ConceptPrimaryButton" TargetType="{x:Type Button}">
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="Background" Value="{StaticResource Brush.Accent}"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -157,15 +127,15 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-        </Style>
+            </Style>
 
-        <Style x:Key="ConceptSecondaryButton" TargetType="{x:Type Button}" BasedOn="{StaticResource ConceptPrimaryButton}">
+            <Style x:Key="ConceptSecondaryButton" TargetType="{x:Type Button}" BasedOn="{StaticResource ConceptPrimaryButton}">
             <Setter Property="Background" Value="#2AFFFFFF"/>
             <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
-        </Style>
+            </Style>
 
         
-        <Style x:Key="HeaderCloseButton" TargetType="{x:Type Button}">
+            <Style x:Key="HeaderCloseButton" TargetType="{x:Type Button}">
             <Setter Property="Foreground" Value="{StaticResource Brush.TextSecondary}"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -193,7 +163,7 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-        </Style>
-
+            </Style>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

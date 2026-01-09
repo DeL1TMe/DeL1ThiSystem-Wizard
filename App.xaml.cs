@@ -18,6 +18,7 @@ public partial class App : Application
             return;
         }
 
+        ThemeManager.ApplyTheme(State.ThemeChoice);
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         TaskScheduler.UnobservedTaskException += (_, ex) =>
         {
