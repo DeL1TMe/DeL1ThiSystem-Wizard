@@ -121,8 +121,8 @@
         },
         {
           "id": "bootstrap.wallpaper_quality_100",
-          "title": "???????? ????? 100%",
-          "description": "????????? ?????? JPEG ??? ????????? ????? (JPEGImportQuality=100).",
+          "title": "Качество обоев 100%",
+          "description": "Устанавливает качество JPEG для обоев (JPEGImportQuality=100).",
           "appliesTo": [
             "10",
             "11"
@@ -331,6 +331,50 @@
           "id": "shell.search_box_mode",
           "title": "Режим поля поиска на панели задач",
           "description": "Сворачивает поиск до иконки вместо длинной строки.",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "tweak"
+        },
+        {
+          "id": "shell.explorer_launch_to_this_pc",
+          "title": "Проводник открывается в «Этот компьютер»",
+          "description": "Открывает Проводник в «Этот компьютер» вместо «Быстрого доступа».",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "tweak"
+        },
+        {
+          "id": "shell.desktop_icons_minimal",
+          "title": "Иконки рабочего стола: Этот компьютер + Корзина",
+          "description": "Оставляет на рабочем столе только «Этот компьютер» и «Корзину».",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "tweak"
+        },
+        {
+          "id": "shell.remove_edge_desktop_shortcut",
+          "title": "Удалить ярлык Microsoft Edge с рабочего стола",
+          "description": "Удаляет ярлык Edge на рабочем столе пользователя и Public.",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "tweak"
+        },
+        {
+          "id": "shell.taskbar_clear_pins",
+          "title": "Очистить закреплённые иконки панели задач",
+          "description": "Удаляет все закрепления на панели задач для текущего пользователя.",
           "appliesTo": [
             "10",
             "11"

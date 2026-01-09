@@ -225,14 +225,14 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
 
         if (_slowNoticeShown && !IsCompleted)
         {
-            FadeHeaderText(_headerTextBase);
+            FadeHeaderText(_headerTextBase, force: true);
             _slowNoticeShown = false;
         }
     }
 
-    private void FadeHeaderText(string newText)
+    private void FadeHeaderText(string newText, bool force = false)
     {
-        if (HeaderTextBlock == null || string.Equals(HeaderText, newText, StringComparison.Ordinal))
+        if (HeaderTextBlock == null || (!force && string.Equals(HeaderText, newText, StringComparison.Ordinal)))
         {
             HeaderText = newText;
             return;

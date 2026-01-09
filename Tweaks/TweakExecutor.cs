@@ -23,6 +23,7 @@ public static class TweakExecutor
 
     private static readonly string LogPath = Path.Combine(BaseDir, "ExeTweaks.log");
     private static readonly string InternetWaitMarker = Path.Combine(BaseDir, "waiting_internet.marker");
+    private static int _procSeq = 0;
 
     private static readonly string[] ContentDeliveryValues =
     {
@@ -116,7 +117,7 @@ public static class TweakExecutor
                     DisableWebContentEvaluation();
                     break;
                 case "bootstrap.executionpolicy_remotesigned":
-                    RunPowerShell("Set-ExecutionPolicy -Scope LocalMachine -ExecutionPolicy RemoteSigned -Force");
+                    SetString(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\PowerShell", "ExecutionPolicy", "RemoteSigned");
                     break;
                 case "bootstrap.remote_access_enable":
                     EnableRemoteAssistance();
@@ -207,6 +208,15 @@ public static class TweakExecutor
                     SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Search", "SearchboxTaskbarMode", 1);
                     SetDefaultUserDword(@"Software\Microsoft\Windows\CurrentVersion\Search", "SearchboxTaskbarMode", 1);
                     break;
+                case "shell.explorer_launch_to_this_pc":
+                    SetExplorerLaunchToThisPc();
+                    break;
+                case "shell.desktop_icons_minimal":
+                    SetDesktopIconsMinimal();
+                    break;
+                case "shell.taskbar_clear_pins":
+                    ClearTaskbarPins();
+                    break;
                 case "shell.taskbar_only_explorer":
                     if (osFamily == "10")
                         SetTaskbarOnlyExplorer();
@@ -263,25 +273,63 @@ public static class TweakExecutor
         }
     }
 
+    private static void LogReg(string kind, string path, string name, string value)
+    {
+        Log($"{kind} {path} {name}={value}");
+    }
+
+    private static void LogCommand(string prefix, string text)
+    {
+        var normalized = text.Replace("\r\n", "\\n").Replace("\n", "\\n");
+        Log($"{prefix}: {normalized}");
+    }
+
     private static void SetDword(RegistryHive hive, string subKey, string name, int value)
     {
-        using var baseKey = RegistryKey.OpenBaseKey(hive, RegistryView.Registry64);
-        using var key = baseKey.CreateSubKey(subKey, true);
-        key?.SetValue(name, value, RegistryValueKind.DWord);
+        var path = $"{hive}\\{subKey}";
+        try
+        {
+            LogReg("REG DWORD", path, name, value.ToString(CultureInfo.InvariantCulture));
+            using var baseKey = RegistryKey.OpenBaseKey(hive, RegistryView.Registry64);
+            using var key = baseKey.CreateSubKey(subKey, true);
+            key?.SetValue(name, value, RegistryValueKind.DWord);
+        }
+        catch (Exception ex)
+        {
+            Log($"REG ERROR {path} {name}: {ex.Message}");
+        }
     }
 
     private static void SetString(RegistryHive hive, string subKey, string name, string value)
     {
-        using var baseKey = RegistryKey.OpenBaseKey(hive, RegistryView.Registry64);
-        using var key = baseKey.CreateSubKey(subKey, true);
-        key?.SetValue(name, value, RegistryValueKind.String);
+        var path = $"{hive}\\{subKey}";
+        try
+        {
+            LogReg("REG SZ", path, name, value);
+            using var baseKey = RegistryKey.OpenBaseKey(hive, RegistryView.Registry64);
+            using var key = baseKey.CreateSubKey(subKey, true);
+            key?.SetValue(name, value, RegistryValueKind.String);
+        }
+        catch (Exception ex)
+        {
+            Log($"REG ERROR {path} {name}: {ex.Message}");
+        }
     }
 
     private static void SetDefaultValue(RegistryHive hive, string subKey, string value)
     {
-        using var baseKey = RegistryKey.OpenBaseKey(hive, RegistryView.Registry64);
-        using var key = baseKey.CreateSubKey(subKey, true);
-        key?.SetValue(null, value, RegistryValueKind.String);
+        var path = $"{hive}\\{subKey}";
+        try
+        {
+            LogReg("REG SZ", path, "(Default)", value);
+            using var baseKey = RegistryKey.OpenBaseKey(hive, RegistryView.Registry64);
+            using var key = baseKey.CreateSubKey(subKey, true);
+            key?.SetValue(null, value, RegistryValueKind.String);
+        }
+        catch (Exception ex)
+        {
+            Log($"REG ERROR {path} (Default): {ex.Message}");
+        }
     }
 
     private static void DisableDefenderNotifications()
@@ -449,10 +497,20 @@ public static class TweakExecutor
     private static void RemoveOneDriveArtifacts()
     {
         TryDelete(@"C:\Users\Default\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\OneDrive.lnk");
-        RunProcess("cmd.exe", "/c \"%SystemRoot%\\System32\\OneDriveSetup.exe\" /uninstall");
-        RunProcess("cmd.exe", "/c \"%SystemRoot%\\SysWOW64\\OneDriveSetup.exe\" /uninstall");
-        ForceDelete(@"C:\Windows\System32\OneDriveSetup.exe");
-        ForceDelete(@"C:\Windows\SysWOW64\OneDriveSetup.exe");
+        var oneDrive32 = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\\System32\\OneDriveSetup.exe");
+        var oneDrive64 = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\\SysWOW64\\OneDriveSetup.exe");
+        if (File.Exists(oneDrive32))
+            RunProcess("cmd.exe", "/c \"" + oneDrive32 + "\" /uninstall");
+        else
+            Log($"OneDriveSetup missing: {oneDrive32}");
+        if (File.Exists(oneDrive64))
+            RunProcess("cmd.exe", "/c \"" + oneDrive64 + "\" /uninstall");
+        else
+            Log($"OneDriveSetup missing: {oneDrive64}");
+        if (File.Exists(@"C:\Windows\System32\OneDriveSetup.exe"))
+            ForceDelete(@"C:\Windows\System32\OneDriveSetup.exe");
+        if (File.Exists(@"C:\Windows\SysWOW64\OneDriveSetup.exe"))
+            ForceDelete(@"C:\Windows\SysWOW64\OneDriveSetup.exe");
     }
 
     private static void MakeEdgeUninstallable()
@@ -504,11 +562,8 @@ public static class TweakExecutor
     private static void DisableConsumerFeatures(string osFamily)
     {
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\CloudContent", "DisableWindowsConsumerFeatures", 1);
-        if (osFamily == "10")
-        {
-            SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\CloudContent", "DisableSoftLanding", 1);
-            SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\CloudContent", "DisableThirdPartySuggestions", 1);
-        }
+        SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\CloudContent", "DisableSoftLanding", 1);
+        SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\CloudContent", "DisableThirdPartySuggestions", 1);
         foreach (var name in ContentDeliveryValues)
             SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager", name, 0);
         ApplyDefaultUserContentDelivery();
@@ -525,6 +580,69 @@ public static class TweakExecutor
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Dsh", "AllowNewsAndInterests", 0);
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Dsh", "AllowWidgets", 0);
         SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "TaskbarDa", 0);
+    }
+
+    private static void SetExplorerLaunchToThisPc()
+    {
+        const string key = @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced";
+        SetDword(RegistryHive.CurrentUser, key, "LaunchTo", 1);
+        SetDefaultUserDword(key, "LaunchTo", 1);
+    }
+
+    private static void SetDesktopIconsMinimal()
+    {
+        string[] hideIcons =
+        {
+            "{5399e694-6ce5-4d6c-8fce-1d8870fdcba0}",
+            "{b4bfcc3a-db2c-424c-b029-7fe99a87c641}",
+            "{a8cdff1c-4878-43be-b5fd-f8091c1c60d0}",
+            "{374de290-123f-4565-9164-39c4925e467b}",
+            "{e88865ea-0e1c-4e20-9aa6-edcd0212c87c}",
+            "{f874310e-b6b7-47dc-bc84-b9e6b38f5903}",
+            "{1cf1260c-4dd0-4ebb-811f-33c572699fde}",
+            "{f02c1a0d-be21-4350-88b0-7367fc96ef3c}",
+            "{3add1653-eb32-4cb0-bbd7-dfa0abb5acca}",
+            "{59031a47-3f72-44a7-89c5-5595fe6b30ee}",
+            "{a0953c92-50dc-43bf-be83-3742fed03c9c}"
+        };
+
+        string[] showIcons =
+        {
+            "{645ff040-5081-101b-9f08-00aa002f954e}",
+            "{20d04fe0-3aea-1069-a2d8-08002b30309d}"
+        };
+
+        const string classic = @"Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu";
+        const string modern = @"Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel";
+
+        foreach (var id in hideIcons)
+        {
+            SetDword(RegistryHive.CurrentUser, classic, id, 1);
+            SetDword(RegistryHive.CurrentUser, modern, id, 1);
+            SetDefaultUserDword(classic, id, 1);
+            SetDefaultUserDword(modern, id, 1);
+        }
+
+        foreach (var id in showIcons)
+        {
+            SetDword(RegistryHive.CurrentUser, classic, id, 0);
+            SetDword(RegistryHive.CurrentUser, modern, id, 0);
+            SetDefaultUserDword(classic, id, 0);
+            SetDefaultUserDword(modern, id, 0);
+        }
+    }
+
+    private static void ClearTaskbarPins()
+    {
+        var script = @"
+$taskbar = Join-Path $env:APPDATA 'Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar';
+if (Test-Path $taskbar) {
+  Get-ChildItem $taskbar -Filter *.lnk -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue;
+}
+Remove-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Taskband' -Name Favorites,FavoritesResolve,FavoritesChanges,FavoritesRemovedChanges -ErrorAction SilentlyContinue;
+Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue;
+";
+        RunPowerShell(script);
     }
 
     private static void SetTaskbarOnlyExplorer()
@@ -700,23 +818,45 @@ foreach ($n in $names) {
     private static int RunProcessWithTimeout(string fileName, string arguments, int timeoutMs, out bool timedOut)
     {
         timedOut = false;
+        int procId = System.Threading.Interlocked.Increment(ref _procSeq);
+        Log($"PROC {procId} START: {fileName} {arguments}");
         var psi = new ProcessStartInfo
         {
             FileName = fileName,
             Arguments = arguments,
             UseShellExecute = false,
             CreateNoWindow = true,
-            WindowStyle = ProcessWindowStyle.Hidden
+            WindowStyle = ProcessWindowStyle.Hidden,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
         };
-        using var proc = Process.Start(psi);
-        if (proc == null)
+        using var proc = new Process { StartInfo = psi, EnableRaisingEvents = true };
+        proc.OutputDataReceived += (_, e) =>
+        {
+            if (!string.IsNullOrEmpty(e.Data))
+                Log($"PROC {procId} OUT: {e.Data}");
+        };
+        proc.ErrorDataReceived += (_, e) =>
+        {
+            if (!string.IsNullOrEmpty(e.Data))
+                Log($"PROC {procId} ERR: {e.Data}");
+        };
+        if (!proc.Start())
+        {
+            Log($"PROC {procId} ERROR: failed to start");
             return -1;
+        }
+        proc.BeginOutputReadLine();
+        proc.BeginErrorReadLine();
         if (!proc.WaitForExit(timeoutMs))
         {
             timedOut = true;
             try { proc.Kill(true); } catch { }
+            Log($"PROC {procId} TIMEOUT after {timeoutMs}ms");
             return -1;
         }
+        proc.WaitForExit();
+        Log($"PROC {procId} EXIT: {proc.ExitCode}");
         return proc.ExitCode;
     }
 
@@ -841,8 +981,11 @@ foreach ($n in $names) {
 
     private static void DisableRestoreAndCleanup()
     {
-        RunPowerShell("try { Disable-ComputerRestore -Drive 'C:\\\\' } catch {}");
-        RunProcess("cmd.exe", "/c rmdir /s /q C:\\Windows.old");
+        RunPowerShell("try { Disable-ComputerRestore -Drive \"$env:SystemDrive\\\" } catch {}");
+        if (Directory.Exists(@"C:\Windows.old"))
+            RunProcess("cmd.exe", "/c rmdir /s /q C:\\Windows.old");
+        else
+            Log("Windows.old not found, skip cleanup.");
     }
 
     private static void ApplyDefaultUserContentDelivery()
@@ -902,6 +1045,7 @@ foreach ($n in $names) {
     {
         WithDefaultUserHive(root =>
         {
+            LogReg("REG-DEFAULT DWORD", $@"HKU\DefaultUser\{subKey}", name, value.ToString(CultureInfo.InvariantCulture));
             using var key = root.CreateSubKey(subKey, true);
             key?.SetValue(name, value, RegistryValueKind.DWord);
         });
@@ -911,6 +1055,7 @@ foreach ($n in $names) {
     {
         WithDefaultUserHive(root =>
         {
+            LogReg("REG-DEFAULT SZ", $@"HKU\DefaultUser\{subKey}", name, value);
             using var key = root.CreateSubKey(subKey, true);
             key?.SetValue(name, value, RegistryValueKind.String);
         });
@@ -925,7 +1070,7 @@ foreach ($n in $names) {
 
             var publicDesktop = Environment.GetFolderPath(Environment.SpecialFolder.CommonDesktopDirectory);
             var userDesktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-            var defaultDesktop = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Users", "Default", "Desktop");
+            var defaultDesktop = @"C:\Users\Default\Desktop";
 
             TryDeleteEdgeLinks(publicDesktop);
             TryDeleteEdgeLinks(userDesktop);
@@ -1132,13 +1277,28 @@ if (Test-Path $toolboxPath) {
 
         if (!File.Exists(hwidCmd))
         {
-            var content = ReadEmbeddedResourceText("HWID_Activation.cmd");
+            var content = DecodeHwidActivation();
             if (!string.IsNullOrWhiteSpace(content))
                 File.WriteAllText(hwidCmd, content, Encoding.ASCII);
         }
 
         if (!File.Exists(helperPs))
             File.WriteAllText(helperPs, GetActivateWhenOnlineScript(), Encoding.UTF8);
+    }
+
+    private static string? DecodeHwidActivation()
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(HwidActivationData.Base64))
+                return null;
+            var bytes = Convert.FromBase64String(HwidActivationData.Base64);
+            return Encoding.ASCII.GetString(bytes);
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private static string GetActivateWhenOnlineScript()
@@ -1198,8 +1358,9 @@ try {
         try
         {
             using var client = new TcpClient();
-            var task = client.ConnectAsync("1.1.1.1", 443);
-            return task.Wait(3000);
+            using var cts = new System.Threading.CancellationTokenSource(3000);
+            client.ConnectAsync("1.1.1.1", 443, cts.Token).GetAwaiter().GetResult();
+            return true;
         }
         catch
         {
@@ -1230,23 +1391,47 @@ try {
 
     private static void RunPowerShell(string command)
     {
-        var bytes = Encoding.Unicode.GetBytes(command);
+        var wrapped = "$ProgressPreference='SilentlyContinue'; " + command;
+        var bytes = Encoding.Unicode.GetBytes(wrapped);
         var encoded = Convert.ToBase64String(bytes);
+        LogCommand("PS", command);
         RunProcess("powershell.exe", $"-NoProfile -ExecutionPolicy Bypass -EncodedCommand {encoded}");
     }
 
     private static void RunProcess(string fileName, string arguments)
     {
+        int procId = System.Threading.Interlocked.Increment(ref _procSeq);
+        Log($"PROC {procId} START: {fileName} {arguments}");
         var psi = new ProcessStartInfo
         {
             FileName = fileName,
             Arguments = arguments,
             UseShellExecute = false,
             CreateNoWindow = true,
-            WindowStyle = ProcessWindowStyle.Hidden
+            WindowStyle = ProcessWindowStyle.Hidden,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
         };
-        using var proc = Process.Start(psi);
-        proc?.WaitForExit();
+        using var proc = new Process { StartInfo = psi, EnableRaisingEvents = true };
+        proc.OutputDataReceived += (_, e) =>
+        {
+            if (!string.IsNullOrEmpty(e.Data))
+                Log($"PROC {procId} OUT: {e.Data}");
+        };
+        proc.ErrorDataReceived += (_, e) =>
+        {
+            if (!string.IsNullOrEmpty(e.Data))
+                Log($"PROC {procId} ERR: {e.Data}");
+        };
+        if (!proc.Start())
+        {
+            Log($"PROC {procId} ERROR: failed to start");
+            return;
+        }
+        proc.BeginOutputReadLine();
+        proc.BeginErrorReadLine();
+        proc.WaitForExit();
+        Log($"PROC {procId} EXIT: {proc.ExitCode}");
     }
 
     private static void TryDelete(string path)

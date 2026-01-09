@@ -43,7 +43,9 @@
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
                                 SnapsToDevicePixels="True">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <ContentPresenter x:Name="cp"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsEnabled" Value="True">
@@ -74,6 +76,7 @@
                                 <Setter Property="BorderBrush" Value="{DynamicResource Brush.RebootButtonBorder}"/>
                                 <Setter Property="BorderThickness" Value="0"/>
                                 <Setter Property="Foreground" Value="{DynamicResource Brush.RebootButtonTextDisabled}"/>
+                                <Setter TargetName="cp" Property="Opacity" Value="0.4"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
