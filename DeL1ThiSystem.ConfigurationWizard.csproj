@@ -19,6 +19,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\tweaks_catalog.json" />
     <EmbeddedResource Include="Resources\bootstrap_steps.json" />
+    <EmbeddedResource Include="source_windows\scripts\HWID_Activation.cmd" />
   </ItemGroup>
 
 </Project>

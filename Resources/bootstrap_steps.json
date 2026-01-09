@@ -39,8 +39,16 @@
       "title": "Отключить Sticky Keys"
     },
     {
+      "id": "bootstrap.restore_disable_cleanup",
+      "title": "Отключить восстановление и очистить Windows.old"
+    },
+    {
       "id": "bootstrap.enhance_pointer_precision_disable",
       "title": "Отключить Enhance pointer precision"
+    },
+    {
+      "id": "bootstrap.wallpaper_quality_100",
+      "title": "Качество обоев 100%"
     },
     {
       "id": "bootstrap.start_pins",

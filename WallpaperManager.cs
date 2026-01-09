@@ -11,10 +11,10 @@ public static class WallpaperManager
     private const int SpifUpdateIniFile = 0x01;
     private const int SpifSendChange = 0x02;
 
-    private const string DarkDesktop = @"C:\Wallpapers\dark_background_desktop.jpg";
-    private const string LightDesktop = @"C:\Wallpapers\light_background_desktop.jpg";
-    private const string DarkLock = @"C:\Wallpapers\dark_background_lockscreen.jpg";
-    private const string LightLock = @"C:\Wallpapers\light_background_lockscreen.jpg";
+    private const string DarkDesktop = @"C:\Wallpapers\dark_background_desktop.png";
+    private const string LightDesktop = @"C:\Wallpapers\light_background_desktop.png";
+    private const string DarkLock = @"C:\Wallpapers\dark_background_lockscreen.png";
+    private const string LightLock = @"C:\Wallpapers\light_background_lockscreen.png";
 
     public static void ApplyTheme(string themeChoice)
     {

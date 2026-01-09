@@ -7,6 +7,8 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Threading;
+using System.Windows.Media.Animation;
 using DeL1ThiSystem.ConfigurationWizard.Tweaks;
 
 namespace DeL1ThiSystem.ConfigurationWizard.Pages;
@@ -25,6 +27,16 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
     private double _progressWidth = 0;
     private bool _rebootEnabled = false;
     private bool _isCompleted = false;
+    private readonly DispatcherTimer _waitTimer;
+    private CancellationTokenSource? _slowStepCts;
+    private bool _slowNoticeShown;
+    private readonly string _headerTextBase;
+    private readonly string _internetWaitMarker = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+        "DeL1ThiSystem",
+        "Wizard",
+        "waiting_internet.marker");
+    private string _currentStepTitleBase = "";
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -64,9 +76,24 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
         _autoNavigate = autoNavigate;
 
         HeaderText = headerText;
+        _headerTextBase = headerText;
         if (!string.IsNullOrWhiteSpace(footerText))
             FooterText = footerText;
         DataContext = this;
+
+        _waitTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(500)
+        };
+        _waitTimer.Tick += (_, __) =>
+        {
+            if (IsCompleted || string.IsNullOrWhiteSpace(_currentStepTitleBase))
+                return;
+            if (File.Exists(_internetWaitMarker))
+                CurrentStepText = $"{_currentStepTitleBase} (ожидание интернета...)";
+            else
+                CurrentStepText = _currentStepTitleBase;
+        };
 
         Loaded += async (_, __) => await RunAsync();
     }
@@ -77,15 +104,19 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
         var start = DateTime.UtcNow;
         try
         {
+            _waitTimer.Start();
             for (int i = 0; i < _steps.Length; i++)
             {
-                CurrentStepText = _steps[i].Title;
+                _currentStepTitleBase = _steps[i].Title;
+                CurrentStepText = _currentStepTitleBase;
+                StartSlowNoticeTimer();
                 double p = (double)(i) / total;
                 SetProgress(p);
                 if (!string.Equals(_steps[i].Id, "noop", StringComparison.OrdinalIgnoreCase))
                 {
                     await Task.Run(() => TweakExecutor.Execute(_steps[i].Id, _state.OsFamily, _state.ThemeChoice));
                 }
+                StopSlowNoticeTimer();
                 await Task.Delay(150);
             }
 
@@ -115,6 +146,8 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
         }
         finally
         {
+            _waitTimer.Stop();
+            StopSlowNoticeTimer();
         }
     }
 
@@ -151,6 +184,69 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
 
     private void OnPropertyChanged([CallerMemberName] string? name = null) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
+    private void StartSlowNoticeTimer()
+    {
+        _slowNoticeShown = false;
+        _slowStepCts?.Cancel();
+        _slowStepCts?.Dispose();
+        _slowStepCts = new CancellationTokenSource();
+        var token = _slowStepCts.Token;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(30), token);
+            }
+            catch
+            {
+                return;
+            }
+
+            if (token.IsCancellationRequested)
+                return;
+
+            Dispatcher.Invoke(() =>
+            {
+                if (IsCompleted)
+                    return;
+                _slowNoticeShown = true;
+                FadeHeaderText("Нет, мы не зависли — ожидайте...");
+            });
+        });
+    }
+
+    private void StopSlowNoticeTimer()
+    {
+        _slowStepCts?.Cancel();
+        _slowStepCts?.Dispose();
+        _slowStepCts = null;
+
+        if (_slowNoticeShown && !IsCompleted)
+        {
+            FadeHeaderText(_headerTextBase);
+            _slowNoticeShown = false;
+        }
+    }
+
+    private void FadeHeaderText(string newText)
+    {
+        if (HeaderTextBlock == null || string.Equals(HeaderText, newText, StringComparison.Ordinal))
+        {
+            HeaderText = newText;
+            return;
+        }
+
+        var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromSeconds(0.18));
+        fadeOut.Completed += (_, __) =>
+        {
+            HeaderText = newText;
+            var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromSeconds(0.18));
+            HeaderTextBlock.BeginAnimation(UIElement.OpacityProperty, fadeIn);
+        };
+        HeaderTextBlock.BeginAnimation(UIElement.OpacityProperty, fadeOut);
+    }
 
     private static void TryWriteCompletionMarker()
     {

@@ -120,6 +120,17 @@
           "stage": "bootstrap"
         },
         {
+          "id": "bootstrap.wallpaper_quality_100",
+          "title": "???????? ????? 100%",
+          "description": "????????? ?????? JPEG ??? ????????? ????? (JPEGImportQuality=100).",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "bootstrap"
+        },
+        {
           "id": "bootstrap.start_pins",
           "title": "Пины Start",
           "description": "Применяет рекомендуемую раскладку закреплений Start (заглушка логики).",
@@ -138,7 +149,7 @@
         {
           "id": "apps.remove_uwp",
           "title": "Удаление UWP-приложений",
-          "description": "3D Viewer, BingSearch, Clipchamp, Copilot, DevHome, Family, FeedbackHub, GetHelp/GetStarted, BingNews, OfficeHub, OneNote, Outlook (new), Paint, Solitaire, StickyNotes, Teams (MicrosoftTeams/MSTeams), ToDo, Wallet, Weather, Movies&TV, Xbox (TCUI/XboxApp/GameOverlay/GamingOverlay/IdentityProvider/SpeechToTextOverlay/GamingApp).",
+          "description": "Microsoft Store, 3D Viewer, BingSearch, Clipchamp, Copilot, DevHome, Family, FeedbackHub, GetHelp/GetStarted, BingNews, OfficeHub, OneNote, Outlook (new), Paint, Solitaire, StickyNotes, Teams (MicrosoftTeams/MSTeams), ToDo, Wallet, Weather, Movies&TV, Xbox (TCUI/XboxApp/GameOverlay/GamingOverlay/IdentityProvider/SpeechToTextOverlay/GamingApp).",
           "appliesTo": [
             "10",
             "11"
@@ -322,6 +333,16 @@
           "description": "Сворачивает поиск до иконки вместо длинной строки.",
           "appliesTo": [
             "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "tweak"
+        },
+        {
+          "id": "shell.win11_start_recommended_disable",
+          "title": "Скрытие рекомендаций и недавнего",
+          "description": "Скрывает рекомендации в Пуске, ставит режим \"Больше закреплённых\", убирает недавние в Проводнике.",
+          "appliesTo": [
             "11"
           ],
           "default": true,

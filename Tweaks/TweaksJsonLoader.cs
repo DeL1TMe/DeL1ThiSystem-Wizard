@@ -107,15 +107,6 @@ public static class TweaksJsonLoader
     private static bool IsTweakSupported(TweakItemJson item, out string note)
     {
         note = "";
-        switch (item.Id)
-        {
-            case "extras.install_apps":
-            case "extras.install_toolbox":
-            case "extras.activate_hwid":
-                note = "Недоступно: функция пока не перенесена в .exe.";
-                return false;
-            default:
-                return true;
-        }
+        return true;
     }
 }

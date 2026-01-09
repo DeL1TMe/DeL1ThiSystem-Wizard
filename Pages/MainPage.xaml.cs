@@ -87,6 +87,7 @@ public partial class MainPage : Page
         ApplyThemeSelectionVisuals();
         ThemeManager.ApplyTheme(_state.ThemeChoice);
         WallpaperManager.ApplyTheme(_state.ThemeChoice);
+        TweakExecutor.ApplyWindowsTheme(_state.ThemeChoice);
     }
 
     private void ThemeDark_Click(object sender, RoutedEventArgs e)
@@ -95,6 +96,7 @@ public partial class MainPage : Page
         ApplyThemeSelectionVisuals();
         ThemeManager.ApplyTheme(_state.ThemeChoice);
         WallpaperManager.ApplyTheme(_state.ThemeChoice);
+        TweakExecutor.ApplyWindowsTheme(_state.ThemeChoice);
     }
 
     private void UpdateFadeOverlays()

@@ -95,6 +95,11 @@
             <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
             </Style>
 
+            <Style TargetType="{x:Type Button}">
+            <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+            <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
+            </Style>
+
         
             <Style x:Key="ConceptPrimaryButton" TargetType="{x:Type Button}">
             <Setter Property="Foreground" Value="White"/>
@@ -103,15 +108,29 @@
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="FontSize" Value="13.5"/>
             <Setter Property="Height" Value="34"/>
+            <Setter Property="MinHeight" Value="34"/>
             <Setter Property="MinWidth" Value="96"/>
             <Setter Property="Padding" Value="18,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="UseLayoutRounding" Value="True"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type Button}">
-                        <Border x:Name="b" Background="{TemplateBinding Background}" CornerRadius="6">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Border x:Name="b"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="6"
+                                Height="{TemplateBinding Height}"
+                                ClipToBounds="True"
+                                SnapsToDevicePixels="True"
+                                UseLayoutRounding="True">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              SnapsToDevicePixels="True"
+                                              UseLayoutRounding="True"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -132,6 +151,46 @@
             <Style x:Key="ConceptSecondaryButton" TargetType="{x:Type Button}" BasedOn="{StaticResource ConceptPrimaryButton}">
             <Setter Property="Background" Value="{DynamicResource Brush.SecondaryButtonBg}"/>
             <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}"/>
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="MinHeight" Value="34"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="18,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="UseLayoutRounding" Value="True"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border x:Name="b"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="6"
+                                Height="{TemplateBinding Height}"
+                                ClipToBounds="True"
+                                SnapsToDevicePixels="True"
+                                UseLayoutRounding="True">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              SnapsToDevicePixels="True"
+                                              UseLayoutRounding="True"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="b" Property="Background" Value="{DynamicResource Brush.SecondaryButtonBgHover}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="b" Property="Background" Value="{DynamicResource Brush.SecondaryButtonBgPressed}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="b" Property="Background" Value="{DynamicResource Brush.SecondaryButtonBgDisabled}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource Brush.SecondaryButtonBorderDisabled}"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Foreground" Value="{DynamicResource Brush.SecondaryButtonTextDisabled}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
             </Style>
 
         

@@ -23,18 +23,24 @@
 
 
     <Grid x:Name="RootGrid" Background="Transparent">
-        <Border x:Name="WindowCard"
+        <Border x:Name="WindowShell"
                 Width="720"
                 Height="800"
                 CornerRadius="14"
-                Background="{DynamicResource Brush.WindowBg}"
-                BorderBrush="{DynamicResource Brush.WindowBorder}"
-                BorderThickness="1"
+                Background="{DynamicResource Brush.WindowBorder}"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 ClipToBounds="True"
                 SnapsToDevicePixels="True"
                 UseLayoutRounding="True">
+        <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
+            <Border x:Name="WindowCard"
+                    CornerRadius="13"
+                    Background="{DynamicResource Brush.WindowBg}"
+                    Margin="1"
+                    ClipToBounds="True"
+                    SnapsToDevicePixels="True"
+                    UseLayoutRounding="True">
             <Grid>
             <Grid x:Name="MainContent" Margin="12">
             <Grid.RowDefinitions>
@@ -51,7 +57,10 @@
                 <Image x:Name="HeaderLogo"
                        Width="290" Height="80"
                        HorizontalAlignment="Left"
-                       Stretch="Uniform"/>
+                       Stretch="Uniform"
+                       SnapsToDevicePixels="True"
+                       UseLayoutRounding="True"
+                       RenderOptions.BitmapScalingMode="HighQuality"/>
 
                 <Button x:Name="HeaderCloseButton"
                         Grid.Column="1"
@@ -70,31 +79,46 @@
             </Border>
         </Grid>
 
-        <Grid x:Name="ExitConfirmOverlay" Visibility="Collapsed" Background="Transparent" ClipToBounds="True" SnapsToDevicePixels="True" UseLayoutRounding="True">
-            <Border Background="#AA0F1320" CornerRadius="14" SnapsToDevicePixels="True" UseLayoutRounding="True"/>
-            <Border Background="{DynamicResource Brush.CardBg}"
-                    BorderBrush="{DynamicResource Brush.PopupBorder}"
-                    BorderThickness="1"
+            </Grid>
+            </Border>
+
+        <Grid x:Name="ExitConfirmOverlay"
+              Visibility="Collapsed"
+              Background="Transparent"
+              ClipToBounds="True"
+              SnapsToDevicePixels="True"
+              UseLayoutRounding="True">
+            <Border Background="#AA0F1320"
                     CornerRadius="14"
-                    Padding="24"
+                    SnapsToDevicePixels="True"
+                    UseLayoutRounding="True"/>
+            <Border Background="{DynamicResource Brush.PopupBorder}"
+                    CornerRadius="12"
                     Width="520"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center">
+                <Border Background="{DynamicResource Brush.CardBg}"
+                        CornerRadius="11"
+                        Margin="1"
+                        Padding="24">
                 <StackPanel>
                     <TextBlock Style="{StaticResource Txt.H1}" Text="Вы действительно хотите выйти?"/>
                     <TextBlock Style="{StaticResource Txt.Body14}" Margin="0,10,0,18"
                                Text="Мы настоятельно рекомендуем завершить настройку сейчас, внесение изменений в систему может помешать настроить её повторно."/>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button Content="Отмена" Style="{StaticResource ConceptSecondaryButton}" Opacity="0.88"
+                                Height="34" MinHeight="34" Padding="18,0"
                                 Margin="0,0,10,0" Click="ExitConfirmCancel_Click"/>
                         <Button Content="Выйти" Style="{StaticResource ConceptPrimaryButton}"
+                                Height="34" MinHeight="34" Padding="18,0"
                                 Click="ExitConfirmExit_Click"/>
                     </StackPanel>
                 </StackPanel>
+                </Border>
             </Border>
         </Grid>
-    </Grid>
-    </Border>
+        </Grid>
+        </Border>
     </Grid>
 </Window>
 

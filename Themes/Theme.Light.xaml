@@ -14,6 +14,19 @@
     <Color x:Key="C.ScrollThumb">#9AA5B4</Color>
     <Color x:Key="C.ScrollThumbHover">#8A95A6</Color>
     <Color x:Key="C.ScrollThumbDrag">#7C889A</Color>
+    <Color x:Key="C.RebootButtonBg">#1F5FC2</Color>
+    <Color x:Key="C.RebootButtonBgHover">#2A6ED3</Color>
+    <Color x:Key="C.RebootButtonBgPressed">#1C56B8</Color>
+    <Color x:Key="C.RebootButtonBgDisabled">#EEF2F7</Color>
+    <Color x:Key="C.RebootButtonBorder">#5B677A</Color>
+    <Color x:Key="C.RebootButtonBorderActive">#00000000</Color>
+    <Color x:Key="C.RebootButtonTextDisabled">#9F6C7584</Color>
+    <Color x:Key="C.SecondaryButtonBgHover">#D9E0EA</Color>
+    <Color x:Key="C.SecondaryButtonBgPressed">#C9D2DE</Color>
+    <Color x:Key="C.SecondaryButtonBgDisabled">#E6EBF2</Color>
+    <Color x:Key="C.SecondaryButtonBorder">#7E8A9D</Color>
+    <Color x:Key="C.SecondaryButtonBorderDisabled">#B0B8C5</Color>
+    <Color x:Key="C.SecondaryButtonTextDisabled">#6C7584</Color>
 
     <Color x:Key="C.CardBg_00">#00DCE1EA</Color>
     <Color x:Key="C.CardBg_FF">#FFDCE1EA</Color>
@@ -36,6 +49,19 @@
     <SolidColorBrush x:Key="Brush.ScrollThumb" Color="{StaticResource C.ScrollThumb}"/>
     <SolidColorBrush x:Key="Brush.ScrollThumbHover" Color="{StaticResource C.ScrollThumbHover}"/>
     <SolidColorBrush x:Key="Brush.ScrollThumbDrag" Color="{StaticResource C.ScrollThumbDrag}"/>
+    <SolidColorBrush x:Key="Brush.RebootButtonBg" Color="{StaticResource C.RebootButtonBg}"/>
+    <SolidColorBrush x:Key="Brush.RebootButtonBgHover" Color="{StaticResource C.RebootButtonBgHover}"/>
+    <SolidColorBrush x:Key="Brush.RebootButtonBgPressed" Color="{StaticResource C.RebootButtonBgPressed}"/>
+    <SolidColorBrush x:Key="Brush.RebootButtonBgDisabled" Color="{StaticResource C.RebootButtonBgDisabled}"/>
+    <SolidColorBrush x:Key="Brush.RebootButtonBorder" Color="{StaticResource C.RebootButtonBorder}"/>
+    <SolidColorBrush x:Key="Brush.RebootButtonBorderActive" Color="{StaticResource C.RebootButtonBorderActive}"/>
+    <SolidColorBrush x:Key="Brush.RebootButtonTextDisabled" Color="{StaticResource C.RebootButtonTextDisabled}"/>
+    <SolidColorBrush x:Key="Brush.SecondaryButtonBgHover" Color="{StaticResource C.SecondaryButtonBgHover}"/>
+    <SolidColorBrush x:Key="Brush.SecondaryButtonBgPressed" Color="{StaticResource C.SecondaryButtonBgPressed}"/>
+    <SolidColorBrush x:Key="Brush.SecondaryButtonBgDisabled" Color="{StaticResource C.SecondaryButtonBgDisabled}"/>
+    <SolidColorBrush x:Key="Brush.SecondaryButtonBorder" Color="{StaticResource C.SecondaryButtonBorder}"/>
+    <SolidColorBrush x:Key="Brush.SecondaryButtonBorderDisabled" Color="{StaticResource C.SecondaryButtonBorderDisabled}"/>
+    <SolidColorBrush x:Key="Brush.SecondaryButtonTextDisabled" Color="{StaticResource C.SecondaryButtonTextDisabled}"/>
 
     <SolidColorBrush x:Key="Brush.TextPrimary" Color="{StaticResource C.TextPrimary}"/>
     <SolidColorBrush x:Key="Brush.TextSecondary" Color="{StaticResource C.TextSecondary}"/>

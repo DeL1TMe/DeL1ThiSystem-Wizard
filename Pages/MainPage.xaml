@@ -175,25 +175,27 @@
 
                     <TextBlock Style="{StaticResource Txt.Section}" Margin="0,0,0,10">Выберите тему:</TextBlock>
 
-                    <Grid Margin="0,0,0,22">
+                    <Grid Margin="0,0,0,22" HorizontalAlignment="Left" SnapsToDevicePixels="True" UseLayoutRounding="True">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="18"/>
-                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <Grid Grid.Column="0" Height="172" Cursor="Hand" MouseLeftButtonDown="ThemeLight_Click">
-                            <Border CornerRadius="14" Background="#0FFFFFFF"/>
-                            <Border x:Name="ThemeLightClip"
+                        <Grid Grid.Column="0" Width="300" Height="172" Cursor="Hand" MouseLeftButtonDown="ThemeLight_Click"
+                              SnapsToDevicePixels="True" UseLayoutRounding="True">
+                            <Border x:Name="ThemeLightImage"
                                     CornerRadius="14"
-                                    ClipToBounds="True"
                                     SnapsToDevicePixels="True"
-                                    UseLayoutRounding="True">
-                                <Rectangle x:Name="ThemeLightInset" Margin="1.2" RadiusX="14" RadiusY="14" SnapsToDevicePixels="True">
-                                    <Rectangle.Fill>
-                                        <ImageBrush x:Name="ThemeLightBrush" Stretch="UniformToFill"/>
-                                    </Rectangle.Fill>
-                                </Rectangle>
+                                    UseLayoutRounding="True"
+                                    RenderOptions.BitmapScalingMode="HighQuality">
+                                <Border.Background>
+                                    <ImageBrush x:Name="ThemeLightBrush"
+                                                Stretch="UniformToFill"
+                                                AlignmentX="Center"
+                                                AlignmentY="Center"
+                                                RenderOptions.BitmapScalingMode="HighQuality"/>
+                                </Border.Background>
                             </Border>
                             <Border CornerRadius="14"
                                     BorderThickness="2"
@@ -209,18 +211,20 @@
                                     IsHitTestVisible="False"/>
                         </Grid>
 
-                        <Grid Grid.Column="2" Height="172" Cursor="Hand" MouseLeftButtonDown="ThemeDark_Click">
-                            <Border CornerRadius="14" Background="#0FFFFFFF"/>
-                            <Border x:Name="ThemeDarkClip"
+                        <Grid Grid.Column="2" Width="300" Height="172" Cursor="Hand" MouseLeftButtonDown="ThemeDark_Click"
+                              SnapsToDevicePixels="True" UseLayoutRounding="True">
+                            <Border x:Name="ThemeDarkImage"
                                     CornerRadius="14"
-                                    ClipToBounds="True"
                                     SnapsToDevicePixels="True"
-                                    UseLayoutRounding="True">
-                                <Rectangle x:Name="ThemeDarkInset" Margin="1.2" RadiusX="14" RadiusY="14" SnapsToDevicePixels="True">
-                                    <Rectangle.Fill>
-                                        <ImageBrush x:Name="ThemeDarkBrush" Stretch="UniformToFill"/>
-                                    </Rectangle.Fill>
-                                </Rectangle>
+                                    UseLayoutRounding="True"
+                                    RenderOptions.BitmapScalingMode="HighQuality">
+                                <Border.Background>
+                                    <ImageBrush x:Name="ThemeDarkBrush"
+                                                Stretch="UniformToFill"
+                                                AlignmentX="Center"
+                                                AlignmentY="Center"
+                                                RenderOptions.BitmapScalingMode="HighQuality"/>
+                                </Border.Background>
                             </Border>
                             <Border CornerRadius="14"
                                     BorderThickness="2"
@@ -339,8 +343,10 @@
         <Border Grid.Row="1"
                 Background="{DynamicResource Brush.FooterBar}"
                 CornerRadius="0,0,16,16"
-                Padding="18,12">
-            <Grid>
+                Padding="18,12"
+                SnapsToDevicePixels="True"
+                UseLayoutRounding="True">
+            <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
@@ -356,11 +362,19 @@
                 <Button Grid.Column="1"
                         Style="{StaticResource ConceptSecondaryButton}"
                         Content="Назад"
+                        Height="34"
+                        MinHeight="34"
+                        Padding="18,0"
+                        VerticalContentAlignment="Center"
                         Click="Back_Click"/>
 
                 <Button Grid.Column="3"
                         Style="{StaticResource ConceptPrimaryButton}"
                         Content="Применить"
+                        Height="34"
+                        MinHeight="34"
+                        Padding="18,0"
+                        VerticalContentAlignment="Center"
                         Click="Apply_Click"/>
             </Grid>
         </Border>

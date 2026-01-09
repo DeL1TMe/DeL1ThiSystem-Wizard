@@ -24,10 +24,16 @@
         </Style>
 
         <Style x:Key="ProgressRebootButton" TargetType="Button">
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="#E6FFFFFF"/>
             <Setter Property="Background" Value="#2A3345"/>
-            <Setter Property="BorderBrush" Value="#3A445A"/>
-            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.RebootButtonBorder}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="MinHeight" Value="34"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="UseLayoutRounding" Value="True"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -35,13 +41,14 @@
                         <Border CornerRadius="6"
                                 Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}">
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                SnapsToDevicePixels="True">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsEnabled" Value="True">
-                                <Setter Property="Background" Value="{DynamicResource Brush.Accent}"/>
-                                <Setter Property="BorderBrush" Value="Transparent"/>
+                                <Setter Property="Background" Value="{DynamicResource Brush.RebootButtonBg}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource Brush.RebootButtonBorderActive}"/>
                                 <Setter Property="BorderThickness" Value="0"/>
                             </Trigger>
                             <MultiTrigger>
@@ -49,19 +56,24 @@
                                     <Condition Property="IsEnabled" Value="True"/>
                                     <Condition Property="IsMouseOver" Value="True"/>
                                 </MultiTrigger.Conditions>
-                                <Setter Property="Background" Value="#2D6FDC"/>
-                                <Setter Property="BorderBrush" Value="#2D6FDC"/>
+                                <Setter Property="Background" Value="{DynamicResource Brush.RebootButtonBgHover}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource Brush.RebootButtonBorderActive}"/>
+                                <Setter Property="BorderThickness" Value="0"/>
                             </MultiTrigger>
                             <MultiTrigger>
                                 <MultiTrigger.Conditions>
                                     <Condition Property="IsEnabled" Value="True"/>
                                     <Condition Property="IsPressed" Value="True"/>
                                 </MultiTrigger.Conditions>
-                                <Setter Property="Background" Value="#1C56B8"/>
-                                <Setter Property="BorderBrush" Value="#1C56B8"/>
+                                <Setter Property="Background" Value="{DynamicResource Brush.RebootButtonBgPressed}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource Brush.RebootButtonBorderActive}"/>
+                                <Setter Property="BorderThickness" Value="0"/>
                             </MultiTrigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Opacity" Value="0.5"/>
+                                <Setter Property="Background" Value="{DynamicResource Brush.RebootButtonBgDisabled}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource Brush.RebootButtonBorder}"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Foreground" Value="{DynamicResource Brush.RebootButtonTextDisabled}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -80,7 +92,7 @@
         <Grid Grid.Row="0" VerticalAlignment="Center">
             
             <StackPanel HorizontalAlignment="Center" Width="630">
-                <TextBlock Style="{StaticResource Txt.H1}"
+                <TextBlock x:Name="HeaderTextBlock" Style="{StaticResource Txt.H1}"
                            Text="{Binding HeaderText}" TextAlignment="Center" Margin="0,0,0,8"/>
 
                 <TextBlock Style="{StaticResource ProgressBlinkText}"
@@ -90,21 +102,21 @@
                 
                 <Grid Margin="0,0,0,10" Width="630" Height="16" SnapsToDevicePixels="True" UseLayoutRounding="True"
                       Visibility="{Binding ProgressVisibility}">
-                    
-
-                    
-                    <Rectangle RadiusX="6" RadiusY="6" Stroke="#6B7C93" StrokeThickness="2" Fill="Transparent" SnapsToDevicePixels="True"/>
-
-                    
-                    <Grid Margin="1" SnapsToDevicePixels="True">
-                        <Grid.Clip>
-                            <RectangleGeometry Rect="0,0,628,14" RadiusX="6" RadiusY="6"/>
-                        </Grid.Clip>
-
-                        <Rectangle RadiusX="6" RadiusY="6" Fill="#D9D9D9"/>
-                        <Rectangle RadiusX="6" RadiusY="6" Fill="#0078D4"
-                                   HorizontalAlignment="Left" Width="{Binding ProgressWidth}"/>
-                    </Grid>
+                    <Border Width="630" Height="16"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            CornerRadius="6"
+                            Background="{DynamicResource Brush.PopupBorder}"
+                            ClipToBounds="True"
+                            SnapsToDevicePixels="True"
+                            UseLayoutRounding="True">
+                        <Rectangle RadiusX="6" RadiusY="6"
+                                   Fill="#0078D4"
+                                   HorizontalAlignment="Left"
+                                   Width="{Binding ProgressWidth}"
+                                   SnapsToDevicePixels="True"
+                                   UseLayoutRounding="True"/>
+                    </Border>
                 </Grid>
 
                 <TextBlock Style="{StaticResource Txt.Body14}"
