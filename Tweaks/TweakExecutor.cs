@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -22,7 +22,6 @@ public static class TweakExecutor
         "Wizard");
 
     private static readonly string LogPath = Path.Combine(BaseDir, "ExeTweaks.log");
-    private static readonly string InternetWaitMarker = Path.Combine(BaseDir, "waiting_internet.marker");
     private static int _procSeq = 0;
 
     private static readonly string[] ContentDeliveryValues =
@@ -51,10 +50,10 @@ public static class TweakExecutor
         "Microsoft.Microsoft3DViewer",
         "Microsoft.BingSearch",
         "Clipchamp.Clipchamp",
-        "A025C540.Yandex.Music",
         "Microsoft.Copilot",
         "Microsoft.549981C3F5F10",
         "Microsoft.Windows.DevHome",
+        "A025C540.Yandex.Music",
         "MicrosoftCorporationII.MicrosoftFamily",
         "Microsoft.WindowsFeedbackHub",
         "Microsoft.Edge.GameAssist",
@@ -141,11 +140,8 @@ public static class TweakExecutor
                 case "bootstrap.wallpaper_quality_100":
                     SetWallpaperQuality100();
                     break;
-                case "bootstrap.start_pins":
-                    ConfigureStartPinsForOs(osFamily);
-                    break;
-                case "bootstrap.taskbar_only_explorer":
-                    SetTaskbarOnlyExplorer();
+                case "bootstrap.configure_ru_ru_locale":
+                    ConfigureRuRuLocale();
                     break;
                 case "apps.remove_uwp":
                     RemoveAppxPackages();
@@ -180,6 +176,16 @@ public static class TweakExecutor
                 case "updates.search_suggestions_disable":
                     SetDword(RegistryHive.CurrentUser, @"Software\Policies\Microsoft\Windows\Explorer", "DisableSearchBoxSuggestions", 1);
                     SetDefaultUserDword(@"Software\Policies\Microsoft\Windows\Explorer", "DisableSearchBoxSuggestions", 1);
+                    SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\Windows Search", "AllowSearchHighlights", 0);
+                    SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\SearchSettings", "IsDynamicSearchBoxEnabled", 0);
+                    SetDefaultUserDword(@"Software\Microsoft\Windows\CurrentVersion\SearchSettings", "IsDynamicSearchBoxEnabled", 0);
+                    SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\Windows Search", "DisableWebSearch", 1);
+                    SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\Windows Search", "ConnectedSearchUseWeb", 0);
+                    SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\Windows Search", "ConnectedSearchPrivacy", 3);
+                    SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Search", "BingSearchEnabled", 0);
+                    SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Search", "CortanaConsent", 0);
+                    SetDefaultUserDword(@"Software\Microsoft\Windows\CurrentVersion\Search", "BingSearchEnabled", 0);
+                    SetDefaultUserDword(@"Software\Microsoft\Windows\CurrentVersion\Search", "CortanaConsent", 0);
                     break;
                 case "updates.widgets_disable":
                     DisableWidgetsAndNews();
@@ -190,7 +196,6 @@ public static class TweakExecutor
                 case "perf.powercfg_never_sleep":
                     SetPowercfgNeverSleep();
                     break;
-                case "perf.restore_disable_cleanup":
                 case "bootstrap.restore_disable_cleanup":
                     DisableRestoreAndCleanup();
                     break;
@@ -204,6 +209,9 @@ public static class TweakExecutor
                 case "shell.hide_task_view":
                     SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "ShowTaskViewButton", 0);
                     SetDefaultUserDword(@"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "ShowTaskViewButton", 0);
+                    break;
+                case "shell.meet_now_disable":
+                    DisableMeetNow();
                     break;
                 case "shell.search_box_mode":
                     SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Search", "SearchboxTaskbarMode", 1);
@@ -222,10 +230,6 @@ public static class TweakExecutor
                     break;
                 case "shell.taskbar_clear_pins":
                     ClearTaskbarPins();
-                    break;
-                case "shell.taskbar_only_explorer":
-                    if (osFamily == "10")
-                        SetTaskbarOnlyExplorer();
                     break;
                 case "shell.taskbar_end_task":
                     SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\TaskbarDeveloperSettings", "TaskbarEndTask", 1);
@@ -299,6 +303,24 @@ public static class TweakExecutor
             using var baseKey = RegistryKey.OpenBaseKey(hive, RegistryView.Registry64);
             using var key = baseKey.CreateSubKey(subKey, true);
             key?.SetValue(name, value, RegistryValueKind.DWord);
+        }
+        catch (Exception ex)
+        {
+            Log($"REG ERROR {path} {name}: {ex.Message}");
+        }
+    }
+
+    private static void SetDwordIfKeyExists(RegistryHive hive, RegistryView view, string subKey, string name, int value)
+    {
+        var path = $"{hive}\\{subKey}";
+        try
+        {
+            using var baseKey = RegistryKey.OpenBaseKey(hive, view);
+            using var key = baseKey.OpenSubKey(subKey, writable: true);
+            if (key == null)
+                return;
+            LogReg("REG DWORD", path, name, value.ToString(CultureInfo.InvariantCulture));
+            key.SetValue(name, value, RegistryValueKind.DWord);
         }
         catch (Exception ex)
         {
@@ -425,6 +447,84 @@ public static class TweakExecutor
         SetDefaultUserDword(@"Control Panel\Desktop", "JPEGImportQuality", 100);
     }
 
+    private static void ConfigureRuRuLocale()
+    {
+        var script = @"
+Write-Output 'Начало настройки локализации...'
+
+# Ensure Windows Update service is running
+Write-Output 'Запуск Windows Update сервиса...'
+Set-Service -Name 'wuauserv' -StartupType Manual -ErrorAction SilentlyContinue
+Start-Service -Name 'wuauserv' -ErrorAction SilentlyContinue
+Start-Sleep -Seconds 2
+
+# Try to add language capability
+Write-Output 'Попытка скачать языковой пакет ru-RU...'
+$result = Add-WindowsCapability -Online -Name 'Language.Basic~~~ru-RU~0.0.1.0' 2>&1
+Write-Output ('Результат Add-WindowsCapability: ' + $result)
+
+# Verify language pack is installed
+$caps = dism.exe /Online /Get-Capabilities 2>&1
+if ($caps -match 'ru-RU') {
+    Write-Output 'Языковой пакет успешно установлен'
+} else {
+    Write-Output 'ВНИМАНИЕ: Языковой пакет не найден в списке возможностей'
+}
+
+$list = Get-WinUserLanguageList
+$ruLang = $list | Where-Object { $_.LanguageTag -eq 'ru-RU' }
+if (-not $ruLang) {
+    Write-Output 'ru-RU не в списке языков, добавляю...'
+    $newLang = New-WinUserLanguageList 'ru-RU'
+    $list.Insert(0, $newLang[0])
+} else {
+    Write-Output 'ru-RU уже в списке, переставляю на первое место...'
+    $list.Remove($ruLang)
+    $list.Insert(0, $ruLang)
+}
+Set-WinUserLanguageList $list -Force
+Write-Output 'Список языков обновлен'
+
+Write-Output 'Установка Display Language...'
+Set-WinUILanguageOverride -Language ru-RU -ErrorAction SilentlyContinue
+
+# Alternative: Direct registry modification for Display Language
+Write-Output 'Установка Display Language через реестр...'
+New-Item -Path 'HKCU:\Control Panel\Desktop' -Force -ErrorAction SilentlyContinue | Out-Null
+Set-ItemProperty -Path 'HKCU:\Control Panel\Desktop' -Name 'PreferredUILanguageFallback' -Value 'ru-RU' -Force -ErrorAction SilentlyContinue
+Set-ItemProperty -Path 'HKCU:\Control Panel\International' -Name 'UILanguage' -Value 'ru-RU' -Force -ErrorAction SilentlyContinue
+
+Set-WinSystemLocale ru-RU -ErrorAction SilentlyContinue
+Set-Culture ru-RU -ErrorAction SilentlyContinue
+Set-WinHomeLocation -GeoId 203 -ErrorAction SilentlyContinue
+
+Write-Output 'Установка временной зоны...'
+tzutil /s 'Russian Standard Time'
+
+Write-Output 'Установка UTF-8 кодировки...'
+Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Nls\CodePage' -Name 'ACP' -Value '65001' -Force
+Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Nls\CodePage' -Name 'OEMCP' -Value '65001' -Force
+Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Nls\CodePage' -Name 'MACCP' -Value '65001' -Force
+
+Write-Output 'Установка реестра пользователя...'
+if (-not (Test-Path 'HKCU:\Control Panel\International')) {
+    New-Item -Path 'HKCU:\Control Panel\International' -Force | Out-Null
+}
+Set-ItemProperty -Path 'HKCU:\Control Panel\International' -Name 'LocaleName' -Value 'ru-RU' -Force
+Set-ItemProperty -Path 'HKCU:\Control Panel\International' -Name 'iCountry' -Value '7' -Force
+Set-ItemProperty -Path 'HKCU:\Control Panel\International' -Name 'iLanguage' -Value '0419' -Force
+Set-ItemProperty -Path 'HKCU:\Control Panel\International' -Name 'sLanguage' -Value 'RUS' -Force
+
+if (-not (Test-Path 'HKCU:\Keyboard Layout\Preload')) {
+    New-Item -Path 'HKCU:\Keyboard Layout\Preload' -Force | Out-Null
+}
+Set-ItemProperty -Path 'HKCU:\Keyboard Layout\Preload' -Name '1' -Value '00000419' -Force
+
+Write-Output 'Локализация установлена. ТРЕБУЕТСЯ ПЕРЕЗАГРУЗКА!'
+";
+        RunPowerShell(script);
+    }
+
     private static void ConfigureStartPinsForOs(string osFamily)
     {
         if (string.Equals(osFamily, "10", StringComparison.OrdinalIgnoreCase))
@@ -443,48 +543,101 @@ public static class TweakExecutor
         SetDword(RegistryHive.LocalMachine, key, "ConfigureStartPins_ProviderSet", 1);
         SetQword(RegistryHive.LocalMachine, key, "ConfigureStartPins_LastWrite", DateTime.UtcNow.ToFileTimeUtc());
         SetString(RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\PolicyManager\default\device\Start", "ConfigureStartPins", json);
-        RunProcess("cmd.exe", "/c taskkill /f /im explorer.exe & start explorer.exe");
     }
 
     private static void RemoveAppxPackages()
     {
-        var selectors = string.Join(",", AppxSelectors.Select(s => $"'{s}'"));
-        var script =
-            "$selectors = @(" + selectors + ");" +
-            "$prov = Get-AppxProvisionedPackage -Online;" +
-            "foreach ($s in $selectors) { " +
-            "  $prov | Where-Object { $_.DisplayName -eq $s } | ForEach-Object { " +
-            "    Remove-AppxProvisionedPackage -Online -PackageName $_.PackageName -ErrorAction Continue | Out-Null; " +
-            "  } " +
-            "}" +
-            "$installed = Get-AppxPackage -AllUsers;" +
-            "$hasAllUsers = (Get-Command Remove-AppxPackage).Parameters.ContainsKey('AllUsers');" +
-            "foreach ($s in $selectors) { " +
-            "  $installed | Where-Object { $_.Name -like ($s + '*') -or $_.PackageFamilyName -like ($s + '*') } | ForEach-Object { " +
-            "    if ($hasAllUsers) { Remove-AppxPackage -AllUsers -Package $_.PackageFullName -ErrorAction Continue } " +
-            "    else { Remove-AppxPackage -Package $_.PackageFullName -ErrorAction Continue } " +
-            "  } " +
-            "}" +
-            "$yandexExact = 'A025C540.Yandex.Music';" +
-            "$prov | Where-Object { $_.DisplayName -eq $yandexExact -or $_.PackageName -match 'Yandex' } | ForEach-Object { " +
-            "  Remove-AppxProvisionedPackage -Online -PackageName $_.PackageName -ErrorAction Continue | Out-Null; " +
-            "}" +
-            "Get-AppxPackage -Name $yandexExact -AllUsers | ForEach-Object { " +
-            "  if ($hasAllUsers) { Remove-AppxPackage -AllUsers -Package $_.PackageFullName -ErrorAction Continue } " +
-            "  else { Remove-AppxPackage -Package $_.PackageFullName -ErrorAction Continue } " +
-            "}" +
-            "$yandex = Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -match 'Yandex' };" +
-            "foreach ($p in $yandex) { " +
-            "  Remove-AppxProvisionedPackage -Online -PackageName $p.PackageName -ErrorAction Continue | Out-Null; " +
-            "}" +
-            "$yandexInstalled = Get-AppxPackage -AllUsers | Where-Object { $_.Name -match 'Yandex' -or $_.PackageFamilyName -match 'Yandex' };" +
-            "foreach ($p in $yandexInstalled) { " +
-            "  if ($hasAllUsers) { Remove-AppxPackage -AllUsers -Package $p.PackageFullName -ErrorAction Continue } " +
-            "  else { Remove-AppxPackage -Package $p.PackageFullName -ErrorAction Continue } " +
-            "}";
-        RunPowerShell(script);
+        RunPowerShell(BuildUwpRemovalScript(0));
         RemoveWindowsStore();
         DisableCortana();
+        CreateUwpAutoRemovalTasks();
+    }
+
+    private static void CreateUwpAutoRemovalTasks()
+    {
+        var cleanupTasks = @"
+$tasks = @('DeL1ThiSystem\AutoRemoveUwpShellCore','DeL1ThiSystem\AutoRemoveUwpLicensing');
+foreach ($t in $tasks) {
+  schtasks /Delete /TN $t /F >$null 2>$null
+}";
+        var removalScript = BuildUwpRemovalScript(180) + cleanupTasks;
+
+        var script = $@"
+$root = Join-Path $env:ProgramData 'DeL1ThiSystem\Wizard';
+$path = Join-Path $root 'AutoRemoveUwp.ps1';
+New-Item -ItemType Directory -Path $root -Force | Out-Null;
+
+$ps = @'
+{removalScript}
+'@;
+
+$ps | Set-Content -LiteralPath $path -Encoding UTF8;
+
+$tr = 'powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""' + $path + '""';
+
+$task1 = 'DeL1ThiSystem\AutoRemoveUwpShellCore';
+$task2 = 'DeL1ThiSystem\AutoRemoveUwpLicensing';
+
+schtasks /Delete /TN $task1 /F >$null 2>$null;
+schtasks /Delete /TN $task2 /F >$null 2>$null;
+
+$mo1 = ""*[System[Provider[@Name='Microsoft-Windows-Shell-Core'] and (EventID=62144)]]"";
+$mo2 = ""*[System[Provider[@Name='Microsoft-Client-Licensing-Platform'] and (EventID=116)] and EventData[Data[@Name='PackageName']='Microsoft.Windows.DevHome_8wekyb3d8bbwe' or Data[@Name='PackageName']='A025C540.Yandex.Music_vfvw9svesycw6' or Data[@Name='PackageName']='Microsoft.OutlookForWindows_8wekyb3d8bbwe']]"";
+
+schtasks /Create /F /TN $task1 /RU SYSTEM /RL HIGHEST /SC ONEVENT /EC 'Microsoft-Windows-Shell-Core/Operational' /MO $mo1 /TR $tr | Out-Null;
+schtasks /Create /F /TN $task2 /RU SYSTEM /RL HIGHEST /SC ONEVENT /EC 'Microsoft-Client-Licensing-Platform/Admin' /MO $mo2 /TR $tr | Out-Null;
+";
+        RunPowerShell(script);
+    }
+
+    private static string BuildUwpRemovalScript(int delaySeconds)
+    {
+        var selectors = string.Join(", ", AppxSelectors.Select(s => $"'{s}'"));
+        var delay = delaySeconds > 0 ? $"Start-Sleep -Seconds {delaySeconds}\n" : string.Empty;
+        return $@"
+{delay}$selectors = @({selectors});
+$escaped = $selectors | ForEach-Object {{ [regex]::Escape($_) }};
+$pattern = '^(' + ($escaped -join '|') + ')';
+$isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator);
+Write-Output ('UWP removal: Admin=' + $isAdmin + ', User=' + $env:USERNAME);
+$prov = Get-AppxProvisionedPackage -Online;
+$provMatches = $prov | Where-Object {{ $_.DisplayName -match $pattern -or $_.PackageName -match $pattern }};
+Write-Output ('UWP provisioned matches: ' + $provMatches.Count);
+if ($provMatches.Count -gt 0) {{
+  Write-Output ('UWP provisioned sample: ' + (($provMatches | Select-Object -First 10 -ExpandProperty PackageName) -join '; '));
+}}
+foreach ($p in $provMatches) {{
+  Remove-AppxProvisionedPackage -Online -PackageName $p.PackageName -ErrorAction Continue | Out-Null;
+}}
+
+$installedAll = @();
+try {{ $installedAll = Get-AppxPackage -AllUsers -ErrorAction Stop }} catch {{
+  Write-Output ('Get-AppxPackage -AllUsers failed: ' + $_.Exception.Message);
+  $installedAll = @()
+}}
+$installedCurrent = Get-AppxPackage -ErrorAction SilentlyContinue;
+$installed = @($installedAll + $installedCurrent) | Sort-Object PackageFullName -Unique;
+$hasAllUsers = (Get-Command Remove-AppxPackage).Parameters.ContainsKey('AllUsers');
+$installedMatches = $installed | Where-Object {{ $_.Name -match $pattern -or $_.PackageFamilyName -match $pattern }};
+Write-Output ('UWP installed matches: ' + $installedMatches.Count);
+if ($installedMatches.Count -gt 0) {{
+  Write-Output ('UWP installed sample: ' + (($installedMatches | Select-Object -First 10 -ExpandProperty PackageFullName) -join '; '));
+}}
+foreach ($pkg in $installedMatches) {{
+  if ($hasAllUsers) {{ Remove-AppxPackage -AllUsers -Package $pkg.PackageFullName -ErrorAction Continue }}
+  else {{ Remove-AppxPackage -Package $pkg.PackageFullName -ErrorAction Continue }}
+}}
+
+$outlook = 'Microsoft.OutlookForWindows';
+Get-AppxPackage -AllUsers -Name $outlook | ForEach-Object {{
+  Write-Output ('Remove installed (Outlook): ' + $_.PackageFullName);
+  if ($hasAllUsers) {{ Remove-AppxPackage -AllUsers -Package $_.PackageFullName -ErrorAction Continue }}
+  else {{ Remove-AppxPackage -Package $_.PackageFullName -ErrorAction Continue }}
+}}
+Get-AppxProvisionedPackage -Online | Where-Object {{ $_.DisplayName -eq $outlook -or $_.PackageName -match ('^' + [regex]::Escape($outlook)) }} | ForEach-Object {{
+  Write-Output ('Remove provisioned (Outlook): ' + $_.PackageName);
+  Remove-AppxProvisionedPackage -Online -PackageName $_.PackageName -ErrorAction Continue | Out-Null;
+}}";
     }
 
     private static void RemoveCapabilities()
@@ -530,33 +683,88 @@ public static class TweakExecutor
 
     private static void MakeEdgeUninstallable()
     {
-        var path = @"C:\Windows\System32\IntegratedServicesRegionPolicySet.json";
-        if (!File.Exists(path))
+        var paths = new[]
         {
-            Log($"Edge policy missing: {path}");
-            return;
+            @"C:\Windows\System32\IntegratedServicesRegionPolicySet.json",
+            @"C:\Windows\SysWOW64\IntegratedServicesRegionPolicySet.json"
+        };
+
+        bool updatedAny = false;
+        foreach (var path in paths)
+        {
+            if (!File.Exists(path))
+            {
+                Log($"Edge policy missing: {path}");
+                continue;
+            }
+
+            if (TryPatchEdgeUninstallPolicy(path))
+                updatedAny = true;
         }
 
+        SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Edge", "UninstallAllowed", 1);
+        SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Edge", "AllowUninstall", 1);
+
+        const string edgeUninstallKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Microsoft Edge";
+        SetDwordIfKeyExists(RegistryHive.LocalMachine, RegistryView.Registry64, edgeUninstallKey, "NoRemove", 0);
+        SetDwordIfKeyExists(RegistryHive.LocalMachine, RegistryView.Registry64, edgeUninstallKey, "SystemComponent", 0);
+        SetDwordIfKeyExists(RegistryHive.LocalMachine, RegistryView.Registry32, edgeUninstallKey, "NoRemove", 0);
+        SetDwordIfKeyExists(RegistryHive.LocalMachine, RegistryView.Registry32, edgeUninstallKey, "SystemComponent", 0);
+
+        if (!updatedAny)
+            Log("Edge policy not updated: GUID not found or file not writable.");
+    }
+
+    private static bool TryPatchEdgeUninstallPolicy(string path)
+    {
+        const string edgeGuid = "{1bca278a-5d11-4acf-ad2f-f9ab6d7f93a6}";
         try
         {
+            EnsureFileWritable(path);
             var node = JsonNode.Parse(File.ReadAllText(path));
             var policies = node?["policies"]?.AsArray();
             if (policies == null)
-                return;
+                return false;
 
+            bool updated = false;
             foreach (var item in policies)
             {
-                if ((string?)item?["guid"] == "{1bca278a-5d11-4acf-ad2f-f9ab6d7f93a6}")
-                    item!["defaultState"] = "enabled";
+                if ((string?)item?["guid"] == edgeGuid)
+                {
+                    if (item is JsonObject obj)
+                    {
+                        obj["defaultState"] = "enabled";
+                        obj["conditions"] = new JsonObject();
+                    }
+                    else
+                    {
+                        item!["defaultState"] = "enabled";
+                    }
+                    updated = true;
+                }
+            }
+
+            if (!updated)
+            {
+                Log($"Edge policy GUID not found in: {path}");
+                return false;
             }
 
             var json = node!.ToJsonString(new JsonSerializerOptions { WriteIndented = false });
             File.WriteAllText(path, json);
+            return true;
         }
         catch (Exception ex)
         {
-            Log($"Edge policy update failed: {ex.Message}");
+            Log($"Edge policy update failed ({path}): {ex.Message}");
+            return false;
         }
+    }
+
+    private static void EnsureFileWritable(string path)
+    {
+        var cmd = $"takeown /f \"{path}\" /a & icacls \"{path}\" /setowner \"*S-1-5-32-544\" /c & icacls \"{path}\" /grant \"*S-1-5-32-544:F\" /c";
+        RunProcess("cmd.exe", "/c " + cmd);
     }
 
     private static void PauseWindowsUpdate()
@@ -579,6 +787,7 @@ public static class TweakExecutor
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\CloudContent", "DisableWindowsConsumerFeatures", 1);
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\CloudContent", "DisableSoftLanding", 1);
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\CloudContent", "DisableThirdPartySuggestions", 1);
+        SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\WindowsStore", "AutoDownload", 2);
         foreach (var name in ContentDeliveryValues)
             SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager", name, 0);
         ApplyDefaultUserContentDelivery();
@@ -595,6 +804,17 @@ public static class TweakExecutor
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Dsh", "AllowNewsAndInterests", 0);
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Dsh", "AllowWidgets", 0);
         SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "TaskbarDa", 0);
+        SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\Windows Feeds", "EnableFeeds", 0);
+        SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Feeds", "ShellFeedsTaskbarViewMode", 2);
+        SetDefaultUserDword(@"Software\Microsoft\Windows\CurrentVersion\Feeds", "ShellFeedsTaskbarViewMode", 2);
+    }
+
+    private static void DisableMeetNow()
+    {
+        const string key = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer";
+        SetDword(RegistryHive.LocalMachine, key, "HideSCAMeetNow", 1);
+        SetDword(RegistryHive.CurrentUser, key, "HideSCAMeetNow", 1);
+        SetDefaultUserDword(key, "HideSCAMeetNow", 1);
     }
 
     private static void SetExplorerLaunchToThisPc()
@@ -655,26 +875,6 @@ if (Test-Path $taskbar) {
   Get-ChildItem $taskbar -Filter *.lnk -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue;
 }
 Remove-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Taskband' -Name Favorites,FavoritesResolve,FavoritesChanges,FavoritesRemovedChanges -ErrorAction SilentlyContinue;
-Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue;
-";
-        RunPowerShell(script);
-    }
-
-    private static void SetTaskbarOnlyExplorer()
-    {
-        SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu", "{20D04FE0-3AEA-1069-A2D8-08002B30309D}", 0);
-        SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel", "{20D04FE0-3AEA-1069-A2D8-08002B30309D}", 0);
-        ApplyDefaultUserDesktopIcons();
-        var script = @"
-$taskbar = Join-Path $env:APPDATA 'Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar';
-if (Test-Path $taskbar) {
-  Get-ChildItem $taskbar -Filter *.lnk -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue;
-  $wsh = New-Object -ComObject WScript.Shell;
-  $lnk = $wsh.CreateShortcut((Join-Path $taskbar 'File Explorer.lnk'));
-  $lnk.TargetPath = ""$env:WINDIR\explorer.exe"";
-  $lnk.Save();
-}
-Remove-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Taskband' -Name Favorites,FavoritesResolve,FavoritesChanges -ErrorAction SilentlyContinue;
 Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue;
 ";
         RunPowerShell(script);
@@ -767,7 +967,6 @@ $smh = Join-Path $env:LOCALAPPDATA 'Packages\Microsoft.Windows.StartMenuExperien
 if (Test-Path $smh) { Remove-Item -Path (Join-Path $smh '*') -Recurse -Force -ErrorAction SilentlyContinue; }
 $tileDb = Join-Path $env:LOCALAPPDATA 'TileDataLayer\Database';
 if (Test-Path $tileDb) { Remove-Item $tileDb -Recurse -Force -ErrorAction SilentlyContinue; }
-Start-Process explorer.exe;
 ";
         RunPowerShell(script);
     }
@@ -775,9 +974,24 @@ Start-Process explorer.exe;
     private static void ScheduleStartCleanupOnce()
     {
         var script = @"
-$taskName = 'DeL1ThiSystem\StartCleanupOnce';
-$ps = @'
-Stop-Process -Name explorer,StartMenuExperienceHost,ShellExperienceHost -Force -ErrorAction SilentlyContinue;
+  $taskName = 'DeL1ThiSystem\StartCleanupOnce';
+  $ps = @'
+    $taskName = 'DeL1ThiSystem\StartCleanupOnce';
+    try {
+      schtasks /Delete /TN $taskName /F >$null 2>$null;
+      Start-Sleep -Seconds 1;
+      schtasks /Query /TN $taskName >$null 2>$null;
+      if ($LASTEXITCODE -eq 0) {
+        Log 'Task still exists after schtasks delete; using COM fallback.';
+        $service = New-Object -ComObject 'Schedule.Service';
+        $service.Connect();
+        $folder = $service.GetFolder('\DeL1ThiSystem');
+        $folder.DeleteTask('StartCleanupOnce', 0);
+      } else {
+        Log 'Task removed via schtasks.';
+      }
+    } catch { Log ('Delete failed: {0}' -f $_.Exception.Message) }
+    Stop-Process -Name explorer,StartMenuExperienceHost,ShellExperienceHost -Force -ErrorAction SilentlyContinue;
 Remove-Item -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\CloudStore\Store\Cache\DefaultAccount' -Recurse -Force -ErrorAction SilentlyContinue;
 Remove-Item -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\CloudStore\Store\DefaultAccount' -Recurse -Force -ErrorAction SilentlyContinue;
 $smh = Join-Path $env:LOCALAPPDATA 'Packages\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\LocalState';
@@ -789,13 +1003,23 @@ $layouts = @(
   (Join-Path $env:LOCALAPPDATA 'Microsoft\Windows\Shell\LayoutModification.xml')
 );
 foreach ($l in $layouts) { if (Test-Path $l) { Remove-Item $l -Force -ErrorAction SilentlyContinue; } }
-Start-Process explorer.exe;
-schtasks /Delete /TN $taskName /F >$null 2>$null;
+  try {
+    schtasks /Delete /TN $taskName /F >$null 2>$null;
+    Start-Sleep -Seconds 1;
+    schtasks /Query /TN $taskName >$null 2>$null;
+    if ($LASTEXITCODE -eq 0) {
+      $service = New-Object -ComObject 'Schedule.Service';
+      $service.Connect();
+      $folder = $service.GetFolder('\DeL1ThiSystem');
+      $folder.DeleteTask('StartCleanupOnce', 0);
+    } else {
+    }
+  } catch { }
 '@;
 $path = Join-Path $env:ProgramData 'DeL1ThiSystem\Wizard\StartCleanupOnce.ps1';
 New-Item -ItemType Directory -Path (Split-Path $path) -Force | Out-Null;
 $ps | Set-Content -LiteralPath $path -Encoding UTF8;
-$tr = 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ' + [char]34 + $path + [char]34;
+  $tr = 'powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ' + [char]34 + $path + [char]34;
 schtasks /Create /F /TN $taskName /RU $env:USERNAME /SC ONLOGON /RL HIGHEST /TR $tr | Out-Null;
 ";
         RunPowerShell(script);
@@ -1003,6 +1227,7 @@ foreach ($n in $names) {
             return;
         }
 
+        LogApp($"InternetAvailable(start)={IsInternetAvailable()}");
         if (IsInternetAvailable())
         {
             LogApp("Internet OK. Installing 7-Zip (if missing) and downloading RustDesk.");
@@ -1013,6 +1238,7 @@ foreach ($n in $names) {
         {
             LogApp("Internet not available. Skip 7-Zip and RustDesk download.");
         }
+        LogApp($"InternetAvailable(after-download)={IsInternetAvailable()}");
 
         var mapPath = Path.Combine(appsPath, "install-args.json");
         var argMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -1098,6 +1324,15 @@ foreach ($n in $names) {
         LogApp("=== Install-Apps finished ===");
     }
 
+    private static void DisableRestoreAndCleanup()
+    {
+        RunPowerShell("try { Disable-ComputerRestore -Drive \"$env:SystemDrive\\\" } catch {}");
+        if (Directory.Exists(@"C:\Windows.old"))
+            RunProcess("cmd.exe", "/c rmdir /s /q C:\\Windows.old");
+        else
+            Log("Windows.old not found, skip cleanup.");
+    }
+
     private static void SetPowercfgNeverSleep()
     {
         RunProcess("powercfg.exe", "-change -standby-timeout-ac 0");
@@ -1106,15 +1341,6 @@ foreach ($n in $names) {
         RunProcess("powercfg.exe", "-change -standby-timeout-dc 0");
         RunProcess("powercfg.exe", "-change -monitor-timeout-dc 0");
         RunProcess("powercfg.exe", "-change -hibernate-timeout-dc 0");
-    }
-
-    private static void DisableRestoreAndCleanup()
-    {
-        RunPowerShell("try { Disable-ComputerRestore -Drive \"$env:SystemDrive\\\" } catch {}");
-        if (Directory.Exists(@"C:\Windows.old"))
-            RunProcess("cmd.exe", "/c rmdir /s /q C:\\Windows.old");
-        else
-            Log("Windows.old not found, skip cleanup.");
     }
 
     private static void ApplyDefaultUserContentDelivery()
@@ -1126,47 +1352,6 @@ foreach ($n in $names) {
                 return;
             foreach (var name in ContentDeliveryValues)
                 key.SetValue(name, 0, RegistryValueKind.DWord);
-        });
-    }
-
-    private static void ApplyDefaultUserDesktopIcons()
-    {
-        string[] hideIcons =
-        {
-            "{5399e694-6ce5-4d6c-8fce-1d8870fdcba0}",
-            "{b4bfcc3a-db2c-424c-b029-7fe99a87c641}",
-            "{a8cdff1c-4878-43be-b5fd-f8091c1c60d0}",
-            "{374de290-123f-4565-9164-39c4925e467b}",
-            "{e88865ea-0e1c-4e20-9aa6-edcd0212c87c}",
-            "{f874310e-b6b7-47dc-bc84-b9e6b38f5903}",
-            "{1cf1260c-4dd0-4ebb-811f-33c572699fde}",
-            "{f02c1a0d-be21-4350-88b0-7367fc96ef3c}",
-            "{3add1653-eb32-4cb0-bbd7-dfa0abb5acca}",
-            "{59031a47-3f72-44a7-89c5-5595fe6b30ee}",
-            "{a0953c92-50dc-43bf-be83-3742fed03c9c}"
-        };
-
-        string[] showIcons =
-        {
-            "{645ff040-5081-101b-9f08-00aa002f954e}",
-            "{20d04fe0-3aea-1069-a2d8-08002b30309d}"
-        };
-
-        void Apply(RegistryKey root, string subKey)
-        {
-            using var key = root.CreateSubKey(subKey, true);
-            if (key == null)
-                return;
-            foreach (var id in hideIcons)
-                key.SetValue(id, 1, RegistryValueKind.DWord);
-            foreach (var id in showIcons)
-                key.SetValue(id, 0, RegistryValueKind.DWord);
-        }
-
-        WithDefaultUserHive(root =>
-        {
-            Apply(root, @"Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu");
-            Apply(root, @"Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel");
         });
     }
 
@@ -1311,26 +1496,55 @@ try {
 
     private static void InstallToolbox()
     {
-        var script = @"
-$ps = Start-Process powershell -ArgumentList '-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command ""irm https://system.del1t.me/setup_ghost.ps1 | iex""' -PassThru -WindowStyle Hidden
-$ps.WaitForExit()
+        var logPath = Path.Combine(BaseDir, "Install-Toolbox.log");
+        void LogToolbox(string message)
+        {
+            try
+            {
+                File.AppendAllText(logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}\r\n");
+            }
+            catch
+            {
+            }
+        }
+
+        LogToolbox("Start InstallToolbox.");
+        LogToolbox($"InternetAvailable={IsInternetAvailable()}");
+
+        var script = $@"
+$ErrorActionPreference = 'Continue'
+function Log([string]$s) {{ (""[{{0}}] {{1}}"" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $s) | Out-File -FilePath '{logPath}' -Append -Encoding UTF8 }}
+Log 'Starting toolbox install script.'
+try {{
+  $ps = Start-Process powershell -ArgumentList '-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command ""irm https://system.del1t.me/setup_ghost.ps1 | iex""' -PassThru -WindowStyle Hidden
+  $ps.WaitForExit()
+  Log (""Toolbox installer exit code: {{0}}"" -f $ps.ExitCode)
+}} catch {{
+  Log (""Toolbox installer failed: {{0}}"" -f $_.Exception.Message)
+}}
 
 $toolboxPath = ""C:\Ghost Toolbox\toolbox.updater.x64.exe""
+Log (""Toolbox path exists: {{0}}"" -f (Test-Path $toolboxPath))
 
-if (Test-Path $toolboxPath) {
-  $WScriptShell = New-Object -ComObject WScript.Shell
-  $desktopPath = [Environment]::GetFolderPath(""Desktop"")
-  $shortcutPath = ""$desktopPath\Toolbox.lnk""
-  $shortcut = $WScriptShell.CreateShortcut($shortcutPath)
-  $shortcut.TargetPath = $toolboxPath
-  $shortcut.WorkingDirectory = ""C:\Ghost Toolbox""
-  $shortcut.IconLocation = $toolboxPath
-  $shortcut.Save()
-}
+if (Test-Path $toolboxPath) {{
+  try {{
+    $WScriptShell = New-Object -ComObject WScript.Shell
+    $desktopPath = [Environment]::GetFolderPath(""Desktop"")
+    $shortcutPath = ""$desktopPath\Toolbox.lnk""
+    $shortcut = $WScriptShell.CreateShortcut($shortcutPath)
+    $shortcut.TargetPath = $toolboxPath
+    $shortcut.WorkingDirectory = ""C:\Ghost Toolbox""
+    $shortcut.IconLocation = $toolboxPath
+    $shortcut.Save()
+    Log (""Shortcut created: {{0}}"" -f $shortcutPath)
+  }} catch {{
+    Log (""Shortcut creation failed: {{0}}"" -f $_.Exception.Message)
+  }}
+}}
 ";
 
         RunPowerShell(script);
-        SetInternetWaitMarker(false);
+        LogToolbox("End InstallToolbox.");
     }
 
     private static void ActivateHwid()
@@ -1377,27 +1591,6 @@ if (Test-Path $toolboxPath) {
             $"/Create /F /TN \"{taskName}\" /RU \"SYSTEM\" /RL HIGHEST /SC ONLOGON /DELAY 0000:30 " +
             $"/TR \"\\\"{psExe}\\\" -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File \\\"{helperPs}\\\"\"";
         RunProcess("schtasks.exe", taskArgs);
-    }
-
-    private static void SetInternetWaitMarker(bool enabled)
-    {
-        try
-        {
-            Directory.CreateDirectory(BaseDir);
-            if (enabled)
-            {
-                if (!File.Exists(InternetWaitMarker))
-                    File.WriteAllText(InternetWaitMarker, "wait", Encoding.ASCII);
-            }
-            else
-            {
-                if (File.Exists(InternetWaitMarker))
-                    File.Delete(InternetWaitMarker);
-            }
-        }
-        catch
-        {
-        }
     }
 
     private static void EnsureHwidFiles(string hwidCmd, string helperPs)

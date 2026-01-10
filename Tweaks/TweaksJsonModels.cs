@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace DeL1ThiSystem.ConfigurationWizard.Tweaks;
 
@@ -24,5 +24,4 @@ public sealed class TweakItemJson
     public List<string> AppliesTo { get; set; } = new();
     public bool Default { get; set; } = false;
     public string Stage { get; set; } = "tweak";
-    public bool OobePreferred { get; set; } = false;
 }

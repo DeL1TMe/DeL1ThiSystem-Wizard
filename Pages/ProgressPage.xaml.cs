@@ -1,13 +1,11 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.IO;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Threading;
 using System.Windows.Media.Animation;
 using DeL1ThiSystem.ConfigurationWizard.Tweaks;
 
@@ -27,16 +25,9 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
     private double _progressWidth = 0;
     private bool _rebootEnabled = false;
     private bool _isCompleted = false;
-    private readonly DispatcherTimer _waitTimer;
     private CancellationTokenSource? _slowStepCts;
     private bool _slowNoticeShown;
     private readonly string _headerTextBase;
-    private readonly string _internetWaitMarker = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-        "DeL1ThiSystem",
-        "Wizard",
-        "waiting_internet.marker");
-    private string _currentStepTitleBase = "";
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -81,20 +72,6 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
             FooterText = footerText;
         DataContext = this;
 
-        _waitTimer = new DispatcherTimer
-        {
-            Interval = TimeSpan.FromMilliseconds(500)
-        };
-        _waitTimer.Tick += (_, __) =>
-        {
-            if (IsCompleted || string.IsNullOrWhiteSpace(_currentStepTitleBase))
-                return;
-            if (File.Exists(_internetWaitMarker))
-                CurrentStepText = $"{_currentStepTitleBase} (ожидание интернета...)";
-            else
-                CurrentStepText = _currentStepTitleBase;
-        };
-
         Loaded += async (_, __) => await RunAsync();
     }
 
@@ -104,11 +81,9 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
         var start = DateTime.UtcNow;
         try
         {
-            _waitTimer.Start();
             for (int i = 0; i < _steps.Length; i++)
             {
-                _currentStepTitleBase = _steps[i].Title;
-                CurrentStepText = _currentStepTitleBase;
+                CurrentStepText = _steps[i].Title;
                 StartSlowNoticeTimer();
                 double p = (double)(i) / total;
                 SetProgress(p);
@@ -128,9 +103,7 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
                 RebootEnabled = true;
             if (_showFooter)
             {
-                HeaderText = "Задача выполнена";
-                CurrentStepText = "Требуется перезагрузка";
-                IsCompleted = true;
+                SetCompletionState();
                 if (_showReboot)
                 {
                     TryWriteCompletionMarker();
@@ -146,7 +119,6 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
         }
         finally
         {
-            _waitTimer.Stop();
             StopSlowNoticeTimer();
         }
     }
@@ -241,11 +213,29 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
         var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromSeconds(0.18));
         fadeOut.Completed += (_, __) =>
         {
+            if (IsCompleted)
+            {
+                HeaderTextBlock.BeginAnimation(UIElement.OpacityProperty, null);
+                HeaderTextBlock.Opacity = 1;
+                return;
+            }
             HeaderText = newText;
             var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromSeconds(0.18));
             HeaderTextBlock.BeginAnimation(UIElement.OpacityProperty, fadeIn);
         };
         HeaderTextBlock.BeginAnimation(UIElement.OpacityProperty, fadeOut);
+    }
+
+    private void SetCompletionState()
+    {
+        if (HeaderTextBlock != null)
+        {
+            HeaderTextBlock.BeginAnimation(UIElement.OpacityProperty, null);
+            HeaderTextBlock.Opacity = 1;
+        }
+        HeaderText = "Задача выполнена";
+        CurrentStepText = "Требуется перезагрузка";
+        IsCompleted = true;
     }
 
     private static void TryWriteCompletionMarker()

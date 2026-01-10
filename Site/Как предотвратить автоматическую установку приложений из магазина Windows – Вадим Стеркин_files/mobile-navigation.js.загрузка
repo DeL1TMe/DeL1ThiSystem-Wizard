@@ -1,0 +1,15 @@
+// based on https://robincornett.com/collapsible-navigation/
+jQuery(document).ready(function($){
+    /* prepend menu icon */
+    $('.site-title').append('<div id="mobi-menu"></div>');
+ 
+    /* toggle nav */
+    $("#mobi-menu").on("click", function(){
+        $(".nav-header").slideToggle();
+        $(this).toggleClass("active");
+    });
+	    $("#mobi-menu").on("click", function(){
+        $(".featured").slideToggle();
+        $(this).toggleClass("active");
+    });
+});

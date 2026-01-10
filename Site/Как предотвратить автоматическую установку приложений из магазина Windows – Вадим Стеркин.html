@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<!-- saved from url=(0035)https://www.outsidethebox.ms/22217/ -->
+<html lang="ru-RU"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<title>Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин</title>		<meta name="robots" content="noodp,noydir">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="max-image-preview:large">
+<link rel="dns-prefetch" href="https://fonts.googleapis.com/">
+<link rel="alternate" type="application/rss+xml" title="Вадим Стеркин » Лента" href="https://www.outsidethebox.ms/feed/">
+<link rel="alternate" type="application/rss+xml" title="Вадим Стеркин » Лента комментариев" href="https://www.outsidethebox.ms/comments/feed/">
+<link rel="alternate" type="application/rss+xml" title="Вадим Стеркин » Лента комментариев к «Как предотвратить автоматическую установку приложений из магазина Windows»" href="https://www.outsidethebox.ms/22217/feed/">
+<link rel="alternate" title="oEmbed (JSON)" type="application/json+oembed" href="https://www.outsidethebox.ms/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.outsidethebox.ms%2F22217%2F">
+<link rel="alternate" title="oEmbed (XML)" type="text/xml+oembed" href="https://www.outsidethebox.ms/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.outsidethebox.ms%2F22217%2F&amp;format=xml">
+<link rel="canonical" href="https://www.outsidethebox.ms/22217/">
+ 
+    <meta property="og:title" content="Как предотвратить автоматическую установку приложений из магазина Windows">
+    <meta property="og:description" content="Сегодня в рубрике «Возвращаясь к напечатанному» приложения, которые прилетают в систему после установки Windows в отличие от применяемых из образа. Строго говоря, я покажу не предотвращение установки, а автоматическое удаление сразу после нее. Зато этот способ подходит для любых приложений и даже поддерживается ;) ">
+    <meta property="og:image" content="https://www.outsidethebox.ms/wp-content/uploads/gears-96.png">
+	<meta property="article:modified_time" content="17.02.2025">
+ 
+<style id="wp-img-auto-sizes-contain-inline-css" type="text/css">
+img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
+/*# sourceURL=wp-img-auto-sizes-contain-inline-css */
+</style>
+<link rel="stylesheet" id="eleven40-pro-theme-css" href="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/style.css" type="text/css" media="all">
+<link rel="stylesheet" id="wp-block-library-css" href="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/style.min.css" type="text/css" media="all">
+<style id="global-styles-inline-css" type="text/css">
+:root{--wp--preset--aspect-ratio--square: 1;--wp--preset--aspect-ratio--4-3: 4/3;--wp--preset--aspect-ratio--3-4: 3/4;--wp--preset--aspect-ratio--3-2: 3/2;--wp--preset--aspect-ratio--2-3: 2/3;--wp--preset--aspect-ratio--16-9: 16/9;--wp--preset--aspect-ratio--9-16: 9/16;--wp--preset--color--black: #000000;--wp--preset--color--cyan-bluish-gray: #abb8c3;--wp--preset--color--white: #ffffff;--wp--preset--color--pale-pink: #f78da7;--wp--preset--color--vivid-red: #cf2e2e;--wp--preset--color--luminous-vivid-orange: #ff6900;--wp--preset--color--luminous-vivid-amber: #fcb900;--wp--preset--color--light-green-cyan: #7bdcb5;--wp--preset--color--vivid-green-cyan: #00d084;--wp--preset--color--pale-cyan-blue: #8ed1fc;--wp--preset--color--vivid-cyan-blue: #0693e3;--wp--preset--color--vivid-purple: #9b51e0;--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple: linear-gradient(135deg,rgb(6,147,227) 0%,rgb(155,81,224) 100%);--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan: linear-gradient(135deg,rgb(122,220,180) 0%,rgb(0,208,130) 100%);--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange: linear-gradient(135deg,rgb(252,185,0) 0%,rgb(255,105,0) 100%);--wp--preset--gradient--luminous-vivid-orange-to-vivid-red: linear-gradient(135deg,rgb(255,105,0) 0%,rgb(207,46,46) 100%);--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray: linear-gradient(135deg,rgb(238,238,238) 0%,rgb(169,184,195) 100%);--wp--preset--gradient--cool-to-warm-spectrum: linear-gradient(135deg,rgb(74,234,220) 0%,rgb(151,120,209) 20%,rgb(207,42,186) 40%,rgb(238,44,130) 60%,rgb(251,105,98) 80%,rgb(254,248,76) 100%);--wp--preset--gradient--blush-light-purple: linear-gradient(135deg,rgb(255,206,236) 0%,rgb(152,150,240) 100%);--wp--preset--gradient--blush-bordeaux: linear-gradient(135deg,rgb(254,205,165) 0%,rgb(254,45,45) 50%,rgb(107,0,62) 100%);--wp--preset--gradient--luminous-dusk: linear-gradient(135deg,rgb(255,203,112) 0%,rgb(199,81,192) 50%,rgb(65,88,208) 100%);--wp--preset--gradient--pale-ocean: linear-gradient(135deg,rgb(255,245,203) 0%,rgb(182,227,212) 50%,rgb(51,167,181) 100%);--wp--preset--gradient--electric-grass: linear-gradient(135deg,rgb(202,248,128) 0%,rgb(113,206,126) 100%);--wp--preset--gradient--midnight: linear-gradient(135deg,rgb(2,3,129) 0%,rgb(40,116,252) 100%);--wp--preset--font-size--small: 13px;--wp--preset--font-size--medium: 20px;--wp--preset--font-size--large: 36px;--wp--preset--font-size--x-large: 42px;--wp--preset--spacing--20: 0.44rem;--wp--preset--spacing--30: 0.67rem;--wp--preset--spacing--40: 1rem;--wp--preset--spacing--50: 1.5rem;--wp--preset--spacing--60: 2.25rem;--wp--preset--spacing--70: 3.38rem;--wp--preset--spacing--80: 5.06rem;--wp--preset--shadow--natural: 6px 6px 9px rgba(0, 0, 0, 0.2);--wp--preset--shadow--deep: 12px 12px 50px rgba(0, 0, 0, 0.4);--wp--preset--shadow--sharp: 6px 6px 0px rgba(0, 0, 0, 0.2);--wp--preset--shadow--outlined: 6px 6px 0px -3px rgb(255, 255, 255), 6px 6px rgb(0, 0, 0);--wp--preset--shadow--crisp: 6px 6px 0px rgb(0, 0, 0);}:where(.is-layout-flex){gap: 0.5em;}:where(.is-layout-grid){gap: 0.5em;}body .is-layout-flex{display: flex;}.is-layout-flex{flex-wrap: wrap;align-items: center;}.is-layout-flex > :is(*, div){margin: 0;}body .is-layout-grid{display: grid;}.is-layout-grid > :is(*, div){margin: 0;}:where(.wp-block-columns.is-layout-flex){gap: 2em;}:where(.wp-block-columns.is-layout-grid){gap: 2em;}:where(.wp-block-post-template.is-layout-flex){gap: 1.25em;}:where(.wp-block-post-template.is-layout-grid){gap: 1.25em;}.has-black-color{color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-color{color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-color{color: var(--wp--preset--color--white) !important;}.has-pale-pink-color{color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-color{color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-color{color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-color{color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-color{color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-color{color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-color{color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-color{color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-color{color: var(--wp--preset--color--vivid-purple) !important;}.has-black-background-color{background-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-background-color{background-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-background-color{background-color: var(--wp--preset--color--white) !important;}.has-pale-pink-background-color{background-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-background-color{background-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-background-color{background-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-background-color{background-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-background-color{background-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-background-color{background-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-background-color{background-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-background-color{background-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-background-color{background-color: var(--wp--preset--color--vivid-purple) !important;}.has-black-border-color{border-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-border-color{border-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-border-color{border-color: var(--wp--preset--color--white) !important;}.has-pale-pink-border-color{border-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-border-color{border-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-border-color{border-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-border-color{border-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-border-color{border-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-border-color{border-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-border-color{border-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-border-color{border-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-border-color{border-color: var(--wp--preset--color--vivid-purple) !important;}.has-vivid-cyan-blue-to-vivid-purple-gradient-background{background: var(--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple) !important;}.has-light-green-cyan-to-vivid-green-cyan-gradient-background{background: var(--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan) !important;}.has-luminous-vivid-amber-to-luminous-vivid-orange-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange) !important;}.has-luminous-vivid-orange-to-vivid-red-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-orange-to-vivid-red) !important;}.has-very-light-gray-to-cyan-bluish-gray-gradient-background{background: var(--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray) !important;}.has-cool-to-warm-spectrum-gradient-background{background: var(--wp--preset--gradient--cool-to-warm-spectrum) !important;}.has-blush-light-purple-gradient-background{background: var(--wp--preset--gradient--blush-light-purple) !important;}.has-blush-bordeaux-gradient-background{background: var(--wp--preset--gradient--blush-bordeaux) !important;}.has-luminous-dusk-gradient-background{background: var(--wp--preset--gradient--luminous-dusk) !important;}.has-pale-ocean-gradient-background{background: var(--wp--preset--gradient--pale-ocean) !important;}.has-electric-grass-gradient-background{background: var(--wp--preset--gradient--electric-grass) !important;}.has-midnight-gradient-background{background: var(--wp--preset--gradient--midnight) !important;}.has-small-font-size{font-size: var(--wp--preset--font-size--small) !important;}.has-medium-font-size{font-size: var(--wp--preset--font-size--medium) !important;}.has-large-font-size{font-size: var(--wp--preset--font-size--large) !important;}.has-x-large-font-size{font-size: var(--wp--preset--font-size--x-large) !important;}
+/*# sourceURL=global-styles-inline-css */
+</style>
+
+<style id="classic-theme-styles-inline-css" type="text/css">
+/*! This file is auto-generated */
+.wp-block-button__link{color:#fff;background-color:#32373c;border-radius:9999px;box-shadow:none;text-decoration:none;padding:calc(.667em + 2px) calc(1.333em + 2px);font-size:1.125em}.wp-block-file__button{background:#32373c;color:#fff;text-decoration:none}
+/*# sourceURL=/wp-includes/css/classic-themes.min.css */
+</style>
+<link rel="stylesheet" id="wp-bigfoot-public-css" href="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/wp-bigfoot-public.css" type="text/css" media="all">
+<link rel="stylesheet" id="wp-bigfoot-style-css" href="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/bigfoot-number.css" type="text/css" media="all">
+<link rel="stylesheet" id="wp-polls-css" href="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/polls-css.css" type="text/css" media="all">
+<style id="wp-polls-inline-css" type="text/css">
+.wp-polls .pollbar {
+	margin: 1px;
+	font-size: 8px;
+	line-height: 10px;
+	height: 10px;
+	background-image: url('https://www.outsidethebox.ms/wp-content/plugins/wp-polls/images/default_gradient/pollbg.gif');
+	border: 1px solid #c8c8c8;
+}
+
+/*# sourceURL=wp-polls-inline-css */
+</style>
+<link rel="stylesheet" id="google-font-css" href="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/css" type="text/css" media="all">
+<link rel="stylesheet" id="dashicons-css" href="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/dashicons.min.css" type="text/css" media="all">
+<link rel="stylesheet" id="themename-style-css" href="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/style(1).css" type="text/css" media="all">
+<script type="text/javascript" async="" src="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/library.js.загрузка"></script><script type="text/javascript" async="" src="https://ssl.google-analytics.com/ga.js"></script><script type="text/javascript" src="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/jquery.min.js.загрузка" id="jquery-core-js"></script>
+<script type="text/javascript" src="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/jquery-migrate.min.js.загрузка" id="jquery-migrate-js"></script>
+<script type="text/javascript" src="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/wp-bigfoot-public.js.загрузка" id="wp-bigfoot-publicjs-js"></script>
+<script type="text/javascript" src="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/bigfoot.min.js.загрузка" id="wp-bigfoot-min-js"></script>
+<script type="text/javascript" src="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/wp-bigfoot.js.загрузка" id="wp-bigfoot-wp-bigfoot-js"></script>
+<script type="text/javascript" src="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/vad_scripts.min.js.загрузка" id="vad_scripts-js"></script>
+<script type="text/javascript" src="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/mobile-navigation.js.загрузка" id="custom-script-js"></script>
+<link rel="https://api.w.org/" href="https://www.outsidethebox.ms/wp-json/"><link rel="alternate" title="JSON" type="application/json" href="https://www.outsidethebox.ms/wp-json/wp/v2/posts/22217"><link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://www.outsidethebox.ms/xmlrpc.php?rsd">
+
+ <!-- OneAll.com / Social Login for WordPress / v5.10.0 -->
+<script data-cfasync="false" type="text/javascript">
+ (function() {
+  var oa = document.createElement('script'); oa.type = 'text/javascript';
+  oa.async = true; oa.src = 'https://outsidethebox.api.oneall.com/socialize/library.js';
+  var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(oa, s);
+ })();
+</script>
+<link rel="stylesheet" href="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/wp-page-numbers.css" type="text/css" media="screen"><link rel="icon" href="https://www.outsidethebox.ms/wp-content/themes/eleven40-pro/images/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="https://www.outsidethebox.ms/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://www.outsidethebox.ms/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="https://www.outsidethebox.ms/favicon-16x16.png">
+<link rel="manifest" href="https://www.outsidethebox.ms/site.webmanifest">
+<!-- Google tag (gtag.js) -->
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=UA-19739103-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-19739103-1');
+</script>
+<link rel="stylesheet" href="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/all.min.css" crossorigin="anonymous"><link rel="stylesheet" id="dwpb_style-css" href="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/main.css" type="text/css" media="all">
+<link rel="stylesheet" type="text/css" href="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/shCore.css"><link rel="stylesheet" type="text/css" href="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/shThemeDefault.css"></head>
+<body class="wp-singular post-template-default single single-post postid-22217 single-format-standard wp-theme-genesis wp-child-theme-eleven40-pro dwpb-push-page dwpb-allow-close content-sidebar dwpb-open" itemscope="" itemtype="http://schema.org/WebPage"><div class="site-container"><header class="site-header" itemscope="" itemtype="http://schema.org/WPHeader"><div class="wrap"><div class="title-area"><h1 class="site-title" itemprop="headline"><a href="https://www.outsidethebox.ms/">Вадим Стеркин</a><div id="mobi-menu"></div></h1></div><div class="widget-area header-widget-area"><section id="nav_menu-3" class="widget widget_nav_menu"><div class="widget-wrap"><nav class="nav-header" itemscope="" itemtype="http://schema.org/SiteNavigationElement"><ul id="menu-genesis" class="menu genesis-nav-menu"><li id="menu-item-16008" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-16008"><a href="https://www.outsidethebox.ms/" itemprop="url"><span itemprop="name">Главная</span></a></li>
+<li id="menu-item-16010" class="menu-item menu-item-type-taxonomy menu-item-object-category current-post-ancestor current-menu-parent current-post-parent menu-item-16010"><a href="https://www.outsidethebox.ms/category/windows/" itemprop="url"><span itemprop="name">Windows</span></a></li>
+<li id="menu-item-16011" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-16011"><a href="https://www.outsidethebox.ms/category/ssd/" itemprop="url"><span itemprop="name">SSD</span></a></li>
+<li id="menu-item-16012" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-16012"><a href="https://www.outsidethebox.ms/category/software/" itemprop="url"><span itemprop="name">Программы</span></a></li>
+<li id="menu-item-16013" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-16013"><a href="https://www.outsidethebox.ms/other/" itemprop="url"><span itemprop="name">Разное</span></a></li>
+<li id="menu-item-16015" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-16015"><a href="https://www.outsidethebox.ms/about/" itemprop="url"><span itemprop="name">Об авторе</span></a></li>
+</ul></nav></div></section>
+</div></div></header><div class="site-inner"><div class="wrap"><div class="content-sidebar-wrap"><main class="content"><div class="breadcrumb" itemscope="" itemtype="http://schema.org/BreadcrumbList">Вы здесь: <span class="breadcrumb-link-wrap" itemprop="itemListElement" itemscope="" itemtype="http://schema.org/ListItem"><a href="https://www.outsidethebox.ms/" itemprop="item"><span itemprop="name">Home</span></a></span> <span class="nav-arrow">→</span> <span class="breadcrumb-link-wrap" itemprop="itemListElement" itemscope="" itemtype="http://schema.org/ListItem"><a href="https://www.outsidethebox.ms/category/popular/" itemprop="item"><span itemprop="name">Popular</span></a></span> <span class="nav-arrow">→</span> Как предотвратить автоматическую установку приложений из магазина Windows</div><article class="post-22217 post type-post status-publish format-standard has-post-thumbnail category-popular category-windows tag-powershell tag-unattended tag-quirks tag-task-scheduler tag-prevention products-windows-10-and-newer entry" itemscope="" itemtype="http://schema.org/CreativeWork"><header class="entry-header"><h1 class="entry-title" itemprop="headline">Как предотвратить автоматическую установку приложений из магазина Windows</h1> 
+<div class="post-tagline"></div><p class="entry-meta"><span class="entry-categories">Рубрики: <a href="https://www.outsidethebox.ms/category/popular/" rel="category tag">Popular</a>, <a href="https://www.outsidethebox.ms/category/windows/" rel="category tag">Windows</a></span> <abbr title="Опубликовано: 29.12.2023 | Последнее обновление: 17.02.2025">Обновлено</abbr>: <span class="modfied-date">17.02.2025</span> <span class="entry-comments-link"><a href="https://www.outsidethebox.ms/22217/#comments">комментариев 6</a></span> </p></header><div class="entry-content" itemprop="text"><p>Сегодня в рубрике «Возвращаясь к напечатанному» приложения, которые <a href="https://www.outsidethebox.ms/19177/#_Toc531106445">прилетают в систему</a> после установки Windows в отличие от применяемых из образа. Строго говоря, я покажу не предотвращение установки, а автоматическое удаление сразу после нее. Зато этот способ подходит для любых приложений и даже <a href="https://www.outsidethebox.ms/21649/#_Toc112741064">поддерживается</a> ;)</p>
+<p><span id="more-22217"></span></p>
+<blockquote><p>⬇️ <a href="https://www.outsidethebox.ms/blog/wp-content/uploads/files/PreventStoreAppsXPath.zip">Скачать</a> архив с файлами из этого руководства.</p></blockquote>
+<h4><a href="javascript:showhide(&#39;toc&#39;);">[+]</a> <strong>Сегодня в программе</strong></h4>
+<div class="domhidden" id="toc">
+<ul>
+<li><a href="https://www.outsidethebox.ms/22217/#8545">Краткая история вопроса</a></li>
+<li><a href="https://www.outsidethebox.ms/22217/#8546">Суть способа</a></li>
+<li><a href="https://www.outsidethebox.ms/22217/#8547">Шаг 1 — Выясните журнал и ИД события</a></li>
+<li><a href="https://www.outsidethebox.ms/22217/#8548">Шаг 2 — Определитесь со стратегией удаления</a></li>
+<ul>
+<li><a href="https://www.outsidethebox.ms/22217/#8549">Отдельное задание для каждого приложения</a></li>
+<li><a href="https://www.outsidethebox.ms/22217/#8550">Единое задание для всех приложений</a></li>
+</ul>
+<li><a href="https://www.outsidethebox.ms/22217/#8551">Шаг 3 — Сформируйте запрос XPath для поиска события</a></li>
+<ul>
+<li><a href="https://www.outsidethebox.ms/22217/#8552">Поиск одного приложения</a></li>
+<li><a href="https://www.outsidethebox.ms/22217/#8553">Поиск нескольких приложений</a></li>
+</ul>
+<li><a href="https://www.outsidethebox.ms/22217/#8554">Шаг 4 – Подготовьте команды для удаления</a></li>
+<ul>
+<li><a href="https://www.outsidethebox.ms/22217/#8555">Удаление приложений по одиночке</a></li>
+<li><a href="https://www.outsidethebox.ms/22217/#8556">Удаление всех приложений сразу</a></li>
+</ul>
+<li><a href="https://www.outsidethebox.ms/22217/#8557">Шаг 5 — Подготовьте запланированное задание</a></li>
+<li><a href="https://www.outsidethebox.ms/22217/#8558">Шаг 6 – Импортируйте задания в планировщик во время установки</a></li>
+<li><a href="https://www.outsidethebox.ms/22217/#8559">Результат</a></li>
+<li><a href="https://www.outsidethebox.ms/22217/#8560">Заключение</a></li>
+</ul>
+</div>
+<h2><a name="8545"></a>Краткая история вопроса</h2>
+<p>В 2018 году я показывал предотвращение установки с помощью политики <a href="https://www.outsidethebox.ms/19177/#_Toc531106448">Turn off all Windows spotlight features</a>. Однако с тех пор ее действие ограничили изданиями Enterprise и Education в соответствии с документацией. Люди боролись с Яндекс Музыкой и Ко недокументированными твиками, отключая диспетчер доставки содержимого (Content Delivery Manger, CDM). Помимо неясного списка побочных эффектов это не универсальное решение.</p>
+<blockquote><p>Когда в Windows 11 23H2 всем пропихнули приложения Dev Home и новый Outlook for Windows, отключение CDM уже не решало вопрос. Новые твики в итоге обнаружили. Но это же надо ждать, искать их…</p></blockquote>
+<p>Я хочу предложить свой подход к решению задачи в соответствии с <a href="https://www.outsidethebox.ms/about/#domain-name">девизом блога</a> на примере удаления трех приложений:</p>
+<ul>
+<li>Dev Home</li>
+<li>Outlook for Windows</li>
+<li>Яндекс Музыка</li>
+</ul>
+<blockquote class="warn"><p>Начиная с Windows 11 24H2 приложения Dev Home и Outlook for Windows входят в состав образа, причем Dev Home свернули в 2025, и больше его не будет. Поэтому можно просто <a href="https://www.outsidethebox.ms/19177/#_Toc531106447">удалить приложения из образа</a> моим скриптом.</p></blockquote>
+<h2><a name="8546"></a>Суть способа</h2>
+<p>Мой метод относительно универсальный и не зависящий от того, опубликуют ли в интернетах секретный твик. Однако он не идеальный и под капотом посложнее твика реестра, хотя внедряется легко. Для меня это что-то вроде этюдной задачи с практическим применением.</p>
+<blockquote><p>При установке магазинных приложений вносятся различные записи в журналы событий. Можно определить конкретный журнал и ИД события, по которому будет запускаться запланированное задание, удаляющее приложение сразу после его установки.</p></blockquote>
+<p>Полный алгоритм такой:</p>
+<ol>
+<li>Выясните журнал и ИД события.</li>
+<li>Определитесь со стратегией удаления.</li>
+<li>Сформируйте запрос XPath для поиска события, связанного с конкретным приложением.</li>
+<li>Подготовьте команды для удаления приложения.</li>
+<li>Создайте запланированное задание в формате XML для удаления по событию.</li>
+<li>Импортируйте это задание во время установки, например, из файла ответов.</li>
+</ol>
+<p>В принципе, можно обойтись без первых трех пунктов, запуская запланированное задание спустя какое-то время после установки ОС. Но это не так гибко, поскольку приложения из магазина прилетают в разное время.</p>
+<p>Разумеется, я <a href="https://www.outsidethebox.ms/blog/wp-content/uploads/files/PreventStoreAppsXPath.zip">подготовил</a> для вас все необходимые файлы. Однако вам придется разобраться в деталях, чтобы воспользоваться ими.</p>
+<h2><a name="8547"></a>Шаг 1 — Выясните журнал и ИД события</h2>
+<p>В канале Telegram я публиковал простые скрипты PowerShell для поиска событий по всем журналам в <i class="fa fa-paper-plane"></i> <a href="https://t.me/sterkin_ru/1399">Windows 11</a> и <i class="fa fa-paper-plane"></i> <a href="https://t.me/sterkin_ru/1411">Windows 10</a>. При установке магазинных приложений создается множество событий от разных источников, но не все они полезны. В одних неудобное или кривое форматирование данных, в других конкретная версия пакета, которая меняется со временем.</p>
+<blockquote><p>Кроме того, журналы варьируются в зависимости от [типа доставки] приложения. И я не смог подобрать журнал, где отметились бы все три тестовых приложения в удобном для синтаксиса XPath формате.</p></blockquote>
+<p>Так, в журнале <strong>Microsoft-Windows-Shell-Core/Operational</strong> событие <strong>62144</strong> регистрирует <i>автоматическую</i> установку всех приложений из образа, а также прилетающий впоследствии Outlook (только в 23H2, далее входит в образ). Однако в этом журнале нет записей об установке Dev Home и Яндекс Музыки. Зато они засветились в событии <strong>116</strong> журнала <strong>Microsoft-Client-Licensing-Platform/Admin</strong>, где нет Outlook.</p>
+<p>Выбранные события могут регистрироваться чуть раньше, чем завершается установка приложения, но это не критично. На данном этапе главное, что в эти события вносится полное имя пакета, посмотреть которое вы можете командой:</p>
+<div><div id="highlighter_144446" class="syntaxhighlighter  powershell"><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="powershell functions">Get-AppxPackage</code> <code class="powershell plain">| select PackageFamilyName</code></div></div></td></tr></tbody></table></div></div>
+<h2><a name="8548"></a>Шаг 2 — Определитесь со стратегией удаления</h2>
+<p>У вас два пути – отдельное задние для каждого приложения или единое задание для всех приложений. От этого зависят запросы XPath и команды на удаление.</p>
+<h3><a name="8549"></a>Отдельное задание для каждого приложения</h3>
+<p>Запланированное задание будет реагировать на событие установки конкретного приложения и удалять только его. <b>Я рекомендую этот вариант</b>, поскольку он более гибкий и менее подверженный случайностям.</p>
+<p>Если предполагается наличие только одного пользователя в системе, можно автоматически удалить задание после первого же запуска. Так ничто не помешает установить приложение вручную, если возникнет такое желание.</p>
+<h3><a name="8550"></a>Единое задание для всех приложений</h3>
+<p>После установки каждого приложения будет выполняться попытка удаления всех приложений. Если каких-то еще или уже нет, с ними ничего и не произойдет.</p>
+<p>Общее задание кажется удобнее. Однако могут возникнуть накладки, когда несколько приложений устанавливаются параллельно, а попытка удаления вмешивается в процесс установки. Кроме того, автоматическое удаление задания становится сложнее.</p>
+<h2><a name="8551"></a>Шаг 3 — Сформируйте запрос XPath для поиска события</h2>
+<p>Сведения о конкретном приложении находятся в текстовой части события.<br>
+<img fetchpriority="high" decoding="async" src="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/prevent-apps-new01.png" height="300" width="519" alt="Предотвращение установки приложений"></p>
+<p>Точне, в формате XML они записаны в узле <code>EventData</code>.</p>
+<div><div id="highlighter_860899" class="syntaxhighlighter  xml"><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1 highlighted">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="xml plain">&lt;</code><code class="xml keyword">EventData</code><code class="xml plain">&gt;</code></div><div class="line number2 index1 alt1 highlighted"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">Data</code> <code class="xml color1">Name</code><code class="xml plain">=</code><code class="xml string">"PackageName"</code><code class="xml plain">&gt;microsoft.windows.devhome_8wekyb3d8bbwe&lt;/</code><code class="xml keyword">Data</code><code class="xml plain">&gt; </code></div><div class="line number3 index2 alt2"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">Data</code> <code class="xml color1">Name</code><code class="xml plain">=</code><code class="xml string">"UserId"</code><code class="xml plain">&gt;NULL&lt;/</code><code class="xml keyword">Data</code><code class="xml plain">&gt; </code></div><div class="line number4 index3 alt1"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">Data</code> <code class="xml color1">Name</code><code class="xml plain">=</code><code class="xml string">"LicenseId"</code><code class="xml plain">&gt;b79ee5a5-24f8-bd24-cb7c-4000d52b54d3&lt;/</code><code class="xml keyword">Data</code><code class="xml plain">&gt; </code></div><div class="line number5 index4 alt2"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">Data</code> <code class="xml color1">Name</code><code class="xml plain">=</code><code class="xml string">"AssociateId"</code><code class="xml plain">&gt;b79ee5a5-24f8-bd24-cb7c-4000d52b54d3&lt;/</code><code class="xml keyword">Data</code><code class="xml plain">&gt; </code></div><div class="line number6 index5 alt1"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;/</code><code class="xml keyword">EventData</code><code class="xml plain">&gt;</code></div><div class="line number7 index6 alt2"><code class="xml plain">&lt;/</code><code class="xml keyword">Event</code><code class="xml plain">&gt;</code></div></div></td></tr></tbody></table></div></div>
+<p>Заметьте, что в имени пакета нет версии и прочего шума. Это критично для синтаксиса XPath, который в журналах событий <a href="https://learn.microsoft.com/en-us/windows/desktop/WES/consuming-events#xpath-10-limitations">имеет множество ограничений</a>, затрудняющих выборку. Это можно обойти, реализовав мониторинг событий с помощью фонового задания PowerShell, что я покажу в будущей статье на другом примере.</p>
+<p>В данном случае мне нравится встроенная возможность планировщика запускать задачи от имени системы. И про XPath я еще не писал в блоге. Упражнения с его вырвиглазным синтаксисом я оставляю вам в качестве домашнего задания. А здесь просто приведу готовые примеры запросов.</p>
+<p>⚠️ Не вставляйте такой код в файл XML запланированного задания — там требуется другой вид специальных символов.</p>
+<h3><a name="8552"></a>Поиск одного приложения</h3>
+<p>Это для удаления каждого приложения отдельным заданием.</p>
+<p>Dev Home (только в 23H2, далее входит в образ)</p>
+<div><div id="highlighter_832386" class="syntaxhighlighter  xml"><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="xml plain">&lt;</code><code class="xml keyword">QueryList</code><code class="xml plain">&gt;</code></div><div class="line number2 index1 alt1"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">Query</code> <code class="xml color1">Id</code><code class="xml plain">=</code><code class="xml string">"0"</code> <code class="xml color1">Path</code><code class="xml plain">=</code><code class="xml string">"Microsoft-Client-Licensing-Platform/Admin"</code><code class="xml plain">&gt;</code></div><div class="line number3 index2 alt2"><code class="xml spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">Select</code> <code class="xml color1">Path</code><code class="xml plain">=</code><code class="xml string">"Microsoft-Client-Licensing-Platform/Admin"</code><code class="xml plain">&gt;*[System[Provider[@Name='Microsoft-Client-Licensing-Platform'] and (EventID=116)] and EventData[Data[@Name='PackageName']='Microsoft.Windows.DevHome_8wekyb3d8bbwe']]&lt;/</code><code class="xml keyword">Select</code><code class="xml plain">&gt;</code></div><div class="line number4 index3 alt1"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;/</code><code class="xml keyword">Query</code><code class="xml plain">&gt;</code></div><div class="line number5 index4 alt2"><code class="xml plain">&lt;/</code><code class="xml keyword">QueryList</code><code class="xml plain">&gt;</code></div></div></td></tr></tbody></table></div></div>
+<p>Outlook for Windows (только в 23H2, далее входит в образ)</p>
+<div><div id="highlighter_420241" class="syntaxhighlighter  xml"><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="xml plain">&lt;</code><code class="xml keyword">QueryList</code><code class="xml plain">&gt;</code></div><div class="line number2 index1 alt1"><code class="xml spaces">&nbsp;&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">Query</code> <code class="xml color1">Id</code><code class="xml plain">=</code><code class="xml string">"2"</code> <code class="xml color1">Path</code><code class="xml plain">=</code><code class="xml string">"Microsoft-Windows-Shell-Core/Operational"</code><code class="xml plain">&gt;</code></div><div class="line number3 index2 alt2"><code class="xml spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">Select</code> <code class="xml color1">Path</code><code class="xml plain">=</code><code class="xml string">"Microsoft-Windows-Shell-Core/Operational"</code><code class="xml plain">&gt;*[System[Provider[@Name='Microsoft-Windows-Shell-Core'] and (EventID=62144)] and EventData[Data[@Name='PackageFamilyName']='Microsoft.OutlookForWindows_8wekyb3d8bbwe' and Data[@Name='ErrorCode']='0']]&lt;/</code><code class="xml keyword">Select</code><code class="xml plain">&gt;</code></div><div class="line number4 index3 alt1"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;/</code><code class="xml keyword">Query</code><code class="xml plain">&gt;</code></div><div class="line number5 index4 alt2"><code class="xml plain">&lt;/</code><code class="xml keyword">QueryList</code><code class="xml plain">&gt;</code></div></div></td></tr></tbody></table></div></div>
+<p>Чтобы убедиться в правильной работе запроса, откройте журнал, в правой панели нажмите <b>Фильтр текущего журнала</b> и на вкладке <b>XML</b> вставьте код запроса. Разумеется, искомое событие должно быть зарегистрировано в этом журнале.</p>
+<h3><a name="8553"></a>Поиск нескольких приложений</h3>
+<p>Это для удаления всех приложений одним заданием.</p>
+<div><div id="highlighter_811022" class="syntaxhighlighter  xml"><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="xml plain">&lt;</code><code class="xml keyword">QueryList</code><code class="xml plain">&gt;</code></div><div class="line number2 index1 alt1"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">Query</code> <code class="xml color1">Id</code><code class="xml plain">=</code><code class="xml string">"0"</code> <code class="xml color1">Path</code><code class="xml plain">=</code><code class="xml string">"Microsoft-Client-Licensing-Platform/Admin"</code><code class="xml plain">&gt;</code></div><div class="line number3 index2 alt2"><code class="xml spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">Select</code> <code class="xml color1">Path</code><code class="xml plain">=</code><code class="xml string">"Microsoft-Client-Licensing-Platform/Admin"</code><code class="xml plain">&gt;*[System[Provider[@Name='Microsoft-Client-Licensing-Platform'] and (EventID=116)] and EventData[Data[@Name='PackageName']='Microsoft.Windows.DevHome_8wekyb3d8bbwe']]&lt;/</code><code class="xml keyword">Select</code><code class="xml plain">&gt;</code></div><div class="line number4 index3 alt1"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;/</code><code class="xml keyword">Query</code><code class="xml plain">&gt;</code></div><div class="line number5 index4 alt2"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">Query</code> <code class="xml color1">Id</code><code class="xml plain">=</code><code class="xml string">"1"</code> <code class="xml color1">Path</code><code class="xml plain">=</code><code class="xml string">"Microsoft-Client-Licensing-Platform/Admin"</code><code class="xml plain">&gt;</code></div><div class="line number6 index5 alt1"><code class="xml spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">Select</code> <code class="xml color1">Path</code><code class="xml plain">=</code><code class="xml string">"Microsoft-Client-Licensing-Platform/Admin"</code><code class="xml plain">&gt;*[System[Provider[@Name='Microsoft-Client-Licensing-Platform'] and (EventID=116)] and EventData[Data[@Name='PackageName']='A025C540.Yandex.Music_vfvw9svesycw6']]&lt;/</code><code class="xml keyword">Select</code><code class="xml plain">&gt;</code></div><div class="line number7 index6 alt2"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;/</code><code class="xml keyword">Query</code><code class="xml plain">&gt;</code></div><div class="line number8 index7 alt1"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">Query</code> <code class="xml color1">Id</code><code class="xml plain">=</code><code class="xml string">"2"</code> <code class="xml color1">Path</code><code class="xml plain">=</code><code class="xml string">"Microsoft-Windows-Shell-Core/Operational"</code><code class="xml plain">&gt;</code></div><div class="line number9 index8 alt2"><code class="xml spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">Select</code> <code class="xml color1">Path</code><code class="xml plain">=</code><code class="xml string">"Microsoft-Windows-Shell-Core/Operational"</code><code class="xml plain">&gt;*[System[Provider[@Name='Microsoft-Windows-Shell-Core'] and (EventID=62144)] and EventData[Data[@Name='PackageFamilyName']='Microsoft.OutlookForWindows_8wekyb3d8bbwe' and Data[@Name='ErrorCode']='0']]&lt;/</code><code class="xml keyword">Select</code><code class="xml plain">&gt;</code></div><div class="line number10 index9 alt1"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;/</code><code class="xml keyword">Query</code><code class="xml plain">&gt;</code></div><div class="line number11 index10 alt2"><code class="xml plain">&lt;/</code><code class="xml keyword">QueryList</code><code class="xml plain">&gt;</code></div></div></td></tr></tbody></table></div></div>
+<h2><a name="8554"></a>Шаг 4 – Подготовьте команды для удаления</h2>
+<p>Команда зависит от того, будете вы удалять ненужные приложения отдельными заданиями или все сразу в рамках одного задания. Также учтите, что приложение может устанавливаться не только у одного пользователя, но еще и подготавливаться для всех пользователей (Dev Home, Outlook). Во втором случае понадобится на одну команду больше.</p>
+<p>Я сразу приведу команды формате XML для запланированного задания.</p>
+<h3><a name="8555"></a>Удаление приложений по одиночке</h3>
+<p>Яндекс Музыка – только установленные у пользователей пакеты.</p>
+<div><div id="highlighter_254188" class="syntaxhighlighter  xml"><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="xml plain">&lt;</code><code class="xml keyword">Exec</code><code class="xml plain">&gt;</code></div><div class="line number2 index1 alt1"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">Command</code><code class="xml plain">&gt;powershell&lt;/</code><code class="xml keyword">Command</code><code class="xml plain">&gt;</code></div><div class="line number3 index2 alt2"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">Arguments</code><code class="xml plain">&gt;-noprofile -command "sleep 120; Get-AppxPackage -AllUsers | where Name -match 'Yandex.Music' | Remove-AppxPackage -AllUsers"&lt;/</code><code class="xml keyword">Arguments</code><code class="xml plain">&gt;</code></div><div class="line number4 index3 alt1"><code class="xml plain">&lt;/</code><code class="xml keyword">Exec</code><code class="xml plain">&gt;</code></div></div></td></tr></tbody></table></div></div>
+<p>Двухминутной паузы перед удалением должно хватить на период между регистрацией в журнале и завершением установки.</p>
+<p>Dev Home — пакеты установленные у текущих пользователей и подготовленные для новых пользователей</p>
+<div><div id="highlighter_795818" class="syntaxhighlighter  xml"><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="xml plain">&lt;</code><code class="xml keyword">Exec</code><code class="xml plain">&gt;</code></div><div class="line number2 index1 alt1"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">Command</code><code class="xml plain">&gt;powershell&lt;/</code><code class="xml keyword">Command</code><code class="xml plain">&gt;</code></div><div class="line number3 index2 alt2"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">Arguments</code><code class="xml plain">&gt;-noprofile -command "sleep 120; Get-AppxPackage -AllUsers | where Name -match 'DevHome' | Remove-AppxPackage -AllUsers; Get-AppxProvisionedPackage -Online | where PackageName -match 'DevHome' | Remove-AppxProvisionedPackage -Online"&lt;/</code><code class="xml keyword">Arguments</code><code class="xml plain">&gt;</code></div><div class="line number4 index3 alt1"><code class="xml plain">&lt;/</code><code class="xml keyword">Exec</code><code class="xml plain">&gt;</code></div></div></td></tr></tbody></table></div></div>
+<p>Для однопользовательской системы вы можете добавить в конце удаление задания после выполнения:</p>
+<div><div id="highlighter_720574" class="syntaxhighlighter  powershell"><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="powershell plain">; </code><code class="powershell functions">Unregister-ScheduledTask</code> <code class="powershell color1">-TaskName</code> <code class="powershell plain">DeleteDevHome</code> <code class="powershell color1">-Confirm</code><code class="powershell plain">:</code><code class="powershell variable">$false</code></div></div></td></tr></tbody></table></div></div>
+<h3><a name="8556"></a>Удаление всех приложений сразу</h3>
+<div><div id="highlighter_455175" class="syntaxhighlighter  xml"><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="xml plain">&lt;</code><code class="xml keyword">Exec</code><code class="xml plain">&gt;</code></div><div class="line number2 index1 alt1"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">Command</code><code class="xml plain">&gt;powershell&lt;/</code><code class="xml keyword">Command</code><code class="xml plain">&gt;</code></div><div class="line number3 index2 alt2"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">Arguments</code><code class="xml plain">&gt;-noprofile -command "sleep 300; Get-AppxPackage -AllUsers | where Name -match 'DevHome|Outlook|Yandex.Music' | Remove-AppxPackage -AllUsers; Get-AppxProvisionedPackage -Online | where PackageName -match 'DevHome|Outlook' | Remove-AppxProvisionedPackage -Online"&lt;/</code><code class="xml keyword">Arguments</code><code class="xml plain">&gt;</code></div><div class="line number4 index3 alt1"><code class="xml plain">&lt;/</code><code class="xml keyword">Exec</code><code class="xml plain">&gt;</code></div></div></td></tr></tbody></table></div></div>
+<p>Здесь задержка выполнения в 5 минут на случай параллельной установки приложений. Второе отличие от предыдущей команды — выборка <i>всех</i> искомых пакетов оператором <code>-match</code>. Все найденные приложения будут удалены.</p>
+<h2><a name="8557"></a>Шаг 5 — Подготовьте запланированное задание</h2>
+<p>Вы можете создать каждое задание вручную с триггером на событие по фильтру XPath и командой на удаление. А потом экспортировать его.</p>
+<p><img decoding="async" src="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/prevent-apps-new02.png" height="554" width="787" alt="Предотвращение установки приложений"></p>
+<p>Но проще импортировать готовое задание, конечно. Ссылка на архив в начале статьи. Обязательно проверьте импорт и корректность отображения фильтра XPath до включения заданий в дистрибутив.</p>
+<p>В экспортированном задании символы &lt; и &gt; заменяются на <a href="https://www.w3schools.com/html/html_entities.asp">эквивалентные сущности</a>. При ручной правке задания легко запутаться. Надежнее настроить запрос в графическом интерфейсе планировщика и экспортировать задание.</p>
+<h2><a name="8558"></a>Шаг 6 – Импортируйте задания в планировщик во время установки</h2>
+<p>Для этого вполне подойдет файл ответов. Он же послужит маркерным файлом для синхронной команды PowerShell. Вы уже видели этот прием в статье <a href="https://www.outsidethebox.ms/21490/#991">про настройку профиля Default</a>.</p>
+<p>Скопируйте файлы заданий в корень установочной флешки, и команда импортирует их все в планировщик. Обратите внимание, что она ищет XML-файлы, у которых имя начинается с <code>Del</code>.</p>
+<div><div id="highlighter_393020" class="syntaxhighlighter  xml"><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="xml plain">&lt;</code><code class="xml keyword">RunSynchronousCommand</code> <code class="xml color1">wcm:action</code><code class="xml plain">=</code><code class="xml string">"add"</code><code class="xml plain">&gt;</code></div><div class="line number2 index1 alt1"><code class="xml spaces">&nbsp;&nbsp;&nbsp;</code><code class="xml comments">&lt;!-- The Path string must be less than 260 symbols --&gt;</code></div><div class="line number3 index2 alt2"><code class="xml spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">Path</code><code class="xml plain">&gt;powershell -command "(Get-Volume).DriveLetter | Foreach-Object {if (Test-Path "${PSItem}:\AutoUnattend.xml") {Get-ChildItem "${PSItem}:\Del*.xml" | %{schtasks /create /xml $($_.FullName) /tn $($_.BaseName)}}}"&lt;/</code><code class="xml keyword">Path</code><code class="xml plain">&gt;</code></div><div class="line number4 index3 alt1"><code class="xml spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">Order</code><code class="xml plain">&gt;25&lt;/</code><code class="xml keyword">Order</code><code class="xml plain">&gt;</code></div><div class="line number5 index4 alt2"><code class="xml spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">Description</code><code class="xml plain">&gt;Import scheduled tasks&lt;/</code><code class="xml keyword">Description</code><code class="xml plain">&gt;</code></div><div class="line number6 index5 alt1"><code class="xml plain">&lt;/</code><code class="xml keyword">RunSynchronousCommand</code><code class="xml plain">&gt;</code></div></div></td></tr></tbody></table></div></div>
+<p>Если вы предпочитаете <strong>setupcomplete.cmd</strong>, он тоже сгодится. При необходимости поправьте путь к маркеру.</p>
+<h2><a name="8559"></a>Результат</h2>
+<p>На картинке успешно отработали задания по удалению Dev Home и Outlook, а Яндекс Музыка пока не прилетала.</p>
+<p><img loading="lazy" decoding="async" src="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/prevent-apps-new03.png" height="201" width="883" alt="Предотвращение установки приложений"></p>
+<p>Однако успех в планировщике лишь означает, что само задание отработало без ошибок. Проверку наличия пакетов выполняйте так:</p>
+<div><div id="highlighter_113643" class="syntaxhighlighter  powershell"><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="powershell functions">Get-AppxPackage</code> <code class="powershell plain">| where name </code><code class="powershell operator value">-match</code> <code class="powershell string single">'DevHome|Outlook|Yandex.Music'</code></div><div class="line number2 index1 alt1"><code class="powershell functions">Get-AppxProvisionedPackage</code> <code class="powershell color1">-Online</code> <code class="powershell plain">| where packagename </code><code class="powershell operator value">-match</code> <code class="powershell string single">'DevHome|Outlook'</code></div></div></td></tr></tbody></table></div></div>
+<h2><a name="8560"></a>Заключение</h2>
+<p>Планировщик <a href="https://www.outsidethebox.ms/tag/task-scheduler/">рулит</a>, но костыль суровый получился, конечно :) Зато когда Microsoft решит пропихнуть следующее приложение, достаточно будет проверить наличие события в журнале и добавить XML задания в образ.</p>
+<blockquote><p>К сожалению, в последнее время компания регулярно проталкивает приложения и фичи, игнорируя здравый смысл.</p></blockquote>
+<p>Установку Dev Home в домашних изданиях я еще могу понять, но зачем же запрещать его удаление в GUI? Особенно если вы <a href="https://github.com/microsoft/devhome/issues/2072">планируете</a> напихать туда еще несколько утилит PowerToys. А почему в корпоративных изданиях <a href="https://www.outsidethebox.ms/21375/">устанавливали Teams</a> и закрепляли чат на панели задач, они и сами не знают. Потому что в 23H2 его уже <a href="https://learn.microsoft.com/en-us/windows/whats-new/whats-new-windows-11-version-23h2#in-box-apps">передумали закреплять</a>.</p>
+<p>Я уже озвучивал в блоге мысль, что противостояние этим действиям все больше напоминает борьбу с ветряными мельницами. Однако по ходу дела появляется возможность разобраться с некоторыми аспектами работы системы и узнать что-то новое. Поэтому я и публикую такие статьи.</p>
+<p><small>Я благодарю читателя Андрея Шубина за помощь в подготовке статьи.</small></p>
+<div class="guest-author"></div></div><footer class="entry-footer"><p class="entry-meta"><span class="entry-tags">Метки: <a href="https://www.outsidethebox.ms/tag/powershell/" rel="tag">PowerShell</a>, <a href="https://www.outsidethebox.ms/tag/unattended/" rel="tag">автоустановка</a>, <a href="https://www.outsidethebox.ms/tag/quirks/" rel="tag">нестыковки</a>, <a href="https://www.outsidethebox.ms/tag/task-scheduler/" rel="tag">планировщик</a>, <a href="https://www.outsidethebox.ms/tag/prevention/" rel="tag">предотвращение</a></span> <span class="entry-terms">Информация в статье применима к <a href="https://www.outsidethebox.ms/applies-to/windows-10-and-newer/" rel="tag">Windows 10 и новее</a></span></p></footer></article><section class="author-box" itemprop="author" itemscope="" itemtype="http://schema.org/Person"><img alt="" src="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/b88af7d3a75145ffd0489c89b931c4906b0834e3e250c92178eaf80cc0f785d4.jpeg" srcset="https://secure.gravatar.com/avatar/b88af7d3a75145ffd0489c89b931c4906b0834e3e250c92178eaf80cc0f785d4?s=192&amp;d=mm&amp;r=g 2x" class="avatar avatar-96 photo" height="96" width="96" loading="lazy" decoding="async"><h1 class="author-box-title"><strong>Об авторе</strong></h1><div class="author-box-content" itemprop="description"><p>Вадим - владелец этого блога, и почти все записи здесь вышли из-под его пера. Подробности о блоге и авторе <a href="https://www.outsidethebox.ms/about/">здесь</a>. Поддержать автора вы можете <a href="https://boosty.to/sterkin">тут</a>.</p>
+</div></section><div class="next-post"><span class="nav-arrow">←</span> <a href="https://www.outsidethebox.ms/22242/">FAQ по Windows RE и ошибке 0x80070643 при установке KB5034441</a></div><div class="previous-post"><a href="https://www.outsidethebox.ms/22149/">Нюансы полной локализации Windows с помощью PowerShell</a> <span class="nav-arrow">→</span></div><section class="author-box tg-box"><img src="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/tg-logo-48.png" height="48" width="48" alt="Telegram logo" class="avatar avatar-48 photo"><h1 class="author-box-title"><strong>Я в Telegram</strong></h1><div class="author-box-content"><p><a href="https://t.me/joinchat/Pa1JbdpHRc0wODZi">Подпишитесь</a> на канал и читайте интересные записи чаще! Есть вопросы? Задайте их в <a href="https://t.me/winsiders">чате</a>.</p></div></section><div class="entry-comments" id="comments"><div class="comment-title"><h3>комментариев 6</h3></div><div class="rss-icon"><a rel="nofollow" title="Лента комментариев этой записи" href="https://www.outsidethebox.ms/22217/feed/"></a></div> <span class="jump-reply"><a href="https://www.outsidethebox.ms/22217/#reply-title" title="К отправке комментария">↓</a></span><ol class="comment-list">
+	<li class="comment byuser comment-author-googleuser28 even thread-even depth-1" id="comment-37100">
+	<article itemprop="comment" itemscope="" itemtype="http://schema.org/Comment">
+
+		
+		<header class="comment-header">
+			<p class="comment-author" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+				<img alt="" src="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/unnamed.jpg" class="avatar avatar-social-login avatar-48 photo" height="48" width="48"><span itemprop="name"><a href="https://plus.google.com/117609617586175088377" class="comment-author-link" rel="external nofollow" itemprop="url">Dhowti</a></span> <span class="says"> </span>			</p>
+
+			<p class="comment-meta"><time class="comment-time" datetime="2024-01-10T09:45:44+03:00" itemprop="datePublished"><a href="https://www.outsidethebox.ms/22217/#comment-37100" class="comment-time-link" itemprop="url">10.01.2024 at 09:45</a></time></p>		</header>
+
+		<div class="comment-content" itemprop="text">
+			
+			<p>Автоматизация и встроенные средства это здорово и полезно для развития, но лично я поудалял через Soft Organizer :) В нём всё видно и удаляется. И бесплатно, если не нужны расширенные опции. Правда, долго искал Dev Home, не знал, как по-русски назвали. А там что-то про разработчика. Поставить можно через Winget.</p>
+		</div>
+
+		
+		
+	</article>
+	<ul class="children">
+
+	<li class="comment byuser comment-author-vadikan bypostauthor odd alt depth-2" id="comment-37102">
+	<article itemprop="comment" itemscope="" itemtype="http://schema.org/Comment">
+
+		
+		<header class="comment-header">
+			<p class="comment-author" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+				<img alt="" src="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/b88af7d3a75145ffd0489c89b931c4906b0834e3e250c92178eaf80cc0f785d4(1).jpeg" srcset="https://secure.gravatar.com/avatar/b88af7d3a75145ffd0489c89b931c4906b0834e3e250c92178eaf80cc0f785d4?s=96&amp;d=mm&amp;r=g 2x" class="avatar avatar-48 photo" height="48" width="48" loading="lazy" decoding="async"><span itemprop="name"><a href="https://www.outsidethebox.ms/" class="comment-author-link" rel="external nofollow" itemprop="url">Vadim Sterkin</a></span> <span class="says"> </span>			</p>
+
+			<p class="comment-meta"><time class="comment-time" datetime="2024-01-10T10:32:53+03:00" itemprop="datePublished"><a href="https://www.outsidethebox.ms/22217/#comment-37102" class="comment-time-link" itemprop="url">10.01.2024 at 10:32</a></time></p>		</header>
+
+		<div class="comment-content" itemprop="text">
+			
+			<p>Для удаления обсуждаемых приложений <a href="https://t.me/sterkin_ru/1544" rel="nofollow ugc">не нужны</a> сторонние программы</p>
+		</div>
+
+		
+		
+	</article>
+	</li><!-- #comment-## -->
+</ul><!-- .children -->
+</li><!-- #comment-## -->
+
+	<li class="comment byuser comment-author-andrej-a even thread-odd thread-alt depth-1" id="comment-37101">
+	<article itemprop="comment" itemscope="" itemtype="http://schema.org/Comment">
+
+		
+		<header class="comment-header">
+			<p class="comment-author" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+				<img alt="" src="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/unnamed.png" class="avatar avatar-social-login avatar-48 photo" height="48" width="48"><span itemprop="name"><a href="https://plus.google.com/105324948261799781241" class="comment-author-link" rel="external nofollow" itemprop="url">Andrej A.</a></span> <span class="says"> </span>			</p>
+
+			<p class="comment-meta"><time class="comment-time" datetime="2024-01-10T10:15:59+03:00" itemprop="datePublished"><a href="https://www.outsidethebox.ms/22217/#comment-37101" class="comment-time-link" itemprop="url">10.01.2024 at 10:15</a></time></p>		</header>
+
+		<div class="comment-content" itemprop="text">
+			
+			<p>Автору респект за решение, без вопросов.  Но глядя на эти пляски с бубном 80-го уровня всего лишь(!) по удалению пары приложений возникает мысль, что МС свернула не туда. Такой ОС просто нельзя доверять — что завтра она притащит на твой комп? Не проще ли поставить LTSC, где  нет этого магазина, и соответственно нет этой проблемы? Еще несколько лет назад Линукс упрекали в сложности — да ладно, там такое колдунство и не снилось! А если и есть какие-то сложные кейсы, так они хотя  бы оправданы</p>
+		</div>
+
+		
+		
+	</article>
+	<ul class="children">
+
+	<li class="comment byuser comment-author-vadikan bypostauthor odd alt depth-2" id="comment-37103">
+	<article itemprop="comment" itemscope="" itemtype="http://schema.org/Comment">
+
+		
+		<header class="comment-header">
+			<p class="comment-author" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+				<img alt="" src="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/b88af7d3a75145ffd0489c89b931c4906b0834e3e250c92178eaf80cc0f785d4(1).jpeg" srcset="https://secure.gravatar.com/avatar/b88af7d3a75145ffd0489c89b931c4906b0834e3e250c92178eaf80cc0f785d4?s=96&amp;d=mm&amp;r=g 2x" class="avatar avatar-48 photo" height="48" width="48" loading="lazy" decoding="async"><span itemprop="name"><a href="https://www.outsidethebox.ms/" class="comment-author-link" rel="external nofollow" itemprop="url">Vadim Sterkin</a></span> <span class="says"> </span>			</p>
+
+			<p class="comment-meta"><time class="comment-time" datetime="2024-01-10T10:39:36+03:00" itemprop="datePublished"><a href="https://www.outsidethebox.ms/22217/#comment-37103" class="comment-time-link" itemprop="url">10.01.2024 at 10:39</a></time></p>		</header>
+
+		<div class="comment-content" itemprop="text">
+			
+			<blockquote cite="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/comment-37101">
+<p><strong><a href="https://www.outsidethebox.ms/22217/#comment-37101" rel="nofollow ugc">Andrej A.</a></strong>: Не проще ли поставить LTSC, где нет этого магазина</p></blockquote>
+<p>Для начала в Windows 11 нет издания LTSC</p>
+<blockquote cite="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/comment-37101">
+<p><strong><a href="https://www.outsidethebox.ms/22217/#comment-37101" rel="nofollow ugc">Andrej A.</a></strong>: и соответственно нет этой проблемы?</p></blockquote>
+<p><a href="https://www.outsidethebox.ms/22119/#:~:text=%D0%92%20%D0%BA%D0%BE%D0%BD%D1%86%D0%B5%20%D0%BB%D0%B5%D1%82%D0%B0%202023%20%D0%B3%D0%BE%D0%B4%D0%B0%20Microsoft%20%D0%BD%D0%B0%D1%87%D0%B0%D0%BB%D0%B0%20%D1%80%D0%B0%D1%81%D0%BA%D0%B0%D1%82%D1%8B%D0%B2%D0%B0%D1%82%D1%8C%20%D0%BD%D0%BE%D0%B2%D0%BE%D0%B5%20%D0%BF%D1%80%D0%B8%D0%BB%D0%BE%D0%B6%D0%B5%D0%BD%D0%B8%D0%B5%20Windows%20Backup.%20%D0%98%D1%80%D0%BE%D0%BD%D0%B8%D1%87%D0%BD%D0%BE%2C%20%D1%87%D1%82%D0%BE%20%D0%B5%D0%B3%D0%BE%20%D0%B4%D0%BE%D1%81%D1%82%D0%B0%D0%B2%D0%B8%D0%BB%D0%B8%20%D0%B2%20%D0%BF%D0%B5%D1%80%D0%B2%D1%83%D1%8E%20%D0%BE%D1%87%D0%B5%D1%80%D0%B5%D0%B4%D1%8C%20%D0%B2%D0%BB%D0%B0%D0%B4%D0%B5%D0%BB%D1%8C%D1%86%D0%B0%D0%BC%20%C2%AB%D1%81%D1%82%D0%B0%D0%B1%D0%B8%D0%BB%D1%8C%D0%BD%D0%BE%D0%B9%20%D0%B4%D0%B5%D1%81%D1%8F%D1%82%D0%BA%D0%B8%C2%BB%2C%20%D0%B2%20%D1%82%D0%BE%D0%BC%20%D1%87%D0%B8%D1%81%D0%BB%D0%B5%20%D0%B2%20%D0%B8%D0%B7%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5%20LTSC" rel="nofollow ugc">Блажен кто верует</a> ©</p>
+		</div>
+
+		
+		
+	</article>
+	<ul class="children">
+
+	<li class="comment byuser comment-author-andrej-a even depth-3" id="comment-37104">
+	<article itemprop="comment" itemscope="" itemtype="http://schema.org/Comment">
+
+		
+		<header class="comment-header">
+			<p class="comment-author" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+				<img alt="" src="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/unnamed.png" class="avatar avatar-social-login avatar-48 photo" height="48" width="48"><span itemprop="name"><a href="https://plus.google.com/105324948261799781241" class="comment-author-link" rel="external nofollow" itemprop="url">Andrej A.</a></span> <span class="says"> </span>			</p>
+
+			<p class="comment-meta"><time class="comment-time" datetime="2024-01-10T15:27:45+03:00" itemprop="datePublished"><a href="https://www.outsidethebox.ms/22217/#comment-37104" class="comment-time-link" itemprop="url">10.01.2024 at 15:27</a></time></p>		</header>
+
+		<div class="comment-content" itemprop="text">
+			
+			<p>Значит все еще хуже чем можно было представить. Остается вариант использования WSUS (реального или несуществующего, чтобы избежать таких сюрпризов) или опять будут в моде отключенные обновы + апдейт-паки как в свое время было для предыдущих версий ОС.</p>
+		</div>
+
+		
+		
+	</article>
+	</li><!-- #comment-## -->
+</ul><!-- .children -->
+</li><!-- #comment-## -->
+</ul><!-- .children -->
+</li><!-- #comment-## -->
+
+	<li class="comment byuser comment-author-vadikan bypostauthor odd alt thread-even depth-1" id="comment-37105">
+	<article itemprop="comment" itemscope="" itemtype="http://schema.org/Comment">
+
+		
+		<header class="comment-header">
+			<p class="comment-author" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+				<img alt="" src="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/b88af7d3a75145ffd0489c89b931c4906b0834e3e250c92178eaf80cc0f785d4(1).jpeg" srcset="https://secure.gravatar.com/avatar/b88af7d3a75145ffd0489c89b931c4906b0834e3e250c92178eaf80cc0f785d4?s=96&amp;d=mm&amp;r=g 2x" class="avatar avatar-48 photo" height="48" width="48" loading="lazy" decoding="async"><span itemprop="name"><a href="https://www.outsidethebox.ms/" class="comment-author-link" rel="external nofollow" itemprop="url">Vadim Sterkin</a></span> <span class="says"> </span>			</p>
+
+			<p class="comment-meta"><time class="comment-time" datetime="2024-01-10T18:12:51+03:00" itemprop="datePublished"><a href="https://www.outsidethebox.ms/22217/#comment-37105" class="comment-time-link" itemprop="url">10.01.2024 at 18:12</a></time></p>		</header>
+
+		<div class="comment-content" itemprop="text">
+			
+			<blockquote cite="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/comment-37104">
+<p><strong><a href="https://www.outsidethebox.ms/22217/#comment-37104" rel="nofollow ugc">Andrej A.</a></strong>: Значит все еще хуже чем можно было представить</p></blockquote>
+<p>Я не знаю, что вы себе представляли, но принудительное проталкивание приложений существует <a href="https://www.outsidethebox.ms/19177/#_Toc531106448" rel="nofollow ugc">как минимум с 2016 года</a>. Тогда появилась политика Turn off all Windows spotlight features. И с самого начала она официально поддерживалась только в корпоративных изданиях.</p>
+<p>У организаций, конечно, могут быть вопросы, как централизованно предотвратить появление Dev Home. Но для домашних пользователей по большому счету ничего не поменялось кроме набора приложений.</p>
+		</div>
+
+		
+		
+	</article>
+	</li><!-- #comment-## -->
+</ol></div>	<div id="reply-title" class="comments-closed">
+		<h4>Обсуждение завершено.</h4>
+	</div>
+	</main><aside class="sidebar sidebar-primary widget-area" role="complementary" aria-label="Primary Sidebar" itemscope="" itemtype="http://schema.org/WPSideBar"><section id="search-3" class="widget widget_search"><div class="widget-wrap"><form class="search-form" itemprop="potentialAction" itemscope="" itemtype="http://schema.org/SearchAction" method="get" action="https://www.outsidethebox.ms/" role="search"><meta itemprop="target" content="https://www.outsidethebox.ms/?s={s}"><input itemprop="query-input" type="search" name="s" placeholder="Найдите ответ поиском"><input type="submit" value="Search"></form></div></section>
+<section id="custom_html-6" class="widget_text widget widget_custom_html"><div class="widget_text widget-wrap"><div class="textwidget custom-html-widget"><div class="fa-widget" align="center"><a href="https://www.outsidethebox.ms/feed/" title="Лента записей блога"><i class="fa fa-rss fa-widget-icons"></i></a> <a href="https://www.outsidethebox.ms/comments/feed/" title="Лента комментариев блога"><i class="fa fa-square-rss fa-widget-icons"></i></a> <a href="https://t.me/sterkin_ru" title="Канал в Telegram"><i class="fa fa-paper-plane fa-widget-icons"></i></a> <a href="https://t.me/winsiders" title="Чат в Telegram"><i class="fa fa-comments fa-widget-icons"></i></a><!-- <a href="https://vk.com/sterkin_ru" title="ВКонтакте"><i class="fab fa-vk fa-widget-icons"></i></a><a href="https://twitter.com/sterkin_ru" title="Twitter"><i class="fab fa-twitter fa-widget-icons"></i></a> --> <a href="https://www.outsidethebox.ms/about/why-subscribe/#email" title="Почтовая подписка"><i class="fa fa-envelope fa-widget-icons"></i></a></div></div></div></section>
+<section id="execphp-17" class="widget widget_execphp"><div class="widget-wrap"><h4 class="widget-title widgettitle">Популярные записи</h4>
+			<div class="execphpwidget"><div>
+<ul>
+<li><a href="https://www.outsidethebox.ms/19635/">Как грамотно настроить язык интерфейса Windows, магазинных приложений и ввода по умолчанию</a> (13)</li>
+<li><a href="https://www.outsidethebox.ms/22217/">Как предотвратить автоматическую установку приложений из магазина Windows</a> (6)</li>
+<li><a href="https://www.outsidethebox.ms/19240/">Как Microsoft доставляет обновления Windows</a> (17)</li>
+<li><a href="https://www.outsidethebox.ms/16424/">Windows 8.1 Update 1: что получается, когда Microsoft вас слушает</a> (183)</li>
+<li><a href="https://www.outsidethebox.ms/16582/">О роли головного мозга в защите операционной системы</a> (246)</li>
+<li><a href="https://www.outsidethebox.ms/22452/">FAQ: Нюансы автоматического шифрования BitLocker в Windows</a> (%)</li>
+<li><a href="https://www.outsidethebox.ms/19515/">Почему в Windows отключили бэкап реестра и как это исправить</a> (20)</li>
+<li><a href="https://www.outsidethebox.ms/category/popular/">Еще →</a></li>
+</ul>
+</div>
+</div>
+		</div></section>
+</aside></div></div></div><div class="footer-widgets"><div class="wrap"><div class="footer-widgets-1 widget-area"><section id="tag_cloud-4" class="widget widget_tag_cloud"><div class="widget-wrap"><h4 class="widget-title widgettitle">Облако меток</h4>
+<div class="tagcloud"><a href="https://www.outsidethebox.ms/tag/chrome/" class="tag-cloud-link tag-link-29 tag-link-position-1" style="font-size: 12.421052631579pt;" aria-label="Chrome (25 элементов)">Chrome</a>
+<a href="https://www.outsidethebox.ms/tag/dism/" class="tag-cloud-link tag-link-81 tag-link-position-2" style="font-size: 11.094736842105pt;" aria-label="DISM (20 элементов)">DISM</a>
+<a href="https://www.outsidethebox.ms/tag/firefox/" class="tag-cloud-link tag-link-30 tag-link-position-3" style="font-size: 11.684210526316pt;" aria-label="Firefox (22 элемента)">Firefox</a>
+<a href="https://www.outsidethebox.ms/tag/ie/" class="tag-cloud-link tag-link-27 tag-link-position-4" style="font-size: 15.663157894737pt;" aria-label="IE (42 элемента)">IE</a>
+<a href="https://www.outsidethebox.ms/tag/insider/" class="tag-cloud-link tag-link-110 tag-link-position-5" style="font-size: 8pt;" aria-label="insider (12 элементов)">insider</a>
+<a href="https://www.outsidethebox.ms/tag/metro-ui/" class="tag-cloud-link tag-link-65 tag-link-position-6" style="font-size: 11.978947368421pt;" aria-label="Modern UI (23 элемента)">Modern UI</a>
+<a href="https://www.outsidethebox.ms/tag/msa/" class="tag-cloud-link tag-link-115 tag-link-position-7" style="font-size: 10.505263157895pt;" aria-label="MSA (18 элементов)">MSA</a>
+<a href="https://www.outsidethebox.ms/tag/ntfs/" class="tag-cloud-link tag-link-68 tag-link-position-8" style="font-size: 13.157894736842pt;" aria-label="NTFS (28 элементов)">NTFS</a>
+<a href="https://www.outsidethebox.ms/tag/office/" class="tag-cloud-link tag-link-61 tag-link-position-9" style="font-size: 11.389473684211pt;" aria-label="Office (21 элемент)">Office</a>
+<a href="https://www.outsidethebox.ms/tag/onedrive/" class="tag-cloud-link tag-link-87 tag-link-position-10" style="font-size: 11.389473684211pt;" aria-label="OneDrive (21 элемент)">OneDrive</a>
+<a href="https://www.outsidethebox.ms/tag/opera/" class="tag-cloud-link tag-link-28 tag-link-position-11" style="font-size: 11.978947368421pt;" aria-label="Opera (23 элемента)">Opera</a>
+<a href="https://www.outsidethebox.ms/tag/powershell/" class="tag-cloud-link tag-link-62 tag-link-position-12" style="font-size: 20.231578947368pt;" aria-label="PowerShell (87 элементов)">PowerShell</a>
+<a href="https://www.outsidethebox.ms/tag/sysinternals/" class="tag-cloud-link tag-link-60 tag-link-position-13" style="font-size: 13.452631578947pt;" aria-label="sysinternals (29 элементов)">sysinternals</a>
+<a href="https://www.outsidethebox.ms/tag/uac/" class="tag-cloud-link tag-link-25 tag-link-position-14" style="font-size: 12.273684210526pt;" aria-label="UAC (24 элемента)">UAC</a>
+<a href="https://www.outsidethebox.ms/tag/windows-pe/" class="tag-cloud-link tag-link-41 tag-link-position-15" style="font-size: 8pt;" aria-label="Windows PE (12 элементов)">Windows PE</a>
+<a href="https://www.outsidethebox.ms/tag/windows-phone/" class="tag-cloud-link tag-link-72 tag-link-position-16" style="font-size: 9.7684210526316pt;" aria-label="Windows Phone (16 элементов)">Windows Phone</a>
+<a href="https://www.outsidethebox.ms/tag/windows-re/" class="tag-cloud-link tag-link-132 tag-link-position-17" style="font-size: 10.8pt;" aria-label="Windows RE (19 элементов)">Windows RE</a>
+<a href="https://www.outsidethebox.ms/tag/wordpress/" class="tag-cloud-link tag-link-50 tag-link-position-18" style="font-size: 9.3263157894737pt;" aria-label="WordPress (15 элементов)">WordPress</a>
+<a href="https://www.outsidethebox.ms/tag/unattended/" class="tag-cloud-link tag-link-33 tag-link-position-19" style="font-size: 15.810526315789pt;" aria-label="автоустановка (43 элемента)">автоустановка</a>
+<a href="https://www.outsidethebox.ms/tag/backup/" class="tag-cloud-link tag-link-38 tag-link-position-20" style="font-size: 10.8pt;" aria-label="архивация (19 элементов)">архивация</a>
+<a href="https://www.outsidethebox.ms/tag/security/" class="tag-cloud-link tag-link-24 tag-link-position-21" style="font-size: 18.315789473684pt;" aria-label="безопасность (64 элемента)">безопасность</a>
+<a href="https://www.outsidethebox.ms/tag/libraries/" class="tag-cloud-link tag-link-109 tag-link-position-22" style="font-size: 9.7684210526316pt;" aria-label="библиотеки (16 элементов)">библиотеки</a>
+<a href="https://www.outsidethebox.ms/tag/video/" class="tag-cloud-link tag-link-56 tag-link-position-23" style="font-size: 8pt;" aria-label="видео (12 элементов)">видео</a>
+<a href="https://www.outsidethebox.ms/tag/restore/" class="tag-cloud-link tag-link-37 tag-link-position-24" style="font-size: 18.021052631579pt;" aria-label="восстановление (60 элементов)">восстановление</a>
+<a href="https://www.outsidethebox.ms/tag/troubleshoot/" class="tag-cloud-link tag-link-40 tag-link-position-25" style="font-size: 15.663157894737pt;" aria-label="диагностика (42 элемента)">диагностика</a>
+<a href="https://www.outsidethebox.ms/tag/boot/" class="tag-cloud-link tag-link-53 tag-link-position-26" style="font-size: 10.505263157895pt;" aria-label="загрузка (18 элементов)">загрузка</a>
+<a href="https://www.outsidethebox.ms/tag/contest/" class="tag-cloud-link tag-link-34 tag-link-position-27" style="font-size: 8.5894736842105pt;" aria-label="конкурс (13 элементов)">конкурс</a>
+<a href="https://www.outsidethebox.ms/tag/context-menus/" class="tag-cloud-link tag-link-49 tag-link-position-28" style="font-size: 10.210526315789pt;" aria-label="контекстные меню (17 элементов)">контекстные меню</a>
+<a href="https://www.outsidethebox.ms/tag/opinion/" class="tag-cloud-link tag-link-94 tag-link-position-29" style="font-size: 13.452631578947pt;" aria-label="мнение (29 элементов)">мнение</a>
+<a href="https://www.outsidethebox.ms/tag/quirks/" class="tag-cloud-link tag-link-52 tag-link-position-30" style="font-size: 22pt;" aria-label="нестыковки (115 элементов)">нестыковки</a>
+<a href="https://www.outsidethebox.ms/tag/nuances/" class="tag-cloud-link tag-link-124 tag-link-position-31" style="font-size: 11.389473684211pt;" aria-label="нюансы (21 элемент)">нюансы</a>
+<a href="https://www.outsidethebox.ms/tag/update/" class="tag-cloud-link tag-link-39 tag-link-position-32" style="font-size: 13.157894736842pt;" aria-label="обновление (28 элементов)">обновление</a>
+<a href="https://www.outsidethebox.ms/tag/optimization/" class="tag-cloud-link tag-link-36 tag-link-position-33" style="font-size: 15.073684210526pt;" aria-label="оптимизация (38 элементов)">оптимизация</a>
+<a href="https://www.outsidethebox.ms/tag/task-scheduler/" class="tag-cloud-link tag-link-77 tag-link-position-34" style="font-size: 11.978947368421pt;" aria-label="планировщик (23 элемента)">планировщик</a>
+<a href="https://www.outsidethebox.ms/tag/tablet/" class="tag-cloud-link tag-link-84 tag-link-position-35" style="font-size: 13.157894736842pt;" aria-label="планшет (28 элементов)">планшет</a>
+<a href="https://www.outsidethebox.ms/tag/search/" class="tag-cloud-link tag-link-31 tag-link-position-36" style="font-size: 11.978947368421pt;" aria-label="поиск (23 элемента)">поиск</a>
+<a href="https://www.outsidethebox.ms/tag/explorer/" class="tag-cloud-link tag-link-32 tag-link-position-37" style="font-size: 19.494736842105pt;" aria-label="проводник (76 элементов)">проводник</a>
+<a href="https://www.outsidethebox.ms/tag/registry/" class="tag-cloud-link tag-link-43 tag-link-position-38" style="font-size: 16.989473684211pt;" aria-label="реестр (52 элемента)">реестр</a>
+<a href="https://www.outsidethebox.ms/tag/scripts/" class="tag-cloud-link tag-link-46 tag-link-position-39" style="font-size: 18.315789473684pt;" aria-label="скрипты (64 элемента)">скрипты</a>
+<a href="https://www.outsidethebox.ms/tag/keyboard-shortcuts/" class="tag-cloud-link tag-link-82 tag-link-position-40" style="font-size: 9.0315789473684pt;" aria-label="сочетания клавиш (14 элементов)">сочетания клавиш</a>
+<a href="https://www.outsidethebox.ms/tag/links/" class="tag-cloud-link tag-link-103 tag-link-position-41" style="font-size: 8.5894736842105pt;" aria-label="ссылки NTFS (13 элементов)">ссылки NTFS</a>
+<a href="https://www.outsidethebox.ms/tag/terminology/" class="tag-cloud-link tag-link-113 tag-link-position-42" style="font-size: 8pt;" aria-label="терминология (12 элементов)">терминология</a>
+<a href="https://www.outsidethebox.ms/tag/speed-up/" class="tag-cloud-link tag-link-42 tag-link-position-43" style="font-size: 21.115789473684pt;" aria-label="ускорение (99 элементов)">ускорение</a>
+<a href="https://www.outsidethebox.ms/tag/features/" class="tag-cloud-link tag-link-89 tag-link-position-44" style="font-size: 13.010526315789pt;" aria-label="фишки (27 элементов)">фишки</a>
+<a href="https://www.outsidethebox.ms/tag/power-options/" class="tag-cloud-link tag-link-78 tag-link-position-45" style="font-size: 11.389473684211pt;" aria-label="электропитание (21 элемент)">электропитание</a></div>
+</div></section>
+</div><div class="footer-widgets-2 widget-area"><section id="custom_html-3" class="widget_text widget widget_custom_html"><div class="widget_text widget-wrap"><h4 class="widget-title widgettitle">Рекомендую ресурсы</h4>
+<div class="textwidget custom-html-widget"><ul>
+<li><a href="https://t.me/sterkin_ru">Windows 11, 10, etc</a> — канал этого блога в Telegram</li>
+<li><a href="https://t.me/winsiders">Инсайдеры Windows</a> — чат блога в Telegram</li>
+<li><a href="https://thecommunity.ru/">Community</a> — новости предварительных сборок</li>
+<li><a href="https://www.planetaexcel.ru/">Николай Павлов</a> — тайны планеты Excel</li>
+<li><a href="http://www.sysadmins.lv/">Вадимс Поданс</a> — PKI, PowerShell и Тера Патрик</li>
+<li><a href="http://xaegr.wordpress.com/">Василий Гусев</a> — PowerShell и другие скрипты</li>
+<li><a href="https://kazunposh.wordpress.com/">Kazun</a> — PowerShell для взрослых</li>
+</ul></div></div></section>
+</div><div class="footer-widgets-3 widget-area"><section id="execphp-18" class="widget widget_execphp"><div class="widget-wrap"><h4 class="widget-title widgettitle">Рекомендую курсы</h4>
+			<div class="execphpwidget"><div class="nagaev">
+<p><!--<img style="vertical-align:middle; display:inline;" src="/blog/wp-content/themes/eleven40-pro/images/terminal24.png" width="24" height="24" />--> <a href="https://itvideo.pro/powershell-basic?utm_source=outsidetheboxtop&amp;utm_medium=www&amp;utm_campaign=poshb" target="_blank">Авторский курс</a> Павла Нагаева "<b>Основы PowerShell</b>". Высокая практическая ценность, внимание к деталям, индивидуальный подход. Скидка по промокоду: outsidethebox5.</p>
+</div>
+</div>
+		</div></section>
+</div></div></div><div class="site-footer"><div class="wrap">
+<p>Измененная тема <a href="https://my.studiopress.com/themes/eleven40/" target="_blank">eleven40 Pro</a> на <a href="https://www.studiopress.com/" target="_blank">платформе Genesis</a> · <a href="https://www.outsidethebox.ms/blog/about/archives-tags/">Архивы и метки</a> ·  <a href="https://www.outsidethebox.ms/rules">Правила (16+)</a> · <!--<a href="/about/ads/">О рекламе</a> --> <a href="https://boosty.to/sterkin/donate">Поблагодарить ₽</a> · <a href="https://www.outsidethebox.ms/blog/contact">Обратная связь</a> · <a href="https://www.outsidethebox.ms/blog/wp-login.php">Вход</a></p>
+<p>Допускается копирование материалов без изменений,
+с указанием имени автора и гиперссылки на сайт.</p>
+</div></div></div><script type="speculationrules">
+{"prefetch":[{"source":"document","where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/wp-*.php","/wp-admin/*","/wp-content/uploads/*","/wp-content/*","/wp-content/plugins/*","/wp-content/themes/eleven40-pro/*","/wp-content/themes/genesis/*","/*\\?(.+)"]}},{"not":{"selector_matches":"a[rel~=\"nofollow\"]"}},{"not":{"selector_matches":".no-prefetch, .no-prefetch a"}}]},"eagerness":"conservative"}]}
+</script>
+		<style type="text/css">
+			.bigfoot-footnote__button  {
+				background-color: #e46f1d !important;
+			}
+			.bigfoot-footnote__button:after {
+				color: #ffffff !important;
+			}
+		</style>
+		<script type="text/javascript" src="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/shCore.js.загрузка" id="syntaxhighlighter-core-js"></script>
+<script type="text/javascript" src="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/shBrushPowerShell.js.загрузка" id="syntaxhighlighter-brush-powershell-js"></script>
+<script type="text/javascript" src="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/shBrushXml.js.загрузка" id="syntaxhighlighter-brush-xml-js"></script>
+<script type="text/javascript">
+	(function(){
+		var corecss = document.createElement('link');
+		var themecss = document.createElement('link');
+		var corecssurl = "https://www.outsidethebox.ms/wp-content/plugins/syntaxhighlighter/syntaxhighlighter3/styles/shCore.css?ver=3.0.9b";
+		if ( corecss.setAttribute ) {
+				corecss.setAttribute( "rel", "stylesheet" );
+				corecss.setAttribute( "type", "text/css" );
+				corecss.setAttribute( "href", corecssurl );
+		} else {
+				corecss.rel = "stylesheet";
+				corecss.href = corecssurl;
+		}
+		document.head.appendChild( corecss );
+		var themecssurl = "https://www.outsidethebox.ms/wp-content/plugins/syntaxhighlighter/syntaxhighlighter3/styles/shThemeDefault.css?ver=3.0.9b";
+		if ( themecss.setAttribute ) {
+				themecss.setAttribute( "rel", "stylesheet" );
+				themecss.setAttribute( "type", "text/css" );
+				themecss.setAttribute( "href", themecssurl );
+		} else {
+				themecss.rel = "stylesheet";
+				themecss.href = themecssurl;
+		}
+		document.head.appendChild( themecss );
+	})();
+	SyntaxHighlighter.config.strings.expandSource = '+ расширить источник';
+	SyntaxHighlighter.config.strings.help = '?';
+	SyntaxHighlighter.config.strings.alert = 'SyntaxHighlighter\n\n';
+	SyntaxHighlighter.config.strings.noBrush = 'Не удается найти пакет для: ';
+	SyntaxHighlighter.config.strings.brushNotHtmlScript = 'Пакет не был настроен для опции html-script: ';
+	SyntaxHighlighter.defaults['pad-line-numbers'] = false;
+	SyntaxHighlighter.defaults['toolbar'] = false;
+	SyntaxHighlighter.all();
+
+	// Infinite scroll support
+	if ( typeof( jQuery ) !== 'undefined' ) {
+		jQuery( function( $ ) {
+			$( document.body ).on( 'post-load', function() {
+				SyntaxHighlighter.highlight();
+			} );
+		} );
+	}
+</script>
+<script type="text/javascript" src="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/quote-comments.js.загрузка" id="quote-comments-js" defer="defer" data-wp-strategy="defer"></script>
+<script type="text/javascript" id="wp-polls-js-extra">
+/* <![CDATA[ */
+var pollsL10n = {"ajax_url":"https://www.outsidethebox.ms/wp-admin/admin-ajax.php","text_wait":"\u0412\u0430\u0448 \u043f\u043e\u0441\u043b\u0435\u0434\u043d\u0438\u0439 \u0437\u0430\u043f\u0440\u043e\u0441 \u0435\u0449\u0435 \u043e\u0431\u0440\u0430\u0431\u0430\u0442\u044b\u0432\u0430\u0435\u0442\u0441\u044f. \u041f\u043e\u0436\u0430\u043b\u0443\u0439\u0441\u0442\u0430 \u043f\u043e\u0434\u043e\u0436\u0434\u0438\u0442\u0435 ...","text_valid":"\u041f\u043e\u0436\u0430\u043b\u0443\u0439\u0441\u0442\u0430 \u043a\u043e\u0440\u0440\u0435\u043a\u0442\u043d\u043e \u0432\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u043e\u0442\u0432\u0435\u0442.","text_multiple":"\u041c\u0430\u043a\u0441\u0438\u043c\u0430\u043b\u044c\u043d\u043e \u0434\u043e\u043f\u0443\u0441\u0442\u0438\u043c\u043e\u0435 \u0447\u0438\u0441\u043b\u043e \u0432\u0430\u0440\u0438\u0430\u043d\u0442\u043e\u0432:","show_loading":"1","show_fading":"1"};
+//# sourceURL=wp-polls-js-extra
+/* ]]> */
+</script>
+<script type="text/javascript" src="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/polls-js.js.загрузка" id="wp-polls-js"></script>
+<script type="text/javascript" id="dwpb_countdown-js-extra">
+/* <![CDATA[ */
+var dwpb = {"timeleft":"-1768217434","reset_cookie":"5"};
+//# sourceURL=dwpb_countdown-js-extra
+/* ]]> */
+</script>
+<script type="text/javascript" src="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/jquery.countdown.js.загрузка" id="dwpb_countdown-js"></script>
+<script type="text/javascript" src="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/jquery.cookie.js.загрузка" id="dwpb_cookie-js"></script>
+<script type="text/javascript" src="./Как предотвратить автоматическую установку приложений из магазина Windows – Вадим Стеркин_files/main.js.загрузка" id="dwpb_script-js"></script>
+		<style>
+						@font-face {
+        font-family: "0";
+        src: url('');
+      }
+			#dwpb {
+				font-family: 0;
+			}
+			
+						#dwpb,
+			.dwpb-action {
+				background-color: #ed702b;
+			}
+			
+			
+						#dwpb,
+			.dwpb-action,
+			body.dwpb-allow-close.dwpb-open .dwpb-close {
+				color: #fff;
+			}
+			
+						#dwpb {
+				font-size: 16px;
+			}
+			
+			
+			
+						#dwpb {
+				border-width: 0;
+			}
+			
+						#dwpb a {
+				color: #fff;
+			}
+			
+						#dwpb .dwpb-button {
+				background-color: #333;
+			}
+			
+					</style>
+		
+		<div id="dwpb" class=" fixtop ">
+			<div class="dwpb-inner">
+				
+				<div class="dwpb-message">
+					<span class="dwpb-content">Читайте еще больше постов в</span>
+					 <a class="" href="https://t.me/joinchat/RxELdLP5v8I4ZDdi" target="_self" "="">канале Telegram</a>				</div>
+					
+				<div class="dwpb-countdown hide">
+					<div class="dwpb-counter countdownHolder"><div class="countDays"><span class="position"><span class="digit static" style="top: 0px; opacity: 1;">0</span></span><span class="position"><span class="digit static" style="top: 0px; opacity: 1;">0</span></span><span class="boxName"><span class="Days">d</span></span></div><div class="countHours"><span class="position"><span class="digit static" style="top: 0px; opacity: 1;">0</span></span><span class="position"><span class="digit static" style="top: 0px; opacity: 1;">0</span></span><span class="boxName"><span class="Hours">h</span></span></div><div class="countMinutes"><span class="position"><span class="digit static" style="top: 0px; opacity: 1;">0</span></span><span class="position"><span class="digit static" style="top: 0px; opacity: 1;">0</span></span><span class="boxName"><span class="Minutes">m</span></span></div><div class="countSeconds"><span class="position"><span class="digit static" style="top: 0px; opacity: 1;">0</span></span><span class="position"><span class="digit static" style="top: 0px; opacity: 1;">0</span></span><span class="boxName"><span class="Seconds">s</span></span></div></div>
+					<span class="dwpbcd-content">Hello. Add your message here.</span>
+									</div>
+			</div>
+		</div>
+				<span class="dwpb-close"></span>
+	
+<style id="dwpb-custom-style">body.dwpb-push-page.dwpb-open, body.dwpb-push-page.admin-bar.dwpb-open #wpadminbar, .dwpb-twenty-fourteen.dwpb-open.dwpb-push-page .site-header{top:40px}</style><style id="dwpb-custom-style-twenty-fourteen">.admin-bar.dwpb-twenty-fourteen.dwpb-open.dwpb-push-page .site-header{top:NaNpx}</style></body></html>

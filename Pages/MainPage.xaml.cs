@@ -1,4 +1,4 @@
-﻿﻿﻿using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
@@ -31,7 +31,6 @@ public partial class MainPage : Page
             LoadTweaksCatalog();
             ApplyThemeSelectionVisuals();
 
-            MainScroll.ScrollChanged += (_, __) => UpdateFadeOverlays();
             Loaded += (_, __) => UpdateFadeOverlays();
         }
         catch (Exception ex)
@@ -138,6 +137,19 @@ public partial class MainPage : Page
 
         if (steps.Length == 0)
             steps = new[] { ("noop", "Применяем твики") };
+        else
+        {
+            var removeUwp = steps
+                .Where(s => string.Equals(s.Id, "apps.remove_uwp", StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+            if (removeUwp.Length > 0)
+            {
+                steps = steps
+                    .Where(s => !string.Equals(s.Id, "apps.remove_uwp", StringComparison.OrdinalIgnoreCase))
+                    .Concat(removeUwp)
+                    .ToArray();
+            }
+        }
 
         string footerNote =
             "Примечание: используйте Toolbox для продолжения настройки системы.\n" +
