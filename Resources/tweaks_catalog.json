@@ -314,7 +314,7 @@
 
           ],
 
-          "default": false,
+          "default": true,
 
           "stage": "tweak"
 

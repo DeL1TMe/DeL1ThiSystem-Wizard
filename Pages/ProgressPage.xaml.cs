@@ -95,6 +95,11 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
                 await Task.Delay(150);
             }
 
+            if (_steps.Any(s => string.Equals(s.Id, "apps.remove_uwp", StringComparison.OrdinalIgnoreCase)))
+            {
+                await Task.Run(TweakExecutor.RemoveYandexMusicCleanup);
+            }
+
             SetProgress(1);
             var elapsed = (int)(DateTime.UtcNow - start).TotalMilliseconds;
             if (elapsed < 800)

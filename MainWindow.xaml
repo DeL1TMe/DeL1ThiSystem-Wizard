@@ -22,31 +22,36 @@
     </shell:WindowChrome.WindowChrome>
 
 
-    <Grid x:Name="RootGrid" Background="Transparent">
-        <Border x:Name="WindowShell"
-                Width="720"
-                Height="800"
-                CornerRadius="14"
-                Background="{DynamicResource Brush.WindowBorder}"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                ClipToBounds="True"
-                SnapsToDevicePixels="True"
-                UseLayoutRounding="True">
-        <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
-            <Border x:Name="WindowCard"
-                    CornerRadius="13"
-                    Background="{DynamicResource Brush.WindowBg}"
-                    Margin="1"
+    <Grid x:Name="RootGrid" Background="Transparent" MouseLeftButtonDown="Header_MouseLeftButtonDown">
+        <Viewbox x:Name="WindowScaler"
+                 Stretch="Uniform"
+                 StretchDirection="DownOnly"
+                 HorizontalAlignment="Center"
+                 VerticalAlignment="Center">
+            <Border x:Name="WindowShell"
+                    Width="720"
+                    Height="800"
+                    CornerRadius="14"
+                    Background="{DynamicResource Brush.WindowBorder}"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
                     ClipToBounds="True"
                     SnapsToDevicePixels="True"
                     UseLayoutRounding="True">
-            <Grid>
-            <Grid x:Name="MainContent" Margin="12">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+            <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
+                <Border x:Name="WindowCard"
+                        CornerRadius="13"
+                        Background="{DynamicResource Brush.WindowBg}"
+                        Margin="1"
+                        ClipToBounds="True"
+                        SnapsToDevicePixels="True"
+                        UseLayoutRounding="True">
+                <Grid>
+                <Grid x:Name="MainContent" Margin="12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
 
             <Grid Grid.Row="0" Margin="0,0,0,14">
                 <Grid.ColumnDefinitions>
@@ -116,9 +121,10 @@
                 </StackPanel>
                 </Border>
             </Border>
-        </Grid>
-        </Grid>
-        </Border>
+            </Grid>
+            </Grid>
+            </Border>
+        </Viewbox>
     </Grid>
 </Window>
 

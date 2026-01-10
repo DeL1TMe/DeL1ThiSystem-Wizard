@@ -251,6 +251,39 @@ public static class TweakExecutor
         Log($"END {id}");
     }
 
+    public static void RemoveYandexMusicCleanup()
+    {
+        EnsureLogDir();
+        Log("START apps.remove_uwp.post");
+        try
+        {
+            var script = @"
+$yandexExact = 'A025C540.Yandex.Music';
+$yandexFamily = 'A025C540.Yandex.Music_vfvw9svesycw6';
+$hasAllUsers = (Get-Command Remove-AppxPackage).Parameters.ContainsKey('AllUsers');
+$prov = Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -match 'Yandex' -or $_.PackageName -match 'Yandex' -or $_.PackageName -match 'A025C540.Yandex.Music' };
+foreach ($p in $prov) {
+  Remove-AppxProvisionedPackage -Online -PackageName $p.PackageName -ErrorAction Continue | Out-Null;
+  try { dism.exe /Online /Remove-ProvisionedAppxPackage /PackageName:$($p.PackageName) | Out-Null } catch { }
+}
+$installed = Get-AppxPackage -AllUsers | Where-Object { $_.Name -eq $yandexExact -or $_.PackageFamilyName -eq $yandexFamily -or $_.Name -match 'Yandex' -or $_.PackageFamilyName -match 'Yandex' };
+foreach ($p in $installed) {
+  if ($hasAllUsers) { Remove-AppxPackage -AllUsers -Package $p.PackageFullName -ErrorAction Continue }
+  else { Remove-AppxPackage -Package $p.PackageFullName -ErrorAction Continue }
+}
+Get-AppxPackage -Name $yandexExact | ForEach-Object {
+  Remove-AppxPackage -Package $_.PackageFullName -ErrorAction Continue;
+}
+";
+            RunPowerShell(script);
+        }
+        catch (Exception ex)
+        {
+            Log($"ERROR apps.remove_uwp.post: {ex}");
+        }
+        Log("END apps.remove_uwp.post");
+    }
+
     private static void EnsureLogDir()
     {
         try { Directory.CreateDirectory(BaseDir); } catch { }
@@ -431,7 +464,6 @@ public static class TweakExecutor
         SetDword(RegistryHive.LocalMachine, key, "ConfigureStartPins_ProviderSet", 1);
         SetQword(RegistryHive.LocalMachine, key, "ConfigureStartPins_LastWrite", DateTime.UtcNow.ToFileTimeUtc());
         SetString(RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\PolicyManager\default\device\Start", "ConfigureStartPins", json);
-        RunProcess("cmd.exe", "/c taskkill /f /im explorer.exe & start explorer.exe");
     }
 
     private static void RemoveAppxPackages()
@@ -455,23 +487,34 @@ foreach ($s in $selectors) {{
   }}
 }}
 
-$yandexExact = 'A025C540.Yandex.Music';
-$prov | Where-Object {{ $_.DisplayName -eq $yandexExact -or $_.PackageName -match 'Yandex' }} | ForEach-Object {{
-  Remove-AppxProvisionedPackage -Online -PackageName $_.PackageName -ErrorAction Continue | Out-Null;
-}}
-Get-AppxPackage -Name $yandexExact -AllUsers | ForEach-Object {{
-  if ($hasAllUsers) {{ Remove-AppxPackage -AllUsers -Package $_.PackageFullName -ErrorAction Continue }}
-  else {{ Remove-AppxPackage -Package $_.PackageFullName -ErrorAction Continue }}
-}}
-$yandex = Get-AppxProvisionedPackage -Online | Where-Object {{ $_.DisplayName -match 'Yandex' }};
-foreach ($p in $yandex) {{
-  Remove-AppxProvisionedPackage -Online -PackageName $p.PackageName -ErrorAction Continue | Out-Null;
-}}
-$yandexInstalled = Get-AppxPackage -AllUsers | Where-Object {{ $_.Name -match 'Yandex' -or $_.PackageFamilyName -match 'Yandex' }};
-foreach ($p in $yandexInstalled) {{
-  if ($hasAllUsers) {{ Remove-AppxPackage -AllUsers -Package $p.PackageFullName -ErrorAction Continue }}
-  else {{ Remove-AppxPackage -Package $p.PackageFullName -ErrorAction Continue }}
-}}";
+  $yandexExact = 'A025C540.Yandex.Music';
+  $yandexFamily = 'A025C540.Yandex.Music_vfvw9svesycw6';
+  $prov | Where-Object {{ $_.DisplayName -eq $yandexExact -or $_.PackageName -match 'A025C540.Yandex.Music' -or $_.PackageName -match 'Yandex' }} | ForEach-Object {{
+    Write-Output ('Remove provisioned: ' + $_.PackageName);
+    Remove-AppxProvisionedPackage -Online -PackageName $_.PackageName -ErrorAction Continue | Out-Null;
+    try {{ dism.exe /Online /Remove-ProvisionedAppxPackage /PackageName:$($_.PackageName) | Out-Null }} catch {{ }}
+  }}
+  Get-AppxPackage -Name $yandexExact -AllUsers | ForEach-Object {{
+    Write-Output ('Remove installed (all users): ' + $_.PackageFullName);
+    if ($hasAllUsers) {{ Remove-AppxPackage -AllUsers -Package $_.PackageFullName -ErrorAction Continue }}
+    else {{ Remove-AppxPackage -Package $_.PackageFullName -ErrorAction Continue }}
+  }}
+  Get-AppxPackage -Name $yandexExact | ForEach-Object {{
+    Write-Output ('Remove installed (current user): ' + $_.PackageFullName);
+    Remove-AppxPackage -Package $_.PackageFullName -ErrorAction Continue;
+  }}
+  $yandex = Get-AppxProvisionedPackage -Online | Where-Object {{ $_.DisplayName -match 'Yandex' }};
+  foreach ($p in $yandex) {{
+    Write-Output ('Remove provisioned (match): ' + $p.PackageName);
+    Remove-AppxProvisionedPackage -Online -PackageName $p.PackageName -ErrorAction Continue | Out-Null;
+    try {{ dism.exe /Online /Remove-ProvisionedAppxPackage /PackageName:$($p.PackageName) | Out-Null }} catch {{ }}
+  }}
+  $yandexInstalled = Get-AppxPackage -AllUsers | Where-Object {{ $_.Name -match 'Yandex' -or $_.PackageFamilyName -match 'Yandex' -or $_.PackageFamilyName -eq $yandexFamily }};
+  foreach ($p in $yandexInstalled) {{
+    Write-Output ('Remove installed (match): ' + $p.PackageFullName);
+    if ($hasAllUsers) {{ Remove-AppxPackage -AllUsers -Package $p.PackageFullName -ErrorAction Continue }}
+    else {{ Remove-AppxPackage -Package $p.PackageFullName -ErrorAction Continue }}
+  }}";
         RunPowerShell(script);
         RemoveWindowsStore();
         DisableCortana();
@@ -737,7 +780,6 @@ $smh = Join-Path $env:LOCALAPPDATA 'Packages\Microsoft.Windows.StartMenuExperien
 if (Test-Path $smh) { Remove-Item -Path (Join-Path $smh '*') -Recurse -Force -ErrorAction SilentlyContinue; }
 $tileDb = Join-Path $env:LOCALAPPDATA 'TileDataLayer\Database';
 if (Test-Path $tileDb) { Remove-Item $tileDb -Recurse -Force -ErrorAction SilentlyContinue; }
-Start-Process explorer.exe;
 ";
         RunPowerShell(script);
     }
@@ -745,9 +787,24 @@ Start-Process explorer.exe;
     private static void ScheduleStartCleanupOnce()
     {
         var script = @"
-$taskName = 'DeL1ThiSystem\StartCleanupOnce';
-$ps = @'
-Stop-Process -Name explorer,StartMenuExperienceHost,ShellExperienceHost -Force -ErrorAction SilentlyContinue;
+  $taskName = 'DeL1ThiSystem\StartCleanupOnce';
+  $ps = @'
+    $taskName = 'DeL1ThiSystem\StartCleanupOnce';
+    try {
+      schtasks /Delete /TN $taskName /F >$null 2>$null;
+      Start-Sleep -Seconds 1;
+      schtasks /Query /TN $taskName >$null 2>$null;
+      if ($LASTEXITCODE -eq 0) {
+        Log 'Task still exists after schtasks delete; using COM fallback.';
+        $service = New-Object -ComObject 'Schedule.Service';
+        $service.Connect();
+        $folder = $service.GetFolder('\DeL1ThiSystem');
+        $folder.DeleteTask('StartCleanupOnce', 0);
+      } else {
+        Log 'Task removed via schtasks.';
+      }
+    } catch { Log ('Delete failed: {0}' -f $_.Exception.Message) }
+    Stop-Process -Name explorer,StartMenuExperienceHost,ShellExperienceHost -Force -ErrorAction SilentlyContinue;
 Remove-Item -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\CloudStore\Store\Cache\DefaultAccount' -Recurse -Force -ErrorAction SilentlyContinue;
 Remove-Item -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\CloudStore\Store\DefaultAccount' -Recurse -Force -ErrorAction SilentlyContinue;
 $smh = Join-Path $env:LOCALAPPDATA 'Packages\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\LocalState';
@@ -759,13 +816,23 @@ $layouts = @(
   (Join-Path $env:LOCALAPPDATA 'Microsoft\Windows\Shell\LayoutModification.xml')
 );
 foreach ($l in $layouts) { if (Test-Path $l) { Remove-Item $l -Force -ErrorAction SilentlyContinue; } }
-Start-Process explorer.exe;
-schtasks /Delete /TN $taskName /F >$null 2>$null;
+  try {
+    schtasks /Delete /TN $taskName /F >$null 2>$null;
+    Start-Sleep -Seconds 1;
+    schtasks /Query /TN $taskName >$null 2>$null;
+    if ($LASTEXITCODE -eq 0) {
+      $service = New-Object -ComObject 'Schedule.Service';
+      $service.Connect();
+      $folder = $service.GetFolder('\DeL1ThiSystem');
+      $folder.DeleteTask('StartCleanupOnce', 0);
+    } else {
+    }
+  } catch { }
 '@;
 $path = Join-Path $env:ProgramData 'DeL1ThiSystem\Wizard\StartCleanupOnce.ps1';
 New-Item -ItemType Directory -Path (Split-Path $path) -Force | Out-Null;
 $ps | Set-Content -LiteralPath $path -Encoding UTF8;
-$tr = 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ' + [char]34 + $path + [char]34;
+  $tr = 'powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ' + [char]34 + $path + [char]34;
 schtasks /Create /F /TN $taskName /RU $env:USERNAME /SC ONLOGON /RL HIGHEST /TR $tr | Out-Null;
 ";
         RunPowerShell(script);

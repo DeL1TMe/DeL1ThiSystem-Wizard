@@ -2,9 +2,7 @@
 using System.Windows;
 using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
-using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
+using Microsoft.Win32;
 using DeL1ThiSystem.ConfigurationWizard.Pages;
 using DeL1ThiSystem.ConfigurationWizard.Tweaks;
 
@@ -12,13 +10,15 @@ namespace DeL1ThiSystem.ConfigurationWizard;
 
 public partial class MainWindow : Window
 {
+    private const double DesignWidth = 720;
+    private const double DesignHeight = 800;
     private bool _allowClose;
-    private CancellationTokenSource? _explorerGuardCts;
 
     public MainWindow()
     {
         InitializeComponent();
         LoadHeaderLogo();
+        SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
     }
 
     private void LoadHeaderLogo()
@@ -32,7 +32,7 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        StartExplorerGuard();
+        AdjustWindowToWorkArea();
         var app = (App)Application.Current;
 
         if (!app.State.BootstrapApplied)
@@ -83,89 +83,42 @@ public partial class MainWindow : Window
 
     private void ExitConfirmExit_Click(object sender, RoutedEventArgs e)
     {
-        StopExplorerGuard();
-        SetAutoRestartShell(true);
-        StartExplorer();
+        SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
         _allowClose = true;
         Close();
     }
 
-    private void StartExplorerGuard()
+    protected override void OnClosed(EventArgs e)
     {
-        if (_explorerGuardCts != null)
-            return;
-
-        SetAutoRestartShell(false);
-        _explorerGuardCts = new CancellationTokenSource();
-        var token = _explorerGuardCts.Token;
-
-        Task.Run(async () =>
-        {
-            while (!token.IsCancellationRequested)
-            {
-                try
-                {
-                    foreach (var p in Process.GetProcessesByName("explorer"))
-                    {
-                        try { p.Kill(); } catch { }
-                    }
-                }
-                catch
-                {
-                }
-
-                try
-                {
-                    await Task.Delay(1500, token);
-                }
-                catch
-                {
-                }
-            }
-        }, token);
+        SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
+        base.OnClosed(e);
     }
 
-    private void StopExplorerGuard()
+    private void Header_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (e.LeftButton == System.Windows.Input.MouseButtonState.Pressed)
+            DragMove();
+    }
+
+    private void AdjustWindowToWorkArea()
     {
         try
         {
-            _explorerGuardCts?.Cancel();
-            _explorerGuardCts?.Dispose();
-            _explorerGuardCts = null;
+            var work = SystemParameters.WorkArea;
+            var targetWidth = Math.Min(DesignWidth, work.Width);
+            var targetHeight = Math.Min(DesignHeight, work.Height);
+            Width = targetWidth;
+            Height = targetHeight;
+            Left = work.Left + (work.Width - targetWidth) / 2;
+            Top = work.Top + (work.Height - targetHeight) / 2;
         }
         catch
         {
         }
     }
 
-    private static void StartExplorer()
+    private void OnDisplaySettingsChanged(object? sender, EventArgs e)
     {
-        try
-        {
-            var psi = new ProcessStartInfo
-            {
-                FileName = "explorer.exe",
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                WindowStyle = ProcessWindowStyle.Hidden
-            };
-            using var proc = Process.Start(psi);
-        }
-        catch
-        {
-        }
-    }
-
-    private static void SetAutoRestartShell(bool enabled)
-    {
-        try
-        {
-            using var key = Microsoft.Win32.Registry.LocalMachine.CreateSubKey(
-                @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon", true);
-            key?.SetValue("AutoRestartShell", enabled ? 1 : 0, Microsoft.Win32.RegistryValueKind.DWord);
-        }
-        catch
-        {
-        }
+        Dispatcher.Invoke(AdjustWindowToWorkArea);
     }
 }
