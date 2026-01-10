@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
@@ -19,7 +19,6 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         LoadHeaderLogo();
-        LoadAppIcon();
     }
 
     private void LoadHeaderLogo()
@@ -27,15 +26,6 @@ public partial class MainWindow : Window
         try
         {
             HeaderLogo.Source = new BitmapImage(new Uri("pack://application:,,,/Assets/logo.png", UriKind.Absolute));
-        }
-        catch { }
-    }
-
-    private void LoadAppIcon()
-    {
-        try
-        {
-            Icon = new BitmapImage(new Uri("pack://application:,,,/Assets/app-icon.png", UriKind.Absolute));
         }
         catch { }
     }
@@ -62,8 +52,6 @@ public partial class MainWindow : Window
     }
 
     public void NavigateToDisclaimer() => Frame.Navigate(new DisclaimerPage());
-
-    public void NavigateToMain() => Frame.Navigate(new MainPage());
 
     private void Close_Click(object sender, RoutedEventArgs e) => ShowExitConfirm();
 

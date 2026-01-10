@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -32,15 +32,14 @@ public static class TweaksJsonLoader
             foreach (var it in g.Items)
             {
                 bool compatible = it.AppliesTo == null || it.AppliesTo.Count == 0 || it.AppliesTo.Contains(osFamily);
-                bool supported = IsTweakSupported(it, out var supportNote);
-                var description = BuildDescription(it, osFamily, compatible, supported, supportNote);
+                var description = BuildDescription(it, osFamily, compatible);
                 groupNode.Children.Add(new TweakNode
                 {
                     Id = it.Id,
                     Title = it.Title,
                     Description = description,
-                    IsChecked = compatible && supported && it.Default,
-                    IsEnabled = compatible && supported,
+                    IsChecked = compatible && it.Default,
+                    IsEnabled = compatible,
                     AppliesTo = string.Join(",", it.AppliesTo ?? new()),
                     Stage = it.Stage
                 });
@@ -56,7 +55,7 @@ public static class TweaksJsonLoader
     {
         var json = ReadEmbeddedText("DeL1ThiSystem.ConfigurationWizard.Resources.bootstrap_steps.json");
         using var doc = JsonDocument.Parse(json);
-        var title = doc.RootElement.GetProperty("title").GetString() ?? "Подготавливаем…";
+        var title = doc.RootElement.GetProperty("title").GetString() ?? "Подготовка ОС";
 
         var steps = doc.RootElement.GetProperty("steps")
             .EnumerateArray()
@@ -75,7 +74,7 @@ public static class TweaksJsonLoader
         return r.ReadToEnd();
     }
 
-    private static string BuildDescription(TweakItemJson item, string osFamily, bool compatible, bool supported, string supportNote)
+    private static string BuildDescription(TweakItemJson item, string osFamily, bool compatible)
     {
         var description = item.Description ?? string.Empty;
         var notes = new List<string>();
@@ -92,9 +91,6 @@ public static class TweaksJsonLoader
             notes.Add(reason);
         }
 
-        if (!supported && !string.IsNullOrWhiteSpace(supportNote))
-            notes.Add(supportNote);
-
         if (notes.Count == 0)
             return description;
 
@@ -102,11 +98,5 @@ public static class TweaksJsonLoader
             return string.Join("\n", notes);
 
         return $"{description}\n{string.Join("\n", notes)}";
-    }
-
-    private static bool IsTweakSupported(TweakItemJson item, out string note)
-    {
-        note = "";
-        return true;
     }
 }

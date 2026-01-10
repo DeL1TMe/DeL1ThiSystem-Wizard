@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -22,7 +22,6 @@ public static class TweakExecutor
         "Wizard");
 
     private static readonly string LogPath = Path.Combine(BaseDir, "ExeTweaks.log");
-    private static readonly string InternetWaitMarker = Path.Combine(BaseDir, "waiting_internet.marker");
     private static int _procSeq = 0;
 
     private static readonly string[] ContentDeliveryValues =
@@ -141,12 +140,6 @@ public static class TweakExecutor
                 case "bootstrap.wallpaper_quality_100":
                     SetWallpaperQuality100();
                     break;
-                case "bootstrap.start_pins":
-                    ConfigureStartPinsForOs(osFamily);
-                    break;
-                case "bootstrap.taskbar_only_explorer":
-                    SetTaskbarOnlyExplorer();
-                    break;
                 case "apps.remove_uwp":
                     RemoveAppxPackages();
                     break;
@@ -190,7 +183,6 @@ public static class TweakExecutor
                 case "perf.powercfg_never_sleep":
                     SetPowercfgNeverSleep();
                     break;
-                case "perf.restore_disable_cleanup":
                 case "bootstrap.restore_disable_cleanup":
                     DisableRestoreAndCleanup();
                     break;
@@ -222,10 +214,6 @@ public static class TweakExecutor
                     break;
                 case "shell.taskbar_clear_pins":
                     ClearTaskbarPins();
-                    break;
-                case "shell.taskbar_only_explorer":
-                    if (osFamily == "10")
-                        SetTaskbarOnlyExplorer();
                     break;
                 case "shell.taskbar_end_task":
                     SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\TaskbarDeveloperSettings", "TaskbarEndTask", 1);
@@ -448,40 +436,42 @@ public static class TweakExecutor
 
     private static void RemoveAppxPackages()
     {
-        var selectors = string.Join(",", AppxSelectors.Select(s => $"'{s}'"));
-        var script =
-            "$selectors = @(" + selectors + ");" +
-            "$prov = Get-AppxProvisionedPackage -Online;" +
-            "foreach ($s in $selectors) { " +
-            "  $prov | Where-Object { $_.DisplayName -eq $s } | ForEach-Object { " +
-            "    Remove-AppxProvisionedPackage -Online -PackageName $_.PackageName -ErrorAction Continue | Out-Null; " +
-            "  } " +
-            "}" +
-            "$installed = Get-AppxPackage -AllUsers;" +
-            "$hasAllUsers = (Get-Command Remove-AppxPackage).Parameters.ContainsKey('AllUsers');" +
-            "foreach ($s in $selectors) { " +
-            "  $installed | Where-Object { $_.Name -like ($s + '*') -or $_.PackageFamilyName -like ($s + '*') } | ForEach-Object { " +
-            "    if ($hasAllUsers) { Remove-AppxPackage -AllUsers -Package $_.PackageFullName -ErrorAction Continue } " +
-            "    else { Remove-AppxPackage -Package $_.PackageFullName -ErrorAction Continue } " +
-            "  } " +
-            "}" +
-            "$yandexExact = 'A025C540.Yandex.Music';" +
-            "$prov | Where-Object { $_.DisplayName -eq $yandexExact -or $_.PackageName -match 'Yandex' } | ForEach-Object { " +
-            "  Remove-AppxProvisionedPackage -Online -PackageName $_.PackageName -ErrorAction Continue | Out-Null; " +
-            "}" +
-            "Get-AppxPackage -Name $yandexExact -AllUsers | ForEach-Object { " +
-            "  if ($hasAllUsers) { Remove-AppxPackage -AllUsers -Package $_.PackageFullName -ErrorAction Continue } " +
-            "  else { Remove-AppxPackage -Package $_.PackageFullName -ErrorAction Continue } " +
-            "}" +
-            "$yandex = Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -match 'Yandex' };" +
-            "foreach ($p in $yandex) { " +
-            "  Remove-AppxProvisionedPackage -Online -PackageName $p.PackageName -ErrorAction Continue | Out-Null; " +
-            "}" +
-            "$yandexInstalled = Get-AppxPackage -AllUsers | Where-Object { $_.Name -match 'Yandex' -or $_.PackageFamilyName -match 'Yandex' };" +
-            "foreach ($p in $yandexInstalled) { " +
-            "  if ($hasAllUsers) { Remove-AppxPackage -AllUsers -Package $p.PackageFullName -ErrorAction Continue } " +
-            "  else { Remove-AppxPackage -Package $p.PackageFullName -ErrorAction Continue } " +
-            "}";
+        var selectors = string.Join(", ", AppxSelectors.Select(s => $"'{s}'"));
+        var script = $@"
+$selectors = @({selectors});
+$prov = Get-AppxProvisionedPackage -Online;
+foreach ($s in $selectors) {{
+  $prov | Where-Object {{ $_.DisplayName -eq $s }} | ForEach-Object {{
+    Remove-AppxProvisionedPackage -Online -PackageName $_.PackageName -ErrorAction Continue | Out-Null;
+  }}
+}}
+
+$installed = Get-AppxPackage -AllUsers;
+$hasAllUsers = (Get-Command Remove-AppxPackage).Parameters.ContainsKey('AllUsers');
+foreach ($s in $selectors) {{
+  $installed | Where-Object {{ $_.Name -like ($s + '*') -or $_.PackageFamilyName -like ($s + '*') }} | ForEach-Object {{
+    if ($hasAllUsers) {{ Remove-AppxPackage -AllUsers -Package $_.PackageFullName -ErrorAction Continue }}
+    else {{ Remove-AppxPackage -Package $_.PackageFullName -ErrorAction Continue }}
+  }}
+}}
+
+$yandexExact = 'A025C540.Yandex.Music';
+$prov | Where-Object {{ $_.DisplayName -eq $yandexExact -or $_.PackageName -match 'Yandex' }} | ForEach-Object {{
+  Remove-AppxProvisionedPackage -Online -PackageName $_.PackageName -ErrorAction Continue | Out-Null;
+}}
+Get-AppxPackage -Name $yandexExact -AllUsers | ForEach-Object {{
+  if ($hasAllUsers) {{ Remove-AppxPackage -AllUsers -Package $_.PackageFullName -ErrorAction Continue }}
+  else {{ Remove-AppxPackage -Package $_.PackageFullName -ErrorAction Continue }}
+}}
+$yandex = Get-AppxProvisionedPackage -Online | Where-Object {{ $_.DisplayName -match 'Yandex' }};
+foreach ($p in $yandex) {{
+  Remove-AppxProvisionedPackage -Online -PackageName $p.PackageName -ErrorAction Continue | Out-Null;
+}}
+$yandexInstalled = Get-AppxPackage -AllUsers | Where-Object {{ $_.Name -match 'Yandex' -or $_.PackageFamilyName -match 'Yandex' }};
+foreach ($p in $yandexInstalled) {{
+  if ($hasAllUsers) {{ Remove-AppxPackage -AllUsers -Package $p.PackageFullName -ErrorAction Continue }}
+  else {{ Remove-AppxPackage -Package $p.PackageFullName -ErrorAction Continue }}
+}}";
         RunPowerShell(script);
         RemoveWindowsStore();
         DisableCortana();
@@ -655,26 +645,6 @@ if (Test-Path $taskbar) {
   Get-ChildItem $taskbar -Filter *.lnk -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue;
 }
 Remove-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Taskband' -Name Favorites,FavoritesResolve,FavoritesChanges,FavoritesRemovedChanges -ErrorAction SilentlyContinue;
-Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue;
-";
-        RunPowerShell(script);
-    }
-
-    private static void SetTaskbarOnlyExplorer()
-    {
-        SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu", "{20D04FE0-3AEA-1069-A2D8-08002B30309D}", 0);
-        SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel", "{20D04FE0-3AEA-1069-A2D8-08002B30309D}", 0);
-        ApplyDefaultUserDesktopIcons();
-        var script = @"
-$taskbar = Join-Path $env:APPDATA 'Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar';
-if (Test-Path $taskbar) {
-  Get-ChildItem $taskbar -Filter *.lnk -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue;
-  $wsh = New-Object -ComObject WScript.Shell;
-  $lnk = $wsh.CreateShortcut((Join-Path $taskbar 'File Explorer.lnk'));
-  $lnk.TargetPath = ""$env:WINDIR\explorer.exe"";
-  $lnk.Save();
-}
-Remove-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Taskband' -Name Favorites,FavoritesResolve,FavoritesChanges -ErrorAction SilentlyContinue;
 Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue;
 ";
         RunPowerShell(script);
@@ -1098,6 +1068,15 @@ foreach ($n in $names) {
         LogApp("=== Install-Apps finished ===");
     }
 
+    private static void DisableRestoreAndCleanup()
+    {
+        RunPowerShell("try { Disable-ComputerRestore -Drive \"$env:SystemDrive\\\" } catch {}");
+        if (Directory.Exists(@"C:\Windows.old"))
+            RunProcess("cmd.exe", "/c rmdir /s /q C:\\Windows.old");
+        else
+            Log("Windows.old not found, skip cleanup.");
+    }
+
     private static void SetPowercfgNeverSleep()
     {
         RunProcess("powercfg.exe", "-change -standby-timeout-ac 0");
@@ -1106,15 +1085,6 @@ foreach ($n in $names) {
         RunProcess("powercfg.exe", "-change -standby-timeout-dc 0");
         RunProcess("powercfg.exe", "-change -monitor-timeout-dc 0");
         RunProcess("powercfg.exe", "-change -hibernate-timeout-dc 0");
-    }
-
-    private static void DisableRestoreAndCleanup()
-    {
-        RunPowerShell("try { Disable-ComputerRestore -Drive \"$env:SystemDrive\\\" } catch {}");
-        if (Directory.Exists(@"C:\Windows.old"))
-            RunProcess("cmd.exe", "/c rmdir /s /q C:\\Windows.old");
-        else
-            Log("Windows.old not found, skip cleanup.");
     }
 
     private static void ApplyDefaultUserContentDelivery()
@@ -1126,47 +1096,6 @@ foreach ($n in $names) {
                 return;
             foreach (var name in ContentDeliveryValues)
                 key.SetValue(name, 0, RegistryValueKind.DWord);
-        });
-    }
-
-    private static void ApplyDefaultUserDesktopIcons()
-    {
-        string[] hideIcons =
-        {
-            "{5399e694-6ce5-4d6c-8fce-1d8870fdcba0}",
-            "{b4bfcc3a-db2c-424c-b029-7fe99a87c641}",
-            "{a8cdff1c-4878-43be-b5fd-f8091c1c60d0}",
-            "{374de290-123f-4565-9164-39c4925e467b}",
-            "{e88865ea-0e1c-4e20-9aa6-edcd0212c87c}",
-            "{f874310e-b6b7-47dc-bc84-b9e6b38f5903}",
-            "{1cf1260c-4dd0-4ebb-811f-33c572699fde}",
-            "{f02c1a0d-be21-4350-88b0-7367fc96ef3c}",
-            "{3add1653-eb32-4cb0-bbd7-dfa0abb5acca}",
-            "{59031a47-3f72-44a7-89c5-5595fe6b30ee}",
-            "{a0953c92-50dc-43bf-be83-3742fed03c9c}"
-        };
-
-        string[] showIcons =
-        {
-            "{645ff040-5081-101b-9f08-00aa002f954e}",
-            "{20d04fe0-3aea-1069-a2d8-08002b30309d}"
-        };
-
-        void Apply(RegistryKey root, string subKey)
-        {
-            using var key = root.CreateSubKey(subKey, true);
-            if (key == null)
-                return;
-            foreach (var id in hideIcons)
-                key.SetValue(id, 1, RegistryValueKind.DWord);
-            foreach (var id in showIcons)
-                key.SetValue(id, 0, RegistryValueKind.DWord);
-        }
-
-        WithDefaultUserHive(root =>
-        {
-            Apply(root, @"Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu");
-            Apply(root, @"Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel");
         });
     }
 
@@ -1330,7 +1259,6 @@ if (Test-Path $toolboxPath) {
 ";
 
         RunPowerShell(script);
-        SetInternetWaitMarker(false);
     }
 
     private static void ActivateHwid()
@@ -1377,27 +1305,6 @@ if (Test-Path $toolboxPath) {
             $"/Create /F /TN \"{taskName}\" /RU \"SYSTEM\" /RL HIGHEST /SC ONLOGON /DELAY 0000:30 " +
             $"/TR \"\\\"{psExe}\\\" -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File \\\"{helperPs}\\\"\"";
         RunProcess("schtasks.exe", taskArgs);
-    }
-
-    private static void SetInternetWaitMarker(bool enabled)
-    {
-        try
-        {
-            Directory.CreateDirectory(BaseDir);
-            if (enabled)
-            {
-                if (!File.Exists(InternetWaitMarker))
-                    File.WriteAllText(InternetWaitMarker, "wait", Encoding.ASCII);
-            }
-            else
-            {
-                if (File.Exists(InternetWaitMarker))
-                    File.Delete(InternetWaitMarker);
-            }
-        }
-        catch
-        {
-        }
     }
 
     private static void EnsureHwidFiles(string hwidCmd, string helperPs)

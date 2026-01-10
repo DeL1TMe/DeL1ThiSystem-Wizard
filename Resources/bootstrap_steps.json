@@ -1,4 +1,4 @@
-{
+﻿{
   "version": 1,
   "title": "Ведётся подготовка ОС для дальнейшей настройки…",
   "steps": [
@@ -20,7 +20,7 @@
     },
     {
       "id": "bootstrap.remote_access_enable",
-      "title": "Remote Access"
+      "title": "Включить Remote Access"
     },
     {
       "id": "bootstrap.long_paths_enable",

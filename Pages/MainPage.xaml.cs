@@ -1,4 +1,4 @@
-﻿﻿﻿using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
@@ -31,7 +31,6 @@ public partial class MainPage : Page
             LoadTweaksCatalog();
             ApplyThemeSelectionVisuals();
 
-            MainScroll.ScrollChanged += (_, __) => UpdateFadeOverlays();
             Loaded += (_, __) => UpdateFadeOverlays();
         }
         catch (Exception ex)

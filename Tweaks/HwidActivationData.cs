@@ -1,4 +1,4 @@
-namespace DeL1ThiSystem.ConfigurationWizard.Tweaks;
+﻿namespace DeL1ThiSystem.ConfigurationWizard.Tweaks;
 
 internal static class HwidActivationData
 {
