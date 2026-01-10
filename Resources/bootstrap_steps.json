@@ -49,10 +49,6 @@
     {
       "id": "bootstrap.wallpaper_quality_100",
       "title": "Качество обоев 100%"
-    },
-    {
-      "id": "bootstrap.start_pins",
-      "title": "Пины Start"
     }
   ]
 }

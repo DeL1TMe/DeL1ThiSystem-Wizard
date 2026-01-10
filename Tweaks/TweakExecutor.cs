@@ -51,6 +51,7 @@ public static class TweakExecutor
         "Microsoft.Microsoft3DViewer",
         "Microsoft.BingSearch",
         "Clipchamp.Clipchamp",
+        "A025C540.Yandex.Music",
         "Microsoft.Copilot",
         "Microsoft.549981C3F5F10",
         "Microsoft.Windows.DevHome",
@@ -207,6 +208,11 @@ public static class TweakExecutor
                 case "shell.search_box_mode":
                     SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Search", "SearchboxTaskbarMode", 1);
                     SetDefaultUserDword(@"Software\Microsoft\Windows\CurrentVersion\Search", "SearchboxTaskbarMode", 1);
+                    break;
+                case "shell.start_tiles_clear":
+                    ConfigureStartPinsForOs(osFamily);
+                    ResetCurrentUserStartState(osFamily);
+                    ScheduleStartCleanupOnce();
                     break;
                 case "shell.explorer_launch_to_this_pc":
                     SetExplorerLaunchToThisPc();
@@ -424,6 +430,7 @@ public static class TweakExecutor
         if (string.Equals(osFamily, "10", StringComparison.OrdinalIgnoreCase))
         {
             ClearStartPinsWin10();
+            ClearStartLayoutPolicy();
             return;
         }
 
@@ -457,6 +464,14 @@ public static class TweakExecutor
             "    if ($hasAllUsers) { Remove-AppxPackage -AllUsers -Package $_.PackageFullName -ErrorAction Continue } " +
             "    else { Remove-AppxPackage -Package $_.PackageFullName -ErrorAction Continue } " +
             "  } " +
+            "}" +
+            "$yandexExact = 'A025C540.Yandex.Music';" +
+            "$prov | Where-Object { $_.DisplayName -eq $yandexExact -or $_.PackageName -match 'Yandex' } | ForEach-Object { " +
+            "  Remove-AppxProvisionedPackage -Online -PackageName $_.PackageName -ErrorAction Continue | Out-Null; " +
+            "}" +
+            "Get-AppxPackage -Name $yandexExact -AllUsers | ForEach-Object { " +
+            "  if ($hasAllUsers) { Remove-AppxPackage -AllUsers -Package $_.PackageFullName -ErrorAction Continue } " +
+            "  else { Remove-AppxPackage -Package $_.PackageFullName -ErrorAction Continue } " +
             "}" +
             "$yandex = Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -match 'Yandex' };" +
             "foreach ($p in $yandex) { " +
@@ -680,6 +695,29 @@ $layout = @'
 '@
 $layoutPath = Join-Path $env:ProgramData 'DeL1ThiSystem\Wizard\StartLayout.xml';
 $layout | Set-Content -LiteralPath $layoutPath -Encoding UTF8;
+$defaultShell = 'C:\Users\Default\AppData\Local\Microsoft\Windows\Shell';
+New-Item -ItemType Directory -Path $defaultShell -Force | Out-Null;
+$defaultLayouts = @'
+<?xml version='1.0' encoding='utf-8'?>
+<FullDefaultLayoutTemplate xmlns='http://schemas.microsoft.com/Start/2014/FullDefaultLayout' xmlns:start='http://schemas.microsoft.com/Start/2014/StartLayout' Version='1'>
+  <StartLayoutCollection>
+    <StartLayout GroupCellWidth='6' />
+  </StartLayoutCollection>
+</FullDefaultLayoutTemplate>
+'@
+$defaultMod = @'
+<?xml version='1.0' encoding='utf-8'?>
+<LayoutModificationTemplate Version='1' xmlns='http://schemas.microsoft.com/Start/2014/LayoutModification'>
+  <LayoutOptions StartTileGroupCellWidth='6' />
+  <DefaultLayoutOverride>
+    <StartLayoutCollection>
+      <StartLayout GroupCellWidth='6' />
+    </StartLayoutCollection>
+  </DefaultLayoutOverride>
+</LayoutModificationTemplate>
+'@
+$defaultLayouts | Set-Content -LiteralPath (Join-Path $defaultShell 'DefaultLayouts.xml') -Encoding UTF8;
+$defaultMod | Set-Content -LiteralPath (Join-Path $defaultShell 'LayoutModification.xml') -Encoding UTF8;
 $policyPaths = @(
   'HKCU:\Software\Policies\Microsoft\Windows\Explorer',
   'HKLM:\Software\Policies\Microsoft\Windows\Explorer'
@@ -709,10 +747,91 @@ Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue;
 Stop-Process -Name StartMenuExperienceHost -Force -ErrorAction SilentlyContinue;
 Start-Sleep -Seconds 2;
 foreach ($p in $policyPaths) {
-  Set-ItemProperty -Path $p -Name LockedStartLayout -Value 0 -Type DWord;
+  Remove-ItemProperty -Path $p -Name StartLayoutFile,LockedStartLayout -ErrorAction SilentlyContinue;
 }
+if (Test-Path $layoutPath) { Remove-Item $layoutPath -Force -ErrorAction SilentlyContinue; }
 ";
         RunPowerShell(script);
+    }
+
+    private static void ResetCurrentUserStartState(string osFamily)
+    {
+        if (!string.Equals(osFamily, "10", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        var script = @"
+Stop-Process -Name explorer,StartMenuExperienceHost,ShellExperienceHost -Force -ErrorAction SilentlyContinue;
+Remove-Item -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\CloudStore\Store\Cache\DefaultAccount' -Recurse -Force -ErrorAction SilentlyContinue;
+Remove-Item -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\CloudStore\Store\DefaultAccount' -Recurse -Force -ErrorAction SilentlyContinue;
+$smh = Join-Path $env:LOCALAPPDATA 'Packages\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\LocalState';
+if (Test-Path $smh) { Remove-Item -Path (Join-Path $smh '*') -Recurse -Force -ErrorAction SilentlyContinue; }
+$tileDb = Join-Path $env:LOCALAPPDATA 'TileDataLayer\Database';
+if (Test-Path $tileDb) { Remove-Item $tileDb -Recurse -Force -ErrorAction SilentlyContinue; }
+Start-Process explorer.exe;
+";
+        RunPowerShell(script);
+    }
+
+    private static void ScheduleStartCleanupOnce()
+    {
+        var script = @"
+$taskName = 'DeL1ThiSystem\StartCleanupOnce';
+$ps = @'
+Stop-Process -Name explorer,StartMenuExperienceHost,ShellExperienceHost -Force -ErrorAction SilentlyContinue;
+Remove-Item -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\CloudStore\Store\Cache\DefaultAccount' -Recurse -Force -ErrorAction SilentlyContinue;
+Remove-Item -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\CloudStore\Store\DefaultAccount' -Recurse -Force -ErrorAction SilentlyContinue;
+$smh = Join-Path $env:LOCALAPPDATA 'Packages\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\LocalState';
+if (Test-Path $smh) { Remove-Item -Path (Join-Path $smh '*') -Recurse -Force -ErrorAction SilentlyContinue; }
+$tileDb = Join-Path $env:LOCALAPPDATA 'TileDataLayer\Database';
+if (Test-Path $tileDb) { Remove-Item $tileDb -Recurse -Force -ErrorAction SilentlyContinue; }
+$layouts = @(
+  (Join-Path $env:LOCALAPPDATA 'Microsoft\Windows\Shell\DefaultLayouts.xml'),
+  (Join-Path $env:LOCALAPPDATA 'Microsoft\Windows\Shell\LayoutModification.xml')
+);
+foreach ($l in $layouts) { if (Test-Path $l) { Remove-Item $l -Force -ErrorAction SilentlyContinue; } }
+Start-Process explorer.exe;
+schtasks /Delete /TN $taskName /F >$null 2>$null;
+'@;
+$path = Join-Path $env:ProgramData 'DeL1ThiSystem\Wizard\StartCleanupOnce.ps1';
+New-Item -ItemType Directory -Path (Split-Path $path) -Force | Out-Null;
+$ps | Set-Content -LiteralPath $path -Encoding UTF8;
+$tr = 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ' + [char]34 + $path + [char]34;
+schtasks /Create /F /TN $taskName /RU $env:USERNAME /SC ONLOGON /RL HIGHEST /TR $tr | Out-Null;
+";
+        RunPowerShell(script);
+    }
+
+    private static void ClearStartLayoutPolicy()
+    {
+        const string key = @"Software\Policies\Microsoft\Windows\Explorer";
+        TryDeleteRegistryValue(RegistryHive.CurrentUser, key, "StartLayoutFile");
+        TryDeleteRegistryValue(RegistryHive.CurrentUser, key, "LockedStartLayout");
+        TryDeleteRegistryValue(RegistryHive.LocalMachine, key, "StartLayoutFile");
+        TryDeleteRegistryValue(RegistryHive.LocalMachine, key, "LockedStartLayout");
+
+        WithDefaultUserHive(root =>
+        {
+            using var k = root.OpenSubKey(key, true);
+            if (k == null)
+                return;
+            k.DeleteValue("StartLayoutFile", false);
+            k.DeleteValue("LockedStartLayout", false);
+        });
+
+        TryDelete(Path.Combine(BaseDir, "StartLayout.xml"));
+    }
+
+    private static void TryDeleteRegistryValue(RegistryHive hive, string subKey, string name)
+    {
+        try
+        {
+            using var baseKey = RegistryKey.OpenBaseKey(hive, RegistryView.Registry64);
+            using var key = baseKey.OpenSubKey(subKey, true);
+            key?.DeleteValue(name, false);
+        }
+        catch
+        {
+        }
     }
 
     private static void RemoveWindowsStore()
@@ -942,7 +1061,17 @@ foreach ($n in $names) {
             else
             {
                 fileName = f.FullName;
-                finalArgs = string.IsNullOrWhiteSpace(args) ? "/S" : args;
+                if (string.IsNullOrWhiteSpace(args))
+                {
+                    if (name.StartsWith("Uninstall.Tool", StringComparison.OrdinalIgnoreCase))
+                        finalArgs = "/S /I";
+                    else
+                        finalArgs = "/S";
+                }
+                else
+                {
+                    finalArgs = args;
+                }
             }
 
             try

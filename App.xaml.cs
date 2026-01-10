@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Diagnostics;
+using System.Security.Principal;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
@@ -14,6 +16,13 @@ public partial class App : Application
     {
         if (HasCompletionMarker())
         {
+            Shutdown(0);
+            return;
+        }
+
+        if (!IsRunningAsAdmin())
+        {
+            RelaunchAsAdmin(e.Args);
             Shutdown(0);
             return;
         }
@@ -33,6 +42,41 @@ public partial class App : Application
         };
 
         base.OnStartup(e);
+    }
+
+    private static bool IsRunningAsAdmin()
+    {
+        try
+        {
+            var identity = WindowsIdentity.GetCurrent();
+            var principal = new WindowsPrincipal(identity);
+            return principal.IsInRole(WindowsBuiltInRole.Administrator);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static void RelaunchAsAdmin(string[] args)
+    {
+        try
+        {
+            var exe = Process.GetCurrentProcess().MainModule?.FileName;
+            if (string.IsNullOrWhiteSpace(exe))
+                return;
+            var psi = new ProcessStartInfo
+            {
+                FileName = exe,
+                Arguments = string.Join(" ", args),
+                UseShellExecute = true,
+                Verb = "runas"
+            };
+            Process.Start(psi);
+        }
+        catch
+        {
+        }
     }
 
     private static bool HasCompletionMarker()

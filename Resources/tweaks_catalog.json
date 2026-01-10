@@ -132,9 +132,10 @@
         },
         {
           "id": "bootstrap.start_pins",
-          "title": "Пины Start",
-          "description": "Применяет рекомендуемую раскладку закреплений Start (заглушка логики).",
+          "title": "Очистить плитки Пуска",
+          "description": "Очищает плитки и применяет пустую раскладку Start.",
           "appliesTo": [
+            "10",
             "11"
           ],
           "default": true,
@@ -149,7 +150,7 @@
         {
           "id": "apps.remove_uwp",
           "title": "Удаление UWP-приложений",
-          "description": "Microsoft Store, 3D Viewer, BingSearch, Clipchamp, Copilot, DevHome, Family, FeedbackHub, GetHelp/GetStarted, BingNews, OfficeHub, OneNote, Outlook (new), Paint, Solitaire, StickyNotes, Teams (MicrosoftTeams/MSTeams), ToDo, Wallet, Weather, Movies&TV, Xbox (TCUI/XboxApp/GameOverlay/GamingOverlay/IdentityProvider/SpeechToTextOverlay/GamingApp).",
+          "description": "Microsoft Store, 3D Viewer, BingSearch, Clipchamp, Copilot, DevHome, Family, FeedbackHub, GetHelp/GetStarted, BingNews, OfficeHub, OneNote, Outlook (new), Paint, Solitaire, StickyNotes, Teams (MicrosoftTeams/MSTeams), ToDo, Wallet, Weather, Movies&TV, Xbox (TCUI/XboxApp/GameOverlay/GamingOverlay/IdentityProvider/SpeechToTextOverlay/GamingApp), Yandex Music.",
           "appliesTo": [
             "10",
             "11"
@@ -331,6 +332,17 @@
           "id": "shell.search_box_mode",
           "title": "Режим поля поиска на панели задач",
           "description": "Сворачивает поиск до иконки вместо длинной строки.",
+          "appliesTo": [
+            "10",
+            "11"
+          ],
+          "default": true,
+          "stage": "tweak"
+        },
+        {
+          "id": "shell.start_tiles_clear",
+          "title": "Очистить плитки Пуска",
+          "description": "Очищает плитки и применяет пустую раскладку Start.",
           "appliesTo": [
             "10",
             "11"
