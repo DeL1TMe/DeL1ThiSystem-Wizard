@@ -644,12 +644,18 @@ Get-AppxProvisionedPackage -Online | Where-Object {{ $_.DisplayName -eq $outlook
     private static void DisableConsumerFeatures(string osFamily)
     {
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\CloudContent", "DisableWindowsConsumerFeatures", 1);
+        SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\CloudContent", "DisableCloudOptimizedContent", 1);
+        SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\CloudContent", "DisableConsumerAccountStateContent", 1);
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\CloudContent", "DisableSoftLanding", 1);
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\CloudContent", "DisableThirdPartySuggestions", 1);
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\WindowsStore", "AutoDownload", 2);
+        SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\WindowsStore", "DisableStoreApps", 1);
+        SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\WindowsStore", "RemoveWindowsStore", 1);
         foreach (var name in ContentDeliveryValues)
             SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager", name, 0);
         ApplyDefaultUserContentDelivery();
+        DisableContentDeliveryTasks();
+        RemoveOutlookPackage();
     }
 
     private static void EnableClassicContextMenu()
@@ -674,6 +680,43 @@ Get-AppxProvisionedPackage -Online | Where-Object {{ $_.DisplayName -eq $outlook
         SetDword(RegistryHive.LocalMachine, key, "HideSCAMeetNow", 1);
         SetDword(RegistryHive.CurrentUser, key, "HideSCAMeetNow", 1);
         SetDefaultUserDword(key, "HideSCAMeetNow", 1);
+    }
+
+    private static void DisableContentDeliveryTasks()
+    {
+        string[] tasks =
+        {
+            @"\Microsoft\Windows\ContentDeliveryManager\ContentDeliveryManager",
+            @"\Microsoft\Windows\ContentDeliveryManager\DUSMDownload",
+            @"\Microsoft\Windows\ContentDeliveryManager\DUSMUpload",
+            @"\Microsoft\Windows\ContentDeliveryManager\Maintenance",
+            @"\Microsoft\Windows\ContentDeliveryManager\NetworkStateChange",
+            @"\Microsoft\Windows\ContentDeliveryManager\PreInstalledApps",
+            @"\Microsoft\Windows\ContentDeliveryManager\ReportSystemState",
+            @"\Microsoft\Windows\ContentDeliveryManager\SilentInstalledApps",
+            @"\Microsoft\Windows\ContentDeliveryManager\SoftLandingTask",
+            @"\Microsoft\Windows\ContentDeliveryManager\Subscription",
+            @"\Microsoft\Windows\ContentDeliveryManager\SubscriptionUpdate"
+        };
+
+        foreach (var task in tasks)
+            RunProcess("schtasks.exe", $"/Change /TN \"{task}\" /Disable");
+    }
+
+    private static void RemoveOutlookPackage()
+    {
+        var script = @"
+$outlook = 'Microsoft.OutlookForWindows';
+$hasAllUsers = (Get-Command Remove-AppxPackage).Parameters.ContainsKey('AllUsers');
+Get-AppxPackage -AllUsers -Name $outlook | ForEach-Object {
+  if ($hasAllUsers) { Remove-AppxPackage -AllUsers -Package $_.PackageFullName -ErrorAction Continue }
+  else { Remove-AppxPackage -Package $_.PackageFullName -ErrorAction Continue }
+}
+Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -eq $outlook } | ForEach-Object {
+  Remove-AppxProvisionedPackage -Online -PackageName $_.PackageName -ErrorAction Continue | Out-Null;
+}
+";
+        RunPowerShell(script);
     }
 
     private static void SetExplorerLaunchToThisPc()
