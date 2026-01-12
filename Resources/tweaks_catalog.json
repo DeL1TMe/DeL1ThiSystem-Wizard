@@ -18,7 +18,7 @@
 
           "title": "Удаление UWP-приложений",
 
-          "description": "Microsoft Store, 3D Viewer, BingSearch, Clipchamp, Copilot, DevHome, Family, FeedbackHub, GetHelp/GetStarted, BingNews, OfficeHub, OneNote, Outlook (new), Paint, Solitaire, StickyNotes, Teams (MicrosoftTeams/MSTeams), ToDo, Wallet, Weather, Movies&TV, Xbox (TCUI/XboxApp/GameOverlay/GamingOverlay/IdentityProvider/SpeechToTextOverlay/GamingApp), Yandex Music.",
+          "description": "Microsoft Store, 3D Viewer, BingSearch, Clipchamp, Copilot, DevHome, Family, FeedbackHub, GetHelp/GetStarted, BingNews, OfficeHub, OneNote, Outlook, Paint, Solitaire, StickyNotes, Teams (MicrosoftTeams/MSTeams), ToDo, Wallet, Weather, Movies&TV, Xbox (TCUI/XboxApp/GameOverlay/GamingOverlay/IdentityProvider/SpeechToTextOverlay/GamingApp).",
 
           "appliesTo": [
 
@@ -387,6 +387,25 @@
             "10",
 
             "11"
+
+          ],
+
+          "default": true,
+
+          "stage": "tweak"
+
+        },
+        {
+
+          "id": "shell.meet_now_disable",
+
+          "title": "Скрыть кнопку \"Провести собрание\"",
+
+          "description": "Убирает Meet Now (Провести собрание) с панели задач.",
+
+          "appliesTo": [
+
+            "10"
 
           ],
 

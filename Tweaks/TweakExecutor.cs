@@ -50,7 +50,6 @@ public static class TweakExecutor
         "Microsoft.Microsoft3DViewer",
         "Microsoft.BingSearch",
         "Clipchamp.Clipchamp",
-        "A025C540.Yandex.Music",
         "Microsoft.Copilot",
         "Microsoft.549981C3F5F10",
         "Microsoft.Windows.DevHome",
@@ -173,6 +172,16 @@ public static class TweakExecutor
                 case "updates.search_suggestions_disable":
                     SetDword(RegistryHive.CurrentUser, @"Software\Policies\Microsoft\Windows\Explorer", "DisableSearchBoxSuggestions", 1);
                     SetDefaultUserDword(@"Software\Policies\Microsoft\Windows\Explorer", "DisableSearchBoxSuggestions", 1);
+                    SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\Windows Search", "AllowSearchHighlights", 0);
+                    SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\SearchSettings", "IsDynamicSearchBoxEnabled", 0);
+                    SetDefaultUserDword(@"Software\Microsoft\Windows\CurrentVersion\SearchSettings", "IsDynamicSearchBoxEnabled", 0);
+                    SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\Windows Search", "DisableWebSearch", 1);
+                    SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\Windows Search", "ConnectedSearchUseWeb", 0);
+                    SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\Windows Search", "ConnectedSearchPrivacy", 3);
+                    SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Search", "BingSearchEnabled", 0);
+                    SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Search", "CortanaConsent", 0);
+                    SetDefaultUserDword(@"Software\Microsoft\Windows\CurrentVersion\Search", "BingSearchEnabled", 0);
+                    SetDefaultUserDword(@"Software\Microsoft\Windows\CurrentVersion\Search", "CortanaConsent", 0);
                     break;
                 case "updates.widgets_disable":
                     DisableWidgetsAndNews();
@@ -196,6 +205,9 @@ public static class TweakExecutor
                 case "shell.hide_task_view":
                     SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "ShowTaskViewButton", 0);
                     SetDefaultUserDword(@"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "ShowTaskViewButton", 0);
+                    break;
+                case "shell.meet_now_disable":
+                    DisableMeetNow();
                     break;
                 case "shell.search_box_mode":
                     SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Search", "SearchboxTaskbarMode", 1);
@@ -251,39 +263,6 @@ public static class TweakExecutor
         Log($"END {id}");
     }
 
-    public static void RemoveYandexMusicCleanup()
-    {
-        EnsureLogDir();
-        Log("START apps.remove_uwp.post");
-        try
-        {
-            var script = @"
-$yandexExact = 'A025C540.Yandex.Music';
-$yandexFamily = 'A025C540.Yandex.Music_vfvw9svesycw6';
-$hasAllUsers = (Get-Command Remove-AppxPackage).Parameters.ContainsKey('AllUsers');
-$prov = Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -match 'Yandex' -or $_.PackageName -match 'Yandex' -or $_.PackageName -match 'A025C540.Yandex.Music' };
-foreach ($p in $prov) {
-  Remove-AppxProvisionedPackage -Online -PackageName $p.PackageName -ErrorAction Continue | Out-Null;
-  try { dism.exe /Online /Remove-ProvisionedAppxPackage /PackageName:$($p.PackageName) | Out-Null } catch { }
-}
-$installed = Get-AppxPackage -AllUsers | Where-Object { $_.Name -eq $yandexExact -or $_.PackageFamilyName -eq $yandexFamily -or $_.Name -match 'Yandex' -or $_.PackageFamilyName -match 'Yandex' };
-foreach ($p in $installed) {
-  if ($hasAllUsers) { Remove-AppxPackage -AllUsers -Package $p.PackageFullName -ErrorAction Continue }
-  else { Remove-AppxPackage -Package $p.PackageFullName -ErrorAction Continue }
-}
-Get-AppxPackage -Name $yandexExact | ForEach-Object {
-  Remove-AppxPackage -Package $_.PackageFullName -ErrorAction Continue;
-}
-";
-            RunPowerShell(script);
-        }
-        catch (Exception ex)
-        {
-            Log($"ERROR apps.remove_uwp.post: {ex}");
-        }
-        Log("END apps.remove_uwp.post");
-    }
-
     private static void EnsureLogDir()
     {
         try { Directory.CreateDirectory(BaseDir); } catch { }
@@ -320,6 +299,24 @@ Get-AppxPackage -Name $yandexExact | ForEach-Object {
             using var baseKey = RegistryKey.OpenBaseKey(hive, RegistryView.Registry64);
             using var key = baseKey.CreateSubKey(subKey, true);
             key?.SetValue(name, value, RegistryValueKind.DWord);
+        }
+        catch (Exception ex)
+        {
+            Log($"REG ERROR {path} {name}: {ex.Message}");
+        }
+    }
+
+    private static void SetDwordIfKeyExists(RegistryHive hive, RegistryView view, string subKey, string name, int value)
+    {
+        var path = $"{hive}\\{subKey}";
+        try
+        {
+            using var baseKey = RegistryKey.OpenBaseKey(hive, view);
+            using var key = baseKey.OpenSubKey(subKey, writable: true);
+            if (key == null)
+                return;
+            LogReg("REG DWORD", path, name, value.ToString(CultureInfo.InvariantCulture));
+            key.SetValue(name, value, RegistryValueKind.DWord);
         }
         catch (Exception ex)
         {
@@ -487,34 +484,16 @@ foreach ($s in $selectors) {{
   }}
 }}
 
-  $yandexExact = 'A025C540.Yandex.Music';
-  $yandexFamily = 'A025C540.Yandex.Music_vfvw9svesycw6';
-  $prov | Where-Object {{ $_.DisplayName -eq $yandexExact -or $_.PackageName -match 'A025C540.Yandex.Music' -or $_.PackageName -match 'Yandex' }} | ForEach-Object {{
-    Write-Output ('Remove provisioned: ' + $_.PackageName);
-    Remove-AppxProvisionedPackage -Online -PackageName $_.PackageName -ErrorAction Continue | Out-Null;
-    try {{ dism.exe /Online /Remove-ProvisionedAppxPackage /PackageName:$($_.PackageName) | Out-Null }} catch {{ }}
-  }}
-  Get-AppxPackage -Name $yandexExact -AllUsers | ForEach-Object {{
-    Write-Output ('Remove installed (all users): ' + $_.PackageFullName);
-    if ($hasAllUsers) {{ Remove-AppxPackage -AllUsers -Package $_.PackageFullName -ErrorAction Continue }}
-    else {{ Remove-AppxPackage -Package $_.PackageFullName -ErrorAction Continue }}
-  }}
-  Get-AppxPackage -Name $yandexExact | ForEach-Object {{
-    Write-Output ('Remove installed (current user): ' + $_.PackageFullName);
-    Remove-AppxPackage -Package $_.PackageFullName -ErrorAction Continue;
-  }}
-  $yandex = Get-AppxProvisionedPackage -Online | Where-Object {{ $_.DisplayName -match 'Yandex' }};
-  foreach ($p in $yandex) {{
-    Write-Output ('Remove provisioned (match): ' + $p.PackageName);
-    Remove-AppxProvisionedPackage -Online -PackageName $p.PackageName -ErrorAction Continue | Out-Null;
-    try {{ dism.exe /Online /Remove-ProvisionedAppxPackage /PackageName:$($p.PackageName) | Out-Null }} catch {{ }}
-  }}
-  $yandexInstalled = Get-AppxPackage -AllUsers | Where-Object {{ $_.Name -match 'Yandex' -or $_.PackageFamilyName -match 'Yandex' -or $_.PackageFamilyName -eq $yandexFamily }};
-  foreach ($p in $yandexInstalled) {{
-    Write-Output ('Remove installed (match): ' + $p.PackageFullName);
-    if ($hasAllUsers) {{ Remove-AppxPackage -AllUsers -Package $p.PackageFullName -ErrorAction Continue }}
-    else {{ Remove-AppxPackage -Package $p.PackageFullName -ErrorAction Continue }}
-  }}";
+$outlook = 'Microsoft.OutlookForWindows';
+Get-AppxPackage -AllUsers -Name $outlook | ForEach-Object {{
+  Write-Output ('Remove installed (Outlook): ' + $_.PackageFullName);
+  if ($hasAllUsers) {{ Remove-AppxPackage -AllUsers -Package $_.PackageFullName -ErrorAction Continue }}
+  else {{ Remove-AppxPackage -Package $_.PackageFullName -ErrorAction Continue }}
+}}
+Get-AppxProvisionedPackage -Online | Where-Object {{ $_.DisplayName -eq $outlook }} | ForEach-Object {{
+  Write-Output ('Remove provisioned (Outlook): ' + $_.PackageName);
+  Remove-AppxProvisionedPackage -Online -PackageName $_.PackageName -ErrorAction Continue | Out-Null;
+}}";
         RunPowerShell(script);
         RemoveWindowsStore();
         DisableCortana();
@@ -563,33 +542,88 @@ foreach ($s in $selectors) {{
 
     private static void MakeEdgeUninstallable()
     {
-        var path = @"C:\Windows\System32\IntegratedServicesRegionPolicySet.json";
-        if (!File.Exists(path))
+        var paths = new[]
         {
-            Log($"Edge policy missing: {path}");
-            return;
+            @"C:\Windows\System32\IntegratedServicesRegionPolicySet.json",
+            @"C:\Windows\SysWOW64\IntegratedServicesRegionPolicySet.json"
+        };
+
+        bool updatedAny = false;
+        foreach (var path in paths)
+        {
+            if (!File.Exists(path))
+            {
+                Log($"Edge policy missing: {path}");
+                continue;
+            }
+
+            if (TryPatchEdgeUninstallPolicy(path))
+                updatedAny = true;
         }
 
+        SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Edge", "UninstallAllowed", 1);
+        SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Edge", "AllowUninstall", 1);
+
+        const string edgeUninstallKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Microsoft Edge";
+        SetDwordIfKeyExists(RegistryHive.LocalMachine, RegistryView.Registry64, edgeUninstallKey, "NoRemove", 0);
+        SetDwordIfKeyExists(RegistryHive.LocalMachine, RegistryView.Registry64, edgeUninstallKey, "SystemComponent", 0);
+        SetDwordIfKeyExists(RegistryHive.LocalMachine, RegistryView.Registry32, edgeUninstallKey, "NoRemove", 0);
+        SetDwordIfKeyExists(RegistryHive.LocalMachine, RegistryView.Registry32, edgeUninstallKey, "SystemComponent", 0);
+
+        if (!updatedAny)
+            Log("Edge policy not updated: GUID not found or file not writable.");
+    }
+
+    private static bool TryPatchEdgeUninstallPolicy(string path)
+    {
+        const string edgeGuid = "{1bca278a-5d11-4acf-ad2f-f9ab6d7f93a6}";
         try
         {
+            EnsureFileWritable(path);
             var node = JsonNode.Parse(File.ReadAllText(path));
             var policies = node?["policies"]?.AsArray();
             if (policies == null)
-                return;
+                return false;
 
+            bool updated = false;
             foreach (var item in policies)
             {
-                if ((string?)item?["guid"] == "{1bca278a-5d11-4acf-ad2f-f9ab6d7f93a6}")
-                    item!["defaultState"] = "enabled";
+                if ((string?)item?["guid"] == edgeGuid)
+                {
+                    if (item is JsonObject obj)
+                    {
+                        obj["defaultState"] = "enabled";
+                        obj["conditions"] = new JsonObject();
+                    }
+                    else
+                    {
+                        item!["defaultState"] = "enabled";
+                    }
+                    updated = true;
+                }
+            }
+
+            if (!updated)
+            {
+                Log($"Edge policy GUID not found in: {path}");
+                return false;
             }
 
             var json = node!.ToJsonString(new JsonSerializerOptions { WriteIndented = false });
             File.WriteAllText(path, json);
+            return true;
         }
         catch (Exception ex)
         {
-            Log($"Edge policy update failed: {ex.Message}");
+            Log($"Edge policy update failed ({path}): {ex.Message}");
+            return false;
         }
+    }
+
+    private static void EnsureFileWritable(string path)
+    {
+        var cmd = $"takeown /f \"{path}\" /a & icacls \"{path}\" /setowner \"*S-1-5-32-544\" /c & icacls \"{path}\" /grant \"*S-1-5-32-544:F\" /c";
+        RunProcess("cmd.exe", "/c " + cmd);
     }
 
     private static void PauseWindowsUpdate()
@@ -612,6 +646,7 @@ foreach ($s in $selectors) {{
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\CloudContent", "DisableWindowsConsumerFeatures", 1);
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\CloudContent", "DisableSoftLanding", 1);
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\CloudContent", "DisableThirdPartySuggestions", 1);
+        SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\WindowsStore", "AutoDownload", 2);
         foreach (var name in ContentDeliveryValues)
             SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager", name, 0);
         ApplyDefaultUserContentDelivery();
@@ -628,6 +663,17 @@ foreach ($s in $selectors) {{
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Dsh", "AllowNewsAndInterests", 0);
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Dsh", "AllowWidgets", 0);
         SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "TaskbarDa", 0);
+        SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\Windows Feeds", "EnableFeeds", 0);
+        SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Feeds", "ShellFeedsTaskbarViewMode", 2);
+        SetDefaultUserDword(@"Software\Microsoft\Windows\CurrentVersion\Feeds", "ShellFeedsTaskbarViewMode", 2);
+    }
+
+    private static void DisableMeetNow()
+    {
+        const string key = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer";
+        SetDword(RegistryHive.LocalMachine, key, "HideSCAMeetNow", 1);
+        SetDword(RegistryHive.CurrentUser, key, "HideSCAMeetNow", 1);
+        SetDefaultUserDword(key, "HideSCAMeetNow", 1);
     }
 
     private static void SetExplorerLaunchToThisPc()

@@ -95,11 +95,6 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
                 await Task.Delay(150);
             }
 
-            if (_steps.Any(s => string.Equals(s.Id, "apps.remove_uwp", StringComparison.OrdinalIgnoreCase)))
-            {
-                await Task.Run(TweakExecutor.RemoveYandexMusicCleanup);
-            }
-
             SetProgress(1);
             var elapsed = (int)(DateTime.UtcNow - start).TotalMilliseconds;
             if (elapsed < 800)
@@ -108,9 +103,7 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
                 RebootEnabled = true;
             if (_showFooter)
             {
-                HeaderText = "Задача выполнена";
-                CurrentStepText = "Требуется перезагрузка";
-                IsCompleted = true;
+                SetCompletionState();
                 if (_showReboot)
                 {
                     TryWriteCompletionMarker();
@@ -220,11 +213,29 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
         var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromSeconds(0.18));
         fadeOut.Completed += (_, __) =>
         {
+            if (IsCompleted)
+            {
+                HeaderTextBlock.BeginAnimation(UIElement.OpacityProperty, null);
+                HeaderTextBlock.Opacity = 1;
+                return;
+            }
             HeaderText = newText;
             var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromSeconds(0.18));
             HeaderTextBlock.BeginAnimation(UIElement.OpacityProperty, fadeIn);
         };
         HeaderTextBlock.BeginAnimation(UIElement.OpacityProperty, fadeOut);
+    }
+
+    private void SetCompletionState()
+    {
+        if (HeaderTextBlock != null)
+        {
+            HeaderTextBlock.BeginAnimation(UIElement.OpacityProperty, null);
+            HeaderTextBlock.Opacity = 1;
+        }
+        HeaderText = "Задача выполнена";
+        CurrentStepText = "Требуется перезагрузка";
+        IsCompleted = true;
     }
 
     private static void TryWriteCompletionMarker()
