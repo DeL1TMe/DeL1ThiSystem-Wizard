@@ -18,7 +18,7 @@
 
           "title": "Удаление UWP-приложений",
 
-          "description": "Microsoft Store, 3D Viewer, BingSearch, Clipchamp, Copilot, DevHome, Family, FeedbackHub, GetHelp/GetStarted, BingNews, OfficeHub, OneNote, Outlook, Paint, Solitaire, StickyNotes, Teams (MicrosoftTeams/MSTeams), ToDo, Wallet, Weather, Movies&TV, Xbox (TCUI/XboxApp/GameOverlay/GamingOverlay/IdentityProvider/SpeechToTextOverlay/GamingApp).",
+          "description": "Microsoft Store, 3D Viewer, BingSearch, Clipchamp, Copilot, DevHome, Family, FeedbackHub, GetHelp/GetStarted, BingNews, OfficeHub, OneNote, Outlook, Paint, Solitaire, StickyNotes, Teams (MicrosoftTeams/MSTeams), ToDo, Wallet, Weather, Movies&TV, Xbox (TCUI/XboxApp/GameOverlay/GamingOverlay/IdentityProvider/SpeechToTextOverlay/GamingApp), Yandex Music.",
 
           "appliesTo": [
 
@@ -694,4 +694,3 @@
   ]
 
 }
-

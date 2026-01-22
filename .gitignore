@@ -402,5 +402,3 @@ FodyWeavers.xsd
 /publish-framework
 /publish-selfcontained
 /source_windows
-autounattend.xml
-SetupComplete.cmd

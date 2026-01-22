@@ -53,6 +53,7 @@ public static class TweakExecutor
         "Microsoft.Copilot",
         "Microsoft.549981C3F5F10",
         "Microsoft.Windows.DevHome",
+        "A025C540.Yandex.Music",
         "MicrosoftCorporationII.MicrosoftFamily",
         "Microsoft.WindowsFeedbackHub",
         "Microsoft.Edge.GameAssist",
@@ -138,6 +139,9 @@ public static class TweakExecutor
                     break;
                 case "bootstrap.wallpaper_quality_100":
                     SetWallpaperQuality100();
+                    break;
+                case "bootstrap.configure_ru_ru_locale":
+                    ConfigureRuRuLocale();
                     break;
                 case "apps.remove_uwp":
                     RemoveAppxPackages();
@@ -443,6 +447,84 @@ public static class TweakExecutor
         SetDefaultUserDword(@"Control Panel\Desktop", "JPEGImportQuality", 100);
     }
 
+    private static void ConfigureRuRuLocale()
+    {
+        var script = @"
+Write-Output 'Начало настройки локализации...'
+
+# Ensure Windows Update service is running
+Write-Output 'Запуск Windows Update сервиса...'
+Set-Service -Name 'wuauserv' -StartupType Manual -ErrorAction SilentlyContinue
+Start-Service -Name 'wuauserv' -ErrorAction SilentlyContinue
+Start-Sleep -Seconds 2
+
+# Try to add language capability
+Write-Output 'Попытка скачать языковой пакет ru-RU...'
+$result = Add-WindowsCapability -Online -Name 'Language.Basic~~~ru-RU~0.0.1.0' 2>&1
+Write-Output ('Результат Add-WindowsCapability: ' + $result)
+
+# Verify language pack is installed
+$caps = dism.exe /Online /Get-Capabilities 2>&1
+if ($caps -match 'ru-RU') {
+    Write-Output 'Языковой пакет успешно установлен'
+} else {
+    Write-Output 'ВНИМАНИЕ: Языковой пакет не найден в списке возможностей'
+}
+
+$list = Get-WinUserLanguageList
+$ruLang = $list | Where-Object { $_.LanguageTag -eq 'ru-RU' }
+if (-not $ruLang) {
+    Write-Output 'ru-RU не в списке языков, добавляю...'
+    $newLang = New-WinUserLanguageList 'ru-RU'
+    $list.Insert(0, $newLang[0])
+} else {
+    Write-Output 'ru-RU уже в списке, переставляю на первое место...'
+    $list.Remove($ruLang)
+    $list.Insert(0, $ruLang)
+}
+Set-WinUserLanguageList $list -Force
+Write-Output 'Список языков обновлен'
+
+Write-Output 'Установка Display Language...'
+Set-WinUILanguageOverride -Language ru-RU -ErrorAction SilentlyContinue
+
+# Alternative: Direct registry modification for Display Language
+Write-Output 'Установка Display Language через реестр...'
+New-Item -Path 'HKCU:\Control Panel\Desktop' -Force -ErrorAction SilentlyContinue | Out-Null
+Set-ItemProperty -Path 'HKCU:\Control Panel\Desktop' -Name 'PreferredUILanguageFallback' -Value 'ru-RU' -Force -ErrorAction SilentlyContinue
+Set-ItemProperty -Path 'HKCU:\Control Panel\International' -Name 'UILanguage' -Value 'ru-RU' -Force -ErrorAction SilentlyContinue
+
+Set-WinSystemLocale ru-RU -ErrorAction SilentlyContinue
+Set-Culture ru-RU -ErrorAction SilentlyContinue
+Set-WinHomeLocation -GeoId 203 -ErrorAction SilentlyContinue
+
+Write-Output 'Установка временной зоны...'
+tzutil /s 'Russian Standard Time'
+
+Write-Output 'Установка UTF-8 кодировки...'
+Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Nls\CodePage' -Name 'ACP' -Value '65001' -Force
+Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Nls\CodePage' -Name 'OEMCP' -Value '65001' -Force
+Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Nls\CodePage' -Name 'MACCP' -Value '65001' -Force
+
+Write-Output 'Установка реестра пользователя...'
+if (-not (Test-Path 'HKCU:\Control Panel\International')) {
+    New-Item -Path 'HKCU:\Control Panel\International' -Force | Out-Null
+}
+Set-ItemProperty -Path 'HKCU:\Control Panel\International' -Name 'LocaleName' -Value 'ru-RU' -Force
+Set-ItemProperty -Path 'HKCU:\Control Panel\International' -Name 'iCountry' -Value '7' -Force
+Set-ItemProperty -Path 'HKCU:\Control Panel\International' -Name 'iLanguage' -Value '0419' -Force
+Set-ItemProperty -Path 'HKCU:\Control Panel\International' -Name 'sLanguage' -Value 'RUS' -Force
+
+if (-not (Test-Path 'HKCU:\Keyboard Layout\Preload')) {
+    New-Item -Path 'HKCU:\Keyboard Layout\Preload' -Force | Out-Null
+}
+Set-ItemProperty -Path 'HKCU:\Keyboard Layout\Preload' -Name '1' -Value '00000419' -Force
+
+Write-Output 'Локализация установлена. ТРЕБУЕТСЯ ПЕРЕЗАГРУЗКА!'
+";
+        RunPowerShell(script);
+    }
+
     private static void ConfigureStartPinsForOs(string osFamily)
     {
         if (string.Equals(osFamily, "10", StringComparison.OrdinalIgnoreCase))
@@ -465,23 +547,85 @@ public static class TweakExecutor
 
     private static void RemoveAppxPackages()
     {
-        var selectors = string.Join(", ", AppxSelectors.Select(s => $"'{s}'"));
+        RunPowerShell(BuildUwpRemovalScript(0));
+        RemoveWindowsStore();
+        DisableCortana();
+        CreateUwpAutoRemovalTasks();
+    }
+
+    private static void CreateUwpAutoRemovalTasks()
+    {
+        var cleanupTasks = @"
+$tasks = @('DeL1ThiSystem\AutoRemoveUwpShellCore','DeL1ThiSystem\AutoRemoveUwpLicensing');
+foreach ($t in $tasks) {
+  schtasks /Delete /TN $t /F >$null 2>$null
+}";
+        var removalScript = BuildUwpRemovalScript(180) + cleanupTasks;
+
         var script = $@"
-$selectors = @({selectors});
+$root = Join-Path $env:ProgramData 'DeL1ThiSystem\Wizard';
+$path = Join-Path $root 'AutoRemoveUwp.ps1';
+New-Item -ItemType Directory -Path $root -Force | Out-Null;
+
+$ps = @'
+{removalScript}
+'@;
+
+$ps | Set-Content -LiteralPath $path -Encoding UTF8;
+
+$tr = 'powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""' + $path + '""';
+
+$task1 = 'DeL1ThiSystem\AutoRemoveUwpShellCore';
+$task2 = 'DeL1ThiSystem\AutoRemoveUwpLicensing';
+
+schtasks /Delete /TN $task1 /F >$null 2>$null;
+schtasks /Delete /TN $task2 /F >$null 2>$null;
+
+$mo1 = ""*[System[Provider[@Name='Microsoft-Windows-Shell-Core'] and (EventID=62144)]]"";
+$mo2 = ""*[System[Provider[@Name='Microsoft-Client-Licensing-Platform'] and (EventID=116)] and EventData[Data[@Name='PackageName']='Microsoft.Windows.DevHome_8wekyb3d8bbwe' or Data[@Name='PackageName']='A025C540.Yandex.Music_vfvw9svesycw6' or Data[@Name='PackageName']='Microsoft.OutlookForWindows_8wekyb3d8bbwe']]"";
+
+schtasks /Create /F /TN $task1 /RU SYSTEM /RL HIGHEST /SC ONEVENT /EC 'Microsoft-Windows-Shell-Core/Operational' /MO $mo1 /TR $tr | Out-Null;
+schtasks /Create /F /TN $task2 /RU SYSTEM /RL HIGHEST /SC ONEVENT /EC 'Microsoft-Client-Licensing-Platform/Admin' /MO $mo2 /TR $tr | Out-Null;
+";
+        RunPowerShell(script);
+    }
+
+    private static string BuildUwpRemovalScript(int delaySeconds)
+    {
+        var selectors = string.Join(", ", AppxSelectors.Select(s => $"'{s}'"));
+        var delay = delaySeconds > 0 ? $"Start-Sleep -Seconds {delaySeconds}\n" : string.Empty;
+        return $@"
+{delay}$selectors = @({selectors});
+$escaped = $selectors | ForEach-Object {{ [regex]::Escape($_) }};
+$pattern = '^(' + ($escaped -join '|') + ')';
+$isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator);
+Write-Output ('UWP removal: Admin=' + $isAdmin + ', User=' + $env:USERNAME);
 $prov = Get-AppxProvisionedPackage -Online;
-foreach ($s in $selectors) {{
-  $prov | Where-Object {{ $_.DisplayName -eq $s }} | ForEach-Object {{
-    Remove-AppxProvisionedPackage -Online -PackageName $_.PackageName -ErrorAction Continue | Out-Null;
-  }}
+$provMatches = $prov | Where-Object {{ $_.DisplayName -match $pattern -or $_.PackageName -match $pattern }};
+Write-Output ('UWP provisioned matches: ' + $provMatches.Count);
+if ($provMatches.Count -gt 0) {{
+  Write-Output ('UWP provisioned sample: ' + (($provMatches | Select-Object -First 10 -ExpandProperty PackageName) -join '; '));
+}}
+foreach ($p in $provMatches) {{
+  Remove-AppxProvisionedPackage -Online -PackageName $p.PackageName -ErrorAction Continue | Out-Null;
 }}
 
-$installed = Get-AppxPackage -AllUsers;
+$installedAll = @();
+try {{ $installedAll = Get-AppxPackage -AllUsers -ErrorAction Stop }} catch {{
+  Write-Output ('Get-AppxPackage -AllUsers failed: ' + $_.Exception.Message);
+  $installedAll = @()
+}}
+$installedCurrent = Get-AppxPackage -ErrorAction SilentlyContinue;
+$installed = @($installedAll + $installedCurrent) | Sort-Object PackageFullName -Unique;
 $hasAllUsers = (Get-Command Remove-AppxPackage).Parameters.ContainsKey('AllUsers');
-foreach ($s in $selectors) {{
-  $installed | Where-Object {{ $_.Name -like ($s + '*') -or $_.PackageFamilyName -like ($s + '*') }} | ForEach-Object {{
-    if ($hasAllUsers) {{ Remove-AppxPackage -AllUsers -Package $_.PackageFullName -ErrorAction Continue }}
-    else {{ Remove-AppxPackage -Package $_.PackageFullName -ErrorAction Continue }}
-  }}
+$installedMatches = $installed | Where-Object {{ $_.Name -match $pattern -or $_.PackageFamilyName -match $pattern }};
+Write-Output ('UWP installed matches: ' + $installedMatches.Count);
+if ($installedMatches.Count -gt 0) {{
+  Write-Output ('UWP installed sample: ' + (($installedMatches | Select-Object -First 10 -ExpandProperty PackageFullName) -join '; '));
+}}
+foreach ($pkg in $installedMatches) {{
+  if ($hasAllUsers) {{ Remove-AppxPackage -AllUsers -Package $pkg.PackageFullName -ErrorAction Continue }}
+  else {{ Remove-AppxPackage -Package $pkg.PackageFullName -ErrorAction Continue }}
 }}
 
 $outlook = 'Microsoft.OutlookForWindows';
@@ -490,13 +634,10 @@ Get-AppxPackage -AllUsers -Name $outlook | ForEach-Object {{
   if ($hasAllUsers) {{ Remove-AppxPackage -AllUsers -Package $_.PackageFullName -ErrorAction Continue }}
   else {{ Remove-AppxPackage -Package $_.PackageFullName -ErrorAction Continue }}
 }}
-Get-AppxProvisionedPackage -Online | Where-Object {{ $_.DisplayName -eq $outlook }} | ForEach-Object {{
+Get-AppxProvisionedPackage -Online | Where-Object {{ $_.DisplayName -eq $outlook -or $_.PackageName -match ('^' + [regex]::Escape($outlook)) }} | ForEach-Object {{
   Write-Output ('Remove provisioned (Outlook): ' + $_.PackageName);
   Remove-AppxProvisionedPackage -Online -PackageName $_.PackageName -ErrorAction Continue | Out-Null;
 }}";
-        RunPowerShell(script);
-        RemoveWindowsStore();
-        DisableCortana();
     }
 
     private static void RemoveCapabilities()
@@ -644,18 +785,12 @@ Get-AppxProvisionedPackage -Online | Where-Object {{ $_.DisplayName -eq $outlook
     private static void DisableConsumerFeatures(string osFamily)
     {
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\CloudContent", "DisableWindowsConsumerFeatures", 1);
-        SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\CloudContent", "DisableCloudOptimizedContent", 1);
-        SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\CloudContent", "DisableConsumerAccountStateContent", 1);
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\CloudContent", "DisableSoftLanding", 1);
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\CloudContent", "DisableThirdPartySuggestions", 1);
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\WindowsStore", "AutoDownload", 2);
-        SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\WindowsStore", "DisableStoreApps", 1);
-        SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\WindowsStore", "RemoveWindowsStore", 1);
         foreach (var name in ContentDeliveryValues)
             SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager", name, 0);
         ApplyDefaultUserContentDelivery();
-        DisableContentDeliveryTasks();
-        RemoveOutlookPackage();
     }
 
     private static void EnableClassicContextMenu()
@@ -680,43 +815,6 @@ Get-AppxProvisionedPackage -Online | Where-Object {{ $_.DisplayName -eq $outlook
         SetDword(RegistryHive.LocalMachine, key, "HideSCAMeetNow", 1);
         SetDword(RegistryHive.CurrentUser, key, "HideSCAMeetNow", 1);
         SetDefaultUserDword(key, "HideSCAMeetNow", 1);
-    }
-
-    private static void DisableContentDeliveryTasks()
-    {
-        string[] tasks =
-        {
-            @"\Microsoft\Windows\ContentDeliveryManager\ContentDeliveryManager",
-            @"\Microsoft\Windows\ContentDeliveryManager\DUSMDownload",
-            @"\Microsoft\Windows\ContentDeliveryManager\DUSMUpload",
-            @"\Microsoft\Windows\ContentDeliveryManager\Maintenance",
-            @"\Microsoft\Windows\ContentDeliveryManager\NetworkStateChange",
-            @"\Microsoft\Windows\ContentDeliveryManager\PreInstalledApps",
-            @"\Microsoft\Windows\ContentDeliveryManager\ReportSystemState",
-            @"\Microsoft\Windows\ContentDeliveryManager\SilentInstalledApps",
-            @"\Microsoft\Windows\ContentDeliveryManager\SoftLandingTask",
-            @"\Microsoft\Windows\ContentDeliveryManager\Subscription",
-            @"\Microsoft\Windows\ContentDeliveryManager\SubscriptionUpdate"
-        };
-
-        foreach (var task in tasks)
-            RunProcess("schtasks.exe", $"/Change /TN \"{task}\" /Disable");
-    }
-
-    private static void RemoveOutlookPackage()
-    {
-        var script = @"
-$outlook = 'Microsoft.OutlookForWindows';
-$hasAllUsers = (Get-Command Remove-AppxPackage).Parameters.ContainsKey('AllUsers');
-Get-AppxPackage -AllUsers -Name $outlook | ForEach-Object {
-  if ($hasAllUsers) { Remove-AppxPackage -AllUsers -Package $_.PackageFullName -ErrorAction Continue }
-  else { Remove-AppxPackage -Package $_.PackageFullName -ErrorAction Continue }
-}
-Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -eq $outlook } | ForEach-Object {
-  Remove-AppxProvisionedPackage -Online -PackageName $_.PackageName -ErrorAction Continue | Out-Null;
-}
-";
-        RunPowerShell(script);
     }
 
     private static void SetExplorerLaunchToThisPc()
@@ -1129,6 +1227,7 @@ foreach ($n in $names) {
             return;
         }
 
+        LogApp($"InternetAvailable(start)={IsInternetAvailable()}");
         if (IsInternetAvailable())
         {
             LogApp("Internet OK. Installing 7-Zip (if missing) and downloading RustDesk.");
@@ -1139,6 +1238,7 @@ foreach ($n in $names) {
         {
             LogApp("Internet not available. Skip 7-Zip and RustDesk download.");
         }
+        LogApp($"InternetAvailable(after-download)={IsInternetAvailable()}");
 
         var mapPath = Path.Combine(appsPath, "install-args.json");
         var argMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -1396,25 +1496,55 @@ try {
 
     private static void InstallToolbox()
     {
-        var script = @"
-$ps = Start-Process powershell -ArgumentList '-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command ""irm https://system.del1t.me/setup_ghost.ps1 | iex""' -PassThru -WindowStyle Hidden
-$ps.WaitForExit()
+        var logPath = Path.Combine(BaseDir, "Install-Toolbox.log");
+        void LogToolbox(string message)
+        {
+            try
+            {
+                File.AppendAllText(logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}\r\n");
+            }
+            catch
+            {
+            }
+        }
+
+        LogToolbox("Start InstallToolbox.");
+        LogToolbox($"InternetAvailable={IsInternetAvailable()}");
+
+        var script = $@"
+$ErrorActionPreference = 'Continue'
+function Log([string]$s) {{ (""[{{0}}] {{1}}"" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $s) | Out-File -FilePath '{logPath}' -Append -Encoding UTF8 }}
+Log 'Starting toolbox install script.'
+try {{
+  $ps = Start-Process powershell -ArgumentList '-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command ""irm https://system.del1t.me/setup_ghost.ps1 | iex""' -PassThru -WindowStyle Hidden
+  $ps.WaitForExit()
+  Log (""Toolbox installer exit code: {{0}}"" -f $ps.ExitCode)
+}} catch {{
+  Log (""Toolbox installer failed: {{0}}"" -f $_.Exception.Message)
+}}
 
 $toolboxPath = ""C:\Ghost Toolbox\toolbox.updater.x64.exe""
+Log (""Toolbox path exists: {{0}}"" -f (Test-Path $toolboxPath))
 
-if (Test-Path $toolboxPath) {
-  $WScriptShell = New-Object -ComObject WScript.Shell
-  $desktopPath = [Environment]::GetFolderPath(""Desktop"")
-  $shortcutPath = ""$desktopPath\Toolbox.lnk""
-  $shortcut = $WScriptShell.CreateShortcut($shortcutPath)
-  $shortcut.TargetPath = $toolboxPath
-  $shortcut.WorkingDirectory = ""C:\Ghost Toolbox""
-  $shortcut.IconLocation = $toolboxPath
-  $shortcut.Save()
-}
+if (Test-Path $toolboxPath) {{
+  try {{
+    $WScriptShell = New-Object -ComObject WScript.Shell
+    $desktopPath = [Environment]::GetFolderPath(""Desktop"")
+    $shortcutPath = ""$desktopPath\Toolbox.lnk""
+    $shortcut = $WScriptShell.CreateShortcut($shortcutPath)
+    $shortcut.TargetPath = $toolboxPath
+    $shortcut.WorkingDirectory = ""C:\Ghost Toolbox""
+    $shortcut.IconLocation = $toolboxPath
+    $shortcut.Save()
+    Log (""Shortcut created: {{0}}"" -f $shortcutPath)
+  }} catch {{
+    Log (""Shortcut creation failed: {{0}}"" -f $_.Exception.Message)
+  }}
+}}
 ";
 
         RunPowerShell(script);
+        LogToolbox("End InstallToolbox.");
     }
 
     private static void ActivateHwid()

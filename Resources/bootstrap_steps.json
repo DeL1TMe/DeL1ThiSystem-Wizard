@@ -49,6 +49,10 @@
     {
       "id": "bootstrap.wallpaper_quality_100",
       "title": "Качество обоев 100%"
+    },
+    {
+      "id": "bootstrap.configure_ru_ru_locale",
+      "title": "Настроить локаль ru-RU и кодировку UTF-8"
     }
   ]
 }
