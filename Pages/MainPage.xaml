@@ -3,7 +3,7 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <Page.Resources>
-        <Style x:Key="LocalConceptScrollBar" TargetType="{x:Type ScrollBar}">
+        <Style x:Key="ScrollBarCompact" TargetType="{x:Type ScrollBar}">
             <Setter Property="Width" Value="8"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Template">
@@ -42,7 +42,7 @@
             </Setter>
         </Style>
 
-        <Style x:Key="LocalConceptScrollViewer" TargetType="{x:Type ScrollViewer}">
+        <Style x:Key="ScrollViewerCompact" TargetType="{x:Type ScrollViewer}">
             <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
             <Setter Property="HorizontalScrollBarVisibility" Value="Disabled"/>
             <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
@@ -65,7 +65,7 @@
                                        ViewportSize="{TemplateBinding ViewportHeight}"
                                        Value="{TemplateBinding VerticalOffset}"
                                        Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"
-                                       Style="{StaticResource LocalConceptScrollBar}"/>
+                                       Style="{StaticResource ScrollBarCompact}"/>
                         </Grid>
                     </ControlTemplate>
                 </Setter.Value>
@@ -80,12 +80,12 @@
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
 
-        <Style x:Key="InfoPopupText" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource Txt.Body14}">
+        <Style x:Key="InfoPopupText" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource TextBody}">
             <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
         </Style>
 
-        <Style x:Key="ConceptToggle" TargetType="{x:Type ToggleButton}">
+        <Style x:Key="ToggleSwitch" TargetType="{x:Type ToggleButton}">
             <Setter Property="Width" Value="52"/>
             <Setter Property="Height" Value="26"/>
             <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
@@ -159,21 +159,21 @@
         <Grid Grid.Row="0">
 
             <ScrollViewer x:Name="MainScroll"
-                          Style="{StaticResource LocalConceptScrollViewer}"
+                          Style="{StaticResource ScrollViewerCompact}"
                           Margin="24,24,10,0"
                           Padding="0"
                           ScrollChanged="MainScroll_ScrollChanged">
                 <StackPanel Margin="0,0,16,0">
 
-                    <TextBlock Style="{StaticResource Txt.H1}" Margin="0,0,0,0">
+                    <TextBlock Style="{StaticResource TextHeading}" Margin="0,0,0,0">
                         Благодарим за установку!
                     </TextBlock>
 
-                    <TextBlock Style="{StaticResource Txt.Body14}" Margin="0,0,0,18">
+                    <TextBlock Style="{StaticResource TextBody}" Margin="0,0,0,18">
                         Выберите параметры, которые необходимо применить к системе.
                     </TextBlock>
 
-                    <TextBlock Style="{StaticResource Txt.Section}" Margin="0,0,0,10">Выберите тему:</TextBlock>
+                    <TextBlock Style="{StaticResource TextSection}" Margin="0,0,0,10">Выберите тему:</TextBlock>
 
                     <Grid Margin="0,0,0,22" HorizontalAlignment="Left" SnapsToDevicePixels="True" UseLayoutRounding="True">
                         <Grid.ColumnDefinitions>
@@ -241,7 +241,7 @@
                         </Grid>
                     </Grid>
 
-                    <TextBlock Style="{StaticResource Txt.Section}" Margin="0,0,0,10">
+                    <TextBlock Style="{StaticResource TextSection}" Margin="0,0,0,10">
                         Выберите необходимые твики:
                     </TextBlock>
 
@@ -270,7 +270,7 @@
                                                                 MouseLeave="InfoHit_MouseLeave">
                                                             <StackPanel Orientation="Horizontal">
                                                                 <TextBlock Style="{StaticResource InfoIcon}" Text="&#xE946;"/>
-                                                                <TextBlock Style="{StaticResource Txt.ItemTitle}" Text="{Binding Title}"/>
+                                                                <TextBlock Style="{StaticResource TextItemTitle}" Text="{Binding Title}"/>
                                                             </StackPanel>
                                                         </Border>
 
@@ -310,7 +310,7 @@
                                                 </StackPanel>
 
                                     <ToggleButton Grid.Column="1"
-                                                  Style="{StaticResource ConceptToggle}"
+                                                  Style="{StaticResource ToggleSwitch}"
                                                   IsChecked="{Binding IsChecked}"
                                                   IsEnabled="{Binding IsEnabled}"
                                                   Checked="Toggle_Checked"
@@ -355,12 +355,12 @@
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Column="0"
-                           Style="{StaticResource FooterNoteText}">
+                           Style="{StaticResource TextFooterNote}">
                     Примечание: пользовательские твики применяются к текущему профилю. Пожалуйста, настройте собственную локальную учётную запись заранее.
                 </TextBlock>
 
                 <Button Grid.Column="1"
-                        Style="{StaticResource ConceptSecondaryButton}"
+                        Style="{StaticResource ButtonSecondary}"
                         Content="Назад"
                         Height="34"
                         MinHeight="34"
@@ -369,7 +369,7 @@
                         Click="Back_Click"/>
 
                 <Button Grid.Column="3"
-                        Style="{StaticResource ConceptPrimaryButton}"
+                        Style="{StaticResource ButtonPrimary}"
                         Content="Применить"
                         Height="34"
                         MinHeight="34"
@@ -380,4 +380,3 @@
         </Border>
     </Grid>
 </Page>
-

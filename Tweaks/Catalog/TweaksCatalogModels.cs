@@ -11,7 +11,6 @@ public sealed class TweaksCatalogJson
 public sealed class TweakGroupJson
 {
     public string Id { get; set; } = "";
-    public string Title { get; set; } = "";
     public string? Note { get; set; }
     public List<TweakItemJson> Items { get; set; } = new();
 }

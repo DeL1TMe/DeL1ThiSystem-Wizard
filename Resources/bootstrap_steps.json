@@ -31,10 +31,6 @@
       "title": "Включить RDP + правило Firewall"
     },
     {
-      "id": "bootstrap.visualfx_profile",
-      "title": "Профиль визуальных эффектов"
-    },
-    {
       "id": "bootstrap.sticky_keys_disable",
       "title": "Отключить Sticky Keys"
     },

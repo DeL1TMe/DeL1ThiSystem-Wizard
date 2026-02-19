@@ -4,7 +4,7 @@
       Background="Transparent">
 
     <Page.Resources>
-        <Style x:Key="ProgressBlinkText" TargetType="TextBlock" BasedOn="{StaticResource Txt.Body14}">
+        <Style x:Key="ProgressBlinkText" TargetType="TextBlock" BasedOn="{StaticResource TextBody}">
             <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}"/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsCompleted}" Value="True">
@@ -28,10 +28,13 @@
             <Setter Property="Background" Value="#2A3345"/>
             <Setter Property="BorderBrush" Value="{DynamicResource Brush.RebootButtonBorder}"/>
             <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontSize" Value="14"/>
             <Setter Property="Height" Value="34"/>
             <Setter Property="MinHeight" Value="34"/>
+            <Setter Property="Padding" Value="18,0"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="TextBlock.LineStackingStrategy" Value="MaxHeight"/>
             <Setter Property="SnapsToDevicePixels" Value="True"/>
             <Setter Property="UseLayoutRounding" Value="True"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -44,8 +47,10 @@
                                 BorderThickness="{TemplateBinding BorderThickness}"
                                 SnapsToDevicePixels="True">
                             <ContentPresenter x:Name="cp"
-                                              HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"/>
+                                              Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              RecognizesAccessKey="True"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsEnabled" Value="True">
@@ -95,7 +100,7 @@
         <Grid Grid.Row="0" VerticalAlignment="Center">
             
             <StackPanel HorizontalAlignment="Center" Width="630">
-                <TextBlock x:Name="HeaderTextBlock" Style="{StaticResource Txt.H1}"
+                <TextBlock x:Name="HeaderTextBlock" Style="{StaticResource TextHeading}"
                            Text="{Binding HeaderText}" TextAlignment="Center" Margin="0,0,0,8"/>
 
                 <TextBlock Style="{StaticResource ProgressBlinkText}"
@@ -122,7 +127,7 @@
                     </Border>
                 </Grid>
 
-                <TextBlock Style="{StaticResource Txt.Body14}"
+                <TextBlock Style="{StaticResource TextBody}"
                            Text="{Binding PercentText}" TextAlignment="Center" Opacity="0.9"
                            Visibility="{Binding ProgressVisibility}"/>
             </StackPanel>
@@ -138,11 +143,11 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Column="0" Style="{StaticResource FooterNoteText}"
+                <TextBlock Grid.Column="0" Style="{StaticResource TextFooterNote}"
                            Text="{Binding FooterText}" TextWrapping="Wrap" VerticalAlignment="Center"/>
 
                 <Button Grid.Column="1" Content="Понятно" Width="130" Height="34" Margin="8,0,0,0"
-                        Style="{StaticResource ConceptPrimaryButton}"
+                        Style="{StaticResource ButtonPrimary}"
                         Visibility="{Binding FooterDismissVisible}"
                         Click="HideFooter_Click"/>
 
@@ -155,4 +160,3 @@
         </Border>
     </Grid>
 </Page>
-

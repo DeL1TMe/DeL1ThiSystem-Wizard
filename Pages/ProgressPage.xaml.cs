@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
+using DeL1ThiSystem.ConfigurationWizard.Resources;
 using DeL1ThiSystem.ConfigurationWizard.Tweaks;
 
 namespace DeL1ThiSystem.ConfigurationWizard.Pages;
@@ -53,8 +54,7 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
     public Visibility FooterDismissVisible => (_showFooter && !_showReboot) ? Visibility.Visible : Visibility.Collapsed;
 
     public string FooterText { get; set; } =
-        "Примечание: используйте Toolbox для продолжения настройки системы.\n" +
-        "Когда закончите — создайте резервную копию в AOMEI Backuper.";
+        WizardTexts.SetupFooter;
 
     public ProgressPage((string Id, string Title)[] steps, string headerText, bool showFooter, bool showReboot, string? footerText = null, bool autoNavigate = false)
     {
@@ -233,8 +233,8 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
             HeaderTextBlock.BeginAnimation(UIElement.OpacityProperty, null);
             HeaderTextBlock.Opacity = 1;
         }
-        HeaderText = "Задача выполнена";
-        CurrentStepText = "Требуется перезагрузка";
+        HeaderText = WizardTexts.CompletionHeader;
+        CurrentStepText = WizardTexts.CompletionStep;
         IsCompleted = true;
     }
 

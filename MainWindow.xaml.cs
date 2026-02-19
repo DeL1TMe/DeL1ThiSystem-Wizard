@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Security.Principal;
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
+using DeL1ThiSystem.ConfigurationWizard.Resources;
 using Microsoft.Win32;
 using DeL1ThiSystem.ConfigurationWizard.Pages;
 using DeL1ThiSystem.ConfigurationWizard.Tweaks;
@@ -17,7 +20,6 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        LoadHeaderLogo();
         SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
     }
 
@@ -25,30 +27,88 @@ public partial class MainWindow : Window
     {
         try
         {
-            HeaderLogo.Source = new BitmapImage(new Uri("pack://application:,,,/Assets/logo.png", UriKind.Absolute));
+            HeaderLogo.Source = LoadBitmapForDisplay("pack://application:,,,/Assets/logo.png", 290, 80);
         }
-        catch { }
+        catch
+        {
+        }
     }
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
         AdjustWindowToWorkArea();
+        LoadHeaderLogo();
         var app = (App)Application.Current;
 
         if (!app.State.BootstrapApplied)
         {
-            var boot = TweaksJsonLoader.LoadBootstrapSteps();
+            if (!TryValidateBootstrapPrerequisites(app.State.OsFamily, out var boot, out var error))
+            {
+                MessageBox.Show(error, "DeL1ThiSystem", MessageBoxButton.OK, MessageBoxImage.Error);
+                _allowClose = true;
+                Close();
+                return;
+            }
+
             Frame.Navigate(new ProgressPage(
                 boot.Steps,
                 boot.Title,
                 showFooter: true,
                 showReboot: false,
-                footerText: "Появился вопрос? Задай его напрямую через официальный веб‑сайт: del1t.me.\nИстория изменений проекта доступна по адресу: system.del1t.me/changelog.",
+                footerText: WizardTexts.BootstrapFooter,
                 autoNavigate: true));
             return;
         }
 
         NavigateToDisclaimer();
+    }
+
+    private static bool TryValidateBootstrapPrerequisites(
+        string osFamily,
+        out (string Title, (string Id, string Title)[] Steps) bootstrap,
+        out string error)
+    {
+        bootstrap = default;
+        error = string.Empty;
+
+        if (!IsRunningAsAdministrator())
+        {
+            error = "Для запуска первичной настройки приложение должно быть запущено от имени администратора.";
+            return false;
+        }
+
+        try
+        {
+            bootstrap = TweaksCatalogLoader.LoadBootstrapSteps();
+            _ = TweaksCatalogLoader.LoadAsNodes(osFamily);
+
+            if (bootstrap.Steps.Length == 0)
+            {
+                error = "Не найдены шаги bootstrap в ресурсах приложения.";
+                return false;
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            error = "Ошибка проверки ресурсов приложения перед bootstrap:\n" + ex.Message;
+            return false;
+        }
+    }
+
+    private static bool IsRunningAsAdministrator()
+    {
+        try
+        {
+            using var identity = WindowsIdentity.GetCurrent();
+            var principal = new WindowsPrincipal(identity);
+            return principal.IsInRole(WindowsBuiltInRole.Administrator);
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public void NavigateToDisclaimer() => Frame.Navigate(new DisclaimerPage());
@@ -119,6 +179,27 @@ public partial class MainWindow : Window
 
     private void OnDisplaySettingsChanged(object? sender, EventArgs e)
     {
-        Dispatcher.Invoke(AdjustWindowToWorkArea);
+        Dispatcher.Invoke(() =>
+        {
+            AdjustWindowToWorkArea();
+            LoadHeaderLogo();
+        });
+    }
+
+    private BitmapImage LoadBitmapForDisplay(string uri, double targetWidthDip, double targetHeightDip)
+    {
+        var dpi = VisualTreeHelper.GetDpi(this);
+        var decodeWidth = Math.Max(1, (int)Math.Round(targetWidthDip * dpi.DpiScaleX));
+        var decodeHeight = Math.Max(1, (int)Math.Round(targetHeightDip * dpi.DpiScaleY));
+        var bitmap = new BitmapImage();
+        bitmap.BeginInit();
+        bitmap.UriSource = new Uri(uri, UriKind.Absolute);
+        bitmap.CacheOption = BitmapCacheOption.OnLoad;
+        bitmap.CreateOptions = BitmapCreateOptions.PreservePixelFormat;
+        bitmap.DecodePixelWidth = decodeWidth;
+        bitmap.DecodePixelHeight = decodeHeight;
+        bitmap.EndInit();
+        bitmap.Freeze();
+        return bitmap;
     }
 }

@@ -13,20 +13,20 @@
                         HorizontalAlignment="Center"
                         MaxWidth="600">
 
-                <TextBlock Style="{StaticResource Txt.H1}"
+                <TextBlock Style="{StaticResource TextHeading}"
                            TextAlignment="Center"
                            TextWrapping="NoWrap"
                            Margin="0,0,0,18">
                     Добро пожаловать в универсальный мастер настройки!
                 </TextBlock>
 
-                <TextBlock Style="{StaticResource Txt.Body14}"
+                <TextBlock Style="{StaticResource TextBody}"
                            TextAlignment="Center"
                            Foreground="{DynamicResource Brush.TextSecondary}">
                     Данный мастер предназначен для подготовки системы и применения настроек после стадии OOBE. В процессе вы сможете выбрать параметры оформления системы, твики для неё и установить дополнительные компоненты в дальнейшем с помощью удобного Toolbox на рабочем столе. Рекомендуем внимательно ознакомиться с каждым этапом настройки, так как некоторые изменения могут повлиять на удобство взаимодействия с системой. Перед началом убедитесь, что имя учётной записи не содержит символов кириллицы.
                 </TextBlock>
 
-                <TextBlock Style="{StaticResource Txt.BlinkPrompt}"
+                <TextBlock Style="{StaticResource TextBlinkPrompt}"
                            TextAlignment="Center"
                            Margin="0,26,0,0">
                     Нажмите «Далее», чтобы продолжить настройку.
@@ -46,14 +46,14 @@
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Column="0"
-                           Style="{StaticResource FooterNoteText}"
+                           Style="{StaticResource TextFooterNote}"
                            Margin="0,0,12,0">
                     Примечание: не пропускайте настройку, провести её в будущем будет невозможно.
                     Некоторые изменения будут применены только после перезагрузки системы.
                 </TextBlock>
 
                 <Button Grid.Column="1"
-                        Style="{StaticResource ConceptPrimaryButton}"
+                        Style="{StaticResource ButtonPrimary}"
                         Content="Далее"
                         VerticalAlignment="Center"
                         Click="Next_Click"/>
@@ -61,4 +61,3 @@
         </Border>
     </Grid>
 </Page>
-

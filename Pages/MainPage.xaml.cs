@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
+using DeL1ThiSystem.ConfigurationWizard.Profile;
+using DeL1ThiSystem.ConfigurationWizard.Resources;
 using DeL1ThiSystem.ConfigurationWizard.Tweaks;
 
 namespace DeL1ThiSystem.ConfigurationWizard.Pages;
@@ -27,11 +31,14 @@ public partial class MainPage : Page
             InitializeComponent();
             DataContext = this;
 
-            LoadThemeImages();
             LoadTweaksCatalog();
             ApplyThemeSelectionVisuals();
 
-            Loaded += (_, __) => UpdateFadeOverlays();
+            Loaded += (_, __) =>
+            {
+                LoadThemeImages();
+                UpdateFadeOverlays();
+            };
         }
         catch (Exception ex)
         {
@@ -42,23 +49,25 @@ public partial class MainPage : Page
     private void LoadTweaksCatalog()
     {
         TweakItems.Clear();
-        var nodes = TweaksJsonLoader.LoadAsNodes(_state.OsFamily);
-        foreach (var group in nodes)
+        var nodes = TweaksCatalogLoader.LoadAsNodes(_state.OsFamily);
+        var titleComparer = StringComparer.Create(CultureInfo.GetCultureInfo("ru-RU"), ignoreCase: true);
+
+        var visibleItems = nodes
+            .Where(item =>
+                !string.Equals(item.Stage, "bootstrap", StringComparison.OrdinalIgnoreCase) &&
+                item.IsEnabled)
+            .OrderBy(item => item.Title, titleComparer)
+            .ToList();
+
+        foreach (var item in visibleItems)
         {
-            foreach (var item in group.Children)
-            {
-                if (!string.Equals(item.Stage, "bootstrap", StringComparison.OrdinalIgnoreCase))
-                    TweakItems.Add(item);
-            }
+            TweakItems.Add(item);
         }
 
-        foreach (var group in nodes)
+        foreach (var item in visibleItems)
         {
-            foreach (var item in group.Children)
-            {
-                if (!_state.Tweaks.ContainsKey(item.Id))
-                    _state.Tweaks[item.Id] = item.IsChecked;
-            }
+            if (!_state.Tweaks.ContainsKey(item.Id))
+                _state.Tweaks[item.Id] = item.IsChecked;
         }
     }
 
@@ -66,10 +75,29 @@ public partial class MainPage : Page
     {
         try
         {
-            ThemeLightBrush.ImageSource = new BitmapImage(new Uri("pack://application:,,,/Assets/theme_light.png", UriKind.Absolute));
-            ThemeDarkBrush.ImageSource = new BitmapImage(new Uri("pack://application:,,,/Assets/theme_dark.png", UriKind.Absolute));
+            ThemeLightBrush.ImageSource = LoadBitmapForBrush("pack://application:,,,/Assets/theme_light.png", 300, 172);
+            ThemeDarkBrush.ImageSource = LoadBitmapForBrush("pack://application:,,,/Assets/theme_dark.png", 300, 172);
         }
-        catch { }
+        catch
+        {
+        }
+    }
+
+    private BitmapImage LoadBitmapForBrush(string uri, double targetWidthDip, double targetHeightDip)
+    {
+        var dpi = VisualTreeHelper.GetDpi(this);
+        var decodeWidth = Math.Max(1, (int)Math.Round(targetWidthDip * dpi.DpiScaleX));
+        var decodeHeight = Math.Max(1, (int)Math.Round(targetHeightDip * dpi.DpiScaleY));
+        var bitmap = new BitmapImage();
+        bitmap.BeginInit();
+        bitmap.UriSource = new Uri(uri, UriKind.Absolute);
+        bitmap.CacheOption = BitmapCacheOption.OnLoad;
+        bitmap.CreateOptions = BitmapCreateOptions.PreservePixelFormat;
+        bitmap.DecodePixelWidth = decodeWidth;
+        bitmap.DecodePixelHeight = decodeHeight;
+        bitmap.EndInit();
+        bitmap.Freeze();
+        return bitmap;
     }
 
     private void ApplyThemeSelectionVisuals()
@@ -126,6 +154,12 @@ public partial class MainPage : Page
             _state.Tweaks[item.Id] = item.IsChecked;
         }
 
+        var selectedIds = TweakItems
+            .Where(i => i.IsChecked)
+            .Select(i => i.Id)
+            .ToArray();
+        ProfileSelectionStore.Save(_state.ThemeChoice, selectedIds);
+
         var steps = TweakItems
             .Where(i => i.IsChecked)
             .Select(i => (i.Id, i.Title))
@@ -151,12 +185,8 @@ public partial class MainPage : Page
             }
         }
 
-        string footerNote =
-            "Примечание: используйте Toolbox для продолжения настройки системы.\n" +
-            "Когда закончите — создайте резервную копию в AOMEI Backuper.";
-
         ((MainWindow)Application.Current.MainWindow).Frame.Navigate(
-            new ProgressPage(steps, "Применяем выбранные настройки", showFooter: true, showReboot: true, footerText: footerNote));
+            new ProgressPage(steps, "Применяем выбранные настройки", showFooter: true, showReboot: true, footerText: WizardTexts.SetupFooter));
     }
 
     private void Toggle_Checked(object sender, RoutedEventArgs e)
