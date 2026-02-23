@@ -16,12 +16,15 @@ namespace DeL1ThiSystem.ConfigurationWizard.Tweaks;
 
 public static partial class TweakExecutor
 {
+    private static readonly object InternetGateSync = new();
+    private static Action? _waitInternetGate;
+
     private static readonly string BaseDir = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
         "DeL1ThiSystem",
         "Wizard");
 
-    private static readonly string LogPath = Path.Combine(BaseDir, "ExeTweaks.log");
+    private static readonly string LogPath = Path.Combine(BaseDir, "Wizard.log");
     private static int _procSeq = 0;
 
     private static readonly string[] ContentDeliveryValues =
@@ -99,4 +102,32 @@ public static partial class TweakExecutor
         "Recall"
     };
 
+    public static void SetInternetGate(Action? waitInternetGate)
+    {
+        lock (InternetGateSync)
+        {
+            _waitInternetGate = waitInternetGate;
+        }
+    }
+
+    private static void WaitInternetGateIfNeeded()
+    {
+        Action? gate;
+        lock (InternetGateSync)
+        {
+            gate = _waitInternetGate;
+        }
+
+        if (gate == null)
+            return;
+
+        try
+        {
+            gate();
+        }
+        catch (Exception ex)
+        {
+            Log($"INTERNET GATE ERROR: {ex.Message}");
+        }
+    }
 }

@@ -48,7 +48,7 @@
     },
     {
       "id": "bootstrap.configure_ru_ru_locale",
-      "title": "Настроить локаль ru-RU и кодировку UTF-8"
+      "title": "Автонастройка часового пояса по сети"
     }
   ]
 }

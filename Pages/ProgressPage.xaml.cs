@@ -3,9 +3,13 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.IO;
 using System.Diagnostics;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Threading;
 using System.Windows.Media.Animation;
 using DeL1ThiSystem.ConfigurationWizard.Resources;
 using DeL1ThiSystem.ConfigurationWizard.Tweaks;
@@ -14,6 +18,7 @@ namespace DeL1ThiSystem.ConfigurationWizard.Pages;
 
 public partial class ProgressPage : Page, INotifyPropertyChanged
 {
+    private static LiveLogWindow? _sharedLogWindow;
     private readonly WizardState _state;
     private readonly (string Id, string Title)[] _steps;
     private readonly bool _showFooter;
@@ -26,9 +31,19 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
     private double _progressWidth = 0;
     private bool _rebootEnabled = false;
     private bool _isCompleted = false;
+    private bool _internetRequired = false;
     private CancellationTokenSource? _slowStepCts;
     private bool _slowNoticeShown;
     private readonly string _headerTextBase;
+    private CancellationTokenSource? _internetMonitorCts;
+    private int _onlineStreak;
+    private int _offlineStreak;
+    private readonly string _logPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+        "DeL1ThiSystem",
+        "Wizard",
+        "Wizard.log");
+    private MainWindow? _hostWindow;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -48,7 +63,6 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
         }
     }
     public Visibility ProgressVisibility => _isCompleted ? Visibility.Collapsed : Visibility.Visible;
-
     public Visibility FooterVisibility => (_showFooter && !_footerDismissed) ? Visibility.Visible : Visibility.Collapsed;
     public Visibility RebootVisible => _showReboot ? Visibility.Visible : Visibility.Collapsed;
     public Visibility FooterDismissVisible => (_showFooter && !_showReboot) ? Visibility.Visible : Visibility.Collapsed;
@@ -72,17 +86,57 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
             FooterText = footerText;
         DataContext = this;
 
-        Loaded += async (_, __) => await RunAsync();
+        Loaded += OnPageLoaded;
+        Unloaded += OnPageUnloaded;
+    }
+
+    private async void OnPageLoaded(object sender, RoutedEventArgs e)
+    {
+        AttachHostWindowHandler();
+        await RunAsync();
+    }
+
+    private void OnPageUnloaded(object sender, RoutedEventArgs e)
+    {
+        DetachHostWindowHandler();
+    }
+
+    private void AttachHostWindowHandler()
+    {
+        if (_hostWindow != null)
+            return;
+        if (Application.Current.MainWindow is not MainWindow mw)
+            return;
+        _hostWindow = mw;
+        _hostWindow.Closing += HostWindow_Closing;
+    }
+
+    private void DetachHostWindowHandler()
+    {
+        if (_hostWindow == null)
+            return;
+        _hostWindow.Closing -= HostWindow_Closing;
+        _hostWindow = null;
+    }
+
+    private void HostWindow_Closing(object? sender, CancelEventArgs e)
+    {
+        CloseSharedLogWindow();
     }
 
     private async Task RunAsync()
     {
+        TweakExecutor.SetInternetGate(WaitForInternetGateFromWorker);
+        StartInternetMonitor();
+        await EnsureInternetOrBlockAsync();
+
         int total = Math.Max(1, _steps.Length);
         var start = DateTime.UtcNow;
         try
         {
             for (int i = 0; i < _steps.Length; i++)
             {
+                await EnsureInternetOrBlockAsync();
                 CurrentStepText = _steps[i].Title;
                 StartSlowNoticeTimer();
                 double p = (double)(i) / total;
@@ -111,7 +165,7 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
                 }
             }
 
-            if (!_showFooter || _autoNavigate)
+            if (_autoNavigate)
             {
                 _state.BootstrapApplied = true;
                 ((MainWindow)Application.Current.MainWindow).NavigateToDisclaimer();
@@ -119,7 +173,121 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
         }
         finally
         {
+            DetachHostWindowHandler();
+            StopInternetMonitor();
+            ShowInternetRequiredOverlay(false);
+            TweakExecutor.SetInternetGate(null);
             StopSlowNoticeTimer();
+        }
+    }
+
+    private void ToggleLog_Click(object sender, RoutedEventArgs e)
+    {
+        if (_sharedLogWindow != null && _sharedLogWindow.IsVisible)
+        {
+            _sharedLogWindow.Close();
+            _sharedLogWindow = null;
+            return;
+        }
+
+        _sharedLogWindow = new LiveLogWindow(_logPath);
+        _sharedLogWindow.Closed += (_, __) => _sharedLogWindow = null;
+        _sharedLogWindow.Show();
+    }
+
+    private void WaitForInternetGateFromWorker()
+    {
+        if (Dispatcher.CheckAccess())
+            return;
+        Dispatcher.InvokeAsync(async () => await EnsureInternetOrBlockAsync()).Task.GetAwaiter().GetResult();
+    }
+
+    private async Task EnsureInternetOrBlockAsync()
+    {
+        _onlineStreak = 0;
+        _offlineStreak = 0;
+        while (!await HasInternetAsync())
+        {
+            ShowInternetRequiredOverlay(true);
+            await Task.Delay(1200);
+        }
+        ShowInternetRequiredOverlay(false);
+    }
+
+    private void StartInternetMonitor()
+    {
+        StopInternetMonitor();
+        _internetMonitorCts = new CancellationTokenSource();
+        var token = _internetMonitorCts.Token;
+
+        _ = Task.Run(async () =>
+        {
+            while (!token.IsCancellationRequested)
+            {
+                var online = await HasInternetAsync();
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    if (online)
+                    {
+                        _onlineStreak++;
+                        _offlineStreak = 0;
+                        if (_internetRequired && _onlineStreak >= 1)
+                            ShowInternetRequiredOverlay(false);
+                        return;
+                    }
+
+                    _offlineStreak++;
+                    _onlineStreak = 0;
+                    if (_offlineStreak >= 2)
+                        ShowInternetRequiredOverlay(true);
+                });
+
+                try
+                {
+                    await Task.Delay(1600, token);
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+            }
+        }, token);
+    }
+
+    private void StopInternetMonitor()
+    {
+        _internetMonitorCts?.Cancel();
+        _internetMonitorCts?.Dispose();
+        _internetMonitorCts = null;
+    }
+
+    private async Task<bool> HasInternetAsync()
+    {
+        if (!NetworkInterface.GetIsNetworkAvailable())
+            return false;
+
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(1400));
+            using var client = new TcpClient();
+            await client.ConnectAsync("1.1.1.1", 443, cts.Token);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private void ShowInternetRequiredOverlay(bool visible)
+    {
+        if (_internetRequired == visible)
+            return;
+        _internetRequired = visible;
+        if (Application.Current.MainWindow is MainWindow mw)
+        {
+            mw.SetInteractionLock(visible);
+            mw.SetInternetRequiredOverlay(visible);
         }
     }
 
@@ -134,6 +302,7 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
     {
         try
         {
+            CloseSharedLogWindow();
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
             {
                 FileName = "shutdown",
@@ -270,6 +439,19 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
             };
             using var proc = Process.Start(psi);
             proc?.WaitForExit(3000);
+        }
+        catch
+        {
+        }
+    }
+
+    public static void CloseSharedLogWindow()
+    {
+        try
+        {
+            if (_sharedLogWindow != null && _sharedLogWindow.IsVisible)
+                _sharedLogWindow.Close();
+            _sharedLogWindow = null;
         }
         catch
         {

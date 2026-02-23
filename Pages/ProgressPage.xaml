@@ -88,75 +88,134 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <Style x:Key="LogIconButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="34"/>
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="MinHeight" Value="34"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Background" Value="{DynamicResource Brush.SecondaryButtonBg}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.SecondaryButtonBorder}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root"
+                                CornerRadius="8"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.SecondaryButtonBgHover}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.SecondaryButtonBgPressed}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.SecondaryButtonBgDisabled}"/>
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.SecondaryButtonBorderDisabled}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Page.Resources>
 
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+        <Grid x:Name="ProgressContentRoot">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
-        
-        <Grid Grid.Row="0" VerticalAlignment="Center">
-            
-            <StackPanel HorizontalAlignment="Center" Width="630">
-                <TextBlock x:Name="HeaderTextBlock" Style="{StaticResource TextHeading}"
-                           Text="{Binding HeaderText}" TextAlignment="Center" Margin="0,0,0,8"/>
+            <Grid Grid.Row="0" VerticalAlignment="Center">
+                <StackPanel Width="630" HorizontalAlignment="Center">
+                    <StackPanel Orientation="Horizontal"
+                                HorizontalAlignment="Center"
+                                Margin="0,0,0,12">
+                        <TextBlock x:Name="HeaderTextBlock"
+                                   Style="{StaticResource TextHeading}"
+                                   Text="{Binding HeaderText}"
+                                   TextAlignment="Center"
+                                   VerticalAlignment="Center"/>
+                        <Button Style="{StaticResource LogIconButtonStyle}"
+                                Margin="8,0,0,0"
+                                ToolTip="Открыть журнал"
+                                VerticalAlignment="Center"
+                                Click="ToggleLog_Click">
+                            <Viewbox Width="16" Height="16">
+                                <Canvas Width="16" Height="16">
+                                    <Rectangle Width="12" Height="14" RadiusX="1.5" RadiusY="1.5"
+                                               Canvas.Left="2" Canvas.Top="1"
+                                               Stroke="{DynamicResource Brush.TextPrimary}" Fill="Transparent" StrokeThickness="1.3"/>
+                                    <Line X1="4.5" Y1="5" X2="11.5" Y2="5" Stroke="{DynamicResource Brush.TextPrimary}" StrokeThickness="1.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                    <Line X1="4.5" Y1="8" X2="11.5" Y2="8" Stroke="{DynamicResource Brush.TextPrimary}" StrokeThickness="1.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                    <Line X1="4.5" Y1="11" X2="9.5" Y2="11" Stroke="{DynamicResource Brush.TextPrimary}" StrokeThickness="1.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                </Canvas>
+                            </Viewbox>
+                        </Button>
+                    </StackPanel>
 
-                <TextBlock Style="{StaticResource ProgressBlinkText}"
-                           Text="{Binding CurrentStepText}" TextAlignment="Center" Margin="0,0,0,18"/>
+                    <TextBlock Style="{StaticResource ProgressBlinkText}"
+                               Text="{Binding CurrentStepText}" TextAlignment="Center" Margin="0,0,0,12"/>
 
-                
-                
-                <Grid Margin="0,0,0,10" Width="630" Height="16" SnapsToDevicePixels="True" UseLayoutRounding="True"
-                      Visibility="{Binding ProgressVisibility}">
-                    <Border Width="630" Height="16"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            CornerRadius="6"
-                            Background="{DynamicResource Brush.PopupBorder}"
-                            ClipToBounds="True"
-                            SnapsToDevicePixels="True"
-                            UseLayoutRounding="True">
-                        <Rectangle RadiusX="6" RadiusY="6"
-                                   Fill="#0078D4"
-                                   HorizontalAlignment="Left"
-                                   Width="{Binding ProgressWidth}"
-                                   SnapsToDevicePixels="True"
-                                   UseLayoutRounding="True"/>
-                    </Border>
+                    <Grid Margin="0,0,0,12" Width="630" Height="16" SnapsToDevicePixels="True" UseLayoutRounding="True"
+                          Visibility="{Binding ProgressVisibility}">
+                        <Border Width="630" Height="16"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                CornerRadius="6"
+                                Background="{DynamicResource Brush.PopupBorder}"
+                                ClipToBounds="True"
+                                SnapsToDevicePixels="True"
+                                UseLayoutRounding="True">
+                            <Rectangle RadiusX="6" RadiusY="6"
+                                       Fill="#0078D4"
+                                       HorizontalAlignment="Left"
+                                       Width="{Binding ProgressWidth}"
+                                       SnapsToDevicePixels="True"
+                                       UseLayoutRounding="True"/>
+                        </Border>
+                    </Grid>
+
+                    <TextBlock Style="{StaticResource TextBody}"
+                               Text="{Binding PercentText}" TextAlignment="Center" Opacity="0.9"
+                               Margin="0,0,0,0"
+                               Visibility="{Binding ProgressVisibility}"/>
+                </StackPanel>
+            </Grid>
+
+            <Border Grid.Row="1" Background="{DynamicResource Brush.FooterBar}"
+                    CornerRadius="0,0,16,16" Padding="18,12"
+                    Visibility="{Binding FooterVisibility}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Style="{StaticResource TextFooterNote}"
+                               Text="{Binding FooterText}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+
+                    <Button Grid.Column="1" Content="Понятно" Width="130" Height="34" Margin="8,0,0,0"
+                            Style="{StaticResource ButtonPrimary}"
+                            Visibility="{Binding FooterDismissVisible}"
+                            Click="HideFooter_Click"/>
+
+                    <Button Grid.Column="1" Content="Перезагрузить" Width="130" Height="34" Margin="0,0,0,0"
+                            Style="{StaticResource ProgressRebootButton}"
+                            Visibility="{Binding RebootVisible}"
+                            IsEnabled="{Binding RebootEnabled}"
+                            Click="Reboot_Click"/>
                 </Grid>
-
-                <TextBlock Style="{StaticResource TextBody}"
-                           Text="{Binding PercentText}" TextAlignment="Center" Opacity="0.9"
-                           Visibility="{Binding ProgressVisibility}"/>
-            </StackPanel>
+            </Border>
         </Grid>
 
-        
-        <Border Grid.Row="1" Background="{DynamicResource Brush.FooterBar}"
-                CornerRadius="0,0,16,16" Padding="18,12"
-                Visibility="{Binding FooterVisibility}">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-
-                <TextBlock Grid.Column="0" Style="{StaticResource TextFooterNote}"
-                           Text="{Binding FooterText}" TextWrapping="Wrap" VerticalAlignment="Center"/>
-
-                <Button Grid.Column="1" Content="Понятно" Width="130" Height="34" Margin="8,0,0,0"
-                        Style="{StaticResource ButtonPrimary}"
-                        Visibility="{Binding FooterDismissVisible}"
-                        Click="HideFooter_Click"/>
-
-                <Button Grid.Column="1" Content="Перезагрузить" Width="130" Height="34" Margin="0,0,0,0"
-                        Style="{StaticResource ProgressRebootButton}"
-                        Visibility="{Binding RebootVisible}"
-                        IsEnabled="{Binding RebootEnabled}"
-                        Click="Reboot_Click"/>
-            </Grid>
-        </Border>
     </Grid>
 </Page>

@@ -41,6 +41,34 @@ public static class TweaksCatalogLoader
             }
         }
 
+        if (!root.Any(n => string.Equals(n.Id, "system.configure_ru_ru_locale_utf8", StringComparison.OrdinalIgnoreCase)))
+        {
+            root.Add(new TweakNode
+            {
+                Id = "system.configure_ru_ru_locale_utf8",
+                Title = "Установить русский язык системы + UTF-8",
+                Description = "Скачивает и применяет ru-RU (Display Language, формат, раскладки) и включает UTF-8 для non-Unicode программ.",
+                IsChecked = true,
+                IsEnabled = true,
+                AppliesTo = "10,11",
+                Stage = "tweak"
+            });
+        }
+
+        if (!root.Any(n => string.Equals(n.Id, "perf.memory_integrity_disable", StringComparison.OrdinalIgnoreCase)))
+        {
+            root.Add(new TweakNode
+            {
+                Id = "perf.memory_integrity_disable",
+                Title = "Отключить целостность памяти (Core Isolation)",
+                Description = "Отключает Memory Integrity (HVCI).",
+                IsChecked = true,
+                IsEnabled = true,
+                AppliesTo = "10,11",
+                Stage = "tweak"
+            });
+        }
+
         return root;
     }
 

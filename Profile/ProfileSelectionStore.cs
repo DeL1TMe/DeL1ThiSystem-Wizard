@@ -17,24 +17,20 @@ public static class ProfileSelectionStore
     {
         Directory.CreateDirectory(ProfileInitPaths.BaseDir);
 
-        var ids = selectedIds
-            .Where(id => !string.IsNullOrWhiteSpace(id))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .Where(ProfileTweakPolicy.IsProfileApplicable)
-            .ToList();
-
-        if (!ids.Contains("ui.color_theme", StringComparer.OrdinalIgnoreCase))
-            ids.Insert(0, "ui.color_theme");
-
         var model = new ProfileSelectionData
         {
             ThemeChoice = string.IsNullOrWhiteSpace(themeChoice) ? "dark" : themeChoice,
-            SelectedIds = ids,
+            SelectedIds = selectedIds?
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList()
+                ?? new List<string>(),
             UpdatedUtc = DateTime.UtcNow
         };
 
         var json = JsonSerializer.Serialize(model, new JsonSerializerOptions { WriteIndented = true });
         File.WriteAllText(ProfileInitPaths.SelectionFile, json, new UTF8Encoding(false));
+        File.WriteAllText(ProfileInitPaths.OwnerUserFile, Environment.UserName ?? string.Empty, new UTF8Encoding(false));
 
         EnsureLauncherScript();
         EnsureRunEntry();
@@ -82,14 +78,36 @@ public static class ProfileSelectionStore
         }
     }
 
+    public static void ClearLauncher()
+    {
+        try
+        {
+            using var runLm = Registry.LocalMachine.CreateSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true);
+            runLm?.DeleteValue(RunValueName, false);
+        }
+        catch
+        {
+        }
+
+        try
+        {
+            using var runCu = Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true);
+            runCu?.DeleteValue(RunValueName, false);
+        }
+        catch
+        {
+        }
+    }
+
     private static void EnsureRunEntry()
     {
         try
         {
-            var ps = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.Windows),
-                @"System32\WindowsPowerShell\v1.0\powershell.exe");
-            var cmd = $"\"{ps}\" -NoProfile -ExecutionPolicy Bypass -File \"{ProfileInitPaths.LauncherScript}\"";
+            var exe = Process.GetCurrentProcess().MainModule?.FileName ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(exe))
+                return;
+
+            var cmd = $"\"{exe}\" --force-run";
             using var run = Registry.LocalMachine.CreateSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true);
             run?.SetValue(RunValueName, cmd, RegistryValueKind.String);
         }
@@ -101,21 +119,43 @@ public static class ProfileSelectionStore
     private static void EnsureLauncherScript()
     {
         var exe = Process.GetCurrentProcess().MainModule?.FileName ?? string.Empty;
+        var launcherLog = ProfileInitPaths.LauncherLogFile;
         var content = $@"
 $ErrorActionPreference = 'SilentlyContinue'
 $exe = '{exe.Replace("'", "''")}'
-$selection = '{ProfileInitPaths.SelectionFile.Replace("'", "''")}'
+$ownerFile = '{ProfileInitPaths.OwnerUserFile.Replace("'", "''")}'
+$launcherLog = '{launcherLog.Replace("'", "''")}'
 
-if (-not (Test-Path -LiteralPath $exe)) {{ exit 0 }}
-if (-not (Test-Path -LiteralPath $selection)) {{ exit 0 }}
+function Log([string]$s) {{
+  try {{
+    New-Item -ItemType Directory -Path (Split-Path -Path $launcherLog -Parent) -Force | Out-Null
+    Add-Content -Path $launcherLog -Encoding UTF8 -Value ('[{{0}}] [PROFILE] {{1}}' -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $s)
+  }} catch {{}}
+}}
+
+if (-not (Test-Path -LiteralPath $exe)) {{ Log 'Skip: exe not found'; exit 0 }}
+if (Get-Process -Name 'DeL1ThiSystem.ConfigurationWizard' -ErrorAction SilentlyContinue) {{ Log 'Skip: already running'; exit 0 }}
 
 $applied = 0
 try {{
   $applied = (Get-ItemProperty -Path 'HKCU:\Software\DeL1ThiSystem\Wizard' -Name 'ProfileInitApplied' -ErrorAction SilentlyContinue).ProfileInitApplied
 }} catch {{}}
-if ($applied -eq 1) {{ exit 0 }}
+if ($applied -eq 1) {{ Log 'Skip: profile already applied for current user'; exit 0 }}
 
-Start-Process -FilePath $exe -ArgumentList '--profile-init'
+$ownerUser = ''
+try {{
+  if (Test-Path -LiteralPath $ownerFile) {{
+    $ownerUser = (Get-Content -LiteralPath $ownerFile -ErrorAction SilentlyContinue | Select-Object -First 1).Trim()
+  }}
+}} catch {{}}
+
+if (-not [string]::IsNullOrWhiteSpace($ownerUser) -and ($ownerUser -eq $env:USERNAME)) {{
+  Log 'Skip: owner user session'
+  exit 0
+}}
+
+Log 'Starting wizard process'
+Start-Process -FilePath $exe -ArgumentList '--force-run'
 ";
         File.WriteAllText(ProfileInitPaths.LauncherScript, content.Trim() + Environment.NewLine, new UTF8Encoding(false));
     }

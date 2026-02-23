@@ -40,6 +40,7 @@ public static partial class TweakExecutor
         foreach (var name in ContentDeliveryValues)
             SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager", name, 0);
         ApplyDefaultUserContentDelivery();
+        DisableCopilotEverywhere();
     }
 
 
@@ -51,6 +52,24 @@ public static partial class TweakExecutor
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\Windows Feeds", "EnableFeeds", 0);
         SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Feeds", "ShellFeedsTaskbarViewMode", 2);
         SetDefaultUserDword(@"Software\Microsoft\Windows\CurrentVersion\Feeds", "ShellFeedsTaskbarViewMode", 2);
+    }
+
+    private static void DisableCopilotEverywhere()
+    {
+        const string policyKey = @"SOFTWARE\Policies\Microsoft\Windows\WindowsCopilot";
+        SetDword(RegistryHive.LocalMachine, policyKey, "TurnOffWindowsCopilot", 1);
+        SetDword(RegistryHive.CurrentUser, @"Software\Policies\Microsoft\Windows\WindowsCopilot", "TurnOffWindowsCopilot", 1);
+        SetDefaultUserDword(@"Software\Policies\Microsoft\Windows\WindowsCopilot", "TurnOffWindowsCopilot", 1);
+
+        const string shellCopilotBingChat = @"Software\Microsoft\Windows\Shell\Copilot\BingChat";
+        SetDword(RegistryHive.CurrentUser, shellCopilotBingChat, "IsUserEligible", 0);
+        SetDword(RegistryHive.CurrentUser, shellCopilotBingChat, "CopilotButtonVisibility", 0);
+        SetDefaultUserDword(shellCopilotBingChat, "IsUserEligible", 0);
+        SetDefaultUserDword(shellCopilotBingChat, "CopilotButtonVisibility", 0);
+
+        const string explorerAdvanced = @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced";
+        SetDword(RegistryHive.CurrentUser, explorerAdvanced, "ShowCopilotButton", 0);
+        SetDefaultUserDword(explorerAdvanced, "ShowCopilotButton", 0);
     }
 
 }

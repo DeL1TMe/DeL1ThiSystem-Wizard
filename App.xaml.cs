@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Threading;
 using DeL1ThiSystem.ConfigurationWizard.Pages;
 using DeL1ThiSystem.ConfigurationWizard.Profile;
+using Microsoft.Win32;
 
 namespace DeL1ThiSystem.ConfigurationWizard;
 
@@ -17,7 +18,8 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
-        var profileInitMode = e.Args.Any(a => string.Equals(a, "--profile-init", StringComparison.OrdinalIgnoreCase));
+        var forceRun = e.Args.Any(a => string.Equals(a, "--force-run", StringComparison.OrdinalIgnoreCase));
+        State.IsForceRun = forceRun;
 
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         TaskScheduler.UnobservedTaskException += (_, ex) =>
@@ -34,48 +36,80 @@ public partial class App : Application
             ex.SetObserved();
         };
 
-        if (profileInitMode)
-        {
-            if (ProfileSelectionStore.IsAppliedForCurrentUser())
-            {
-                Shutdown(0);
-                return;
-            }
-
-            var plan = ProfileInitPlanBuilder.Build(State.OsFamily);
-            if (plan.Steps.Length == 0)
-            {
-                ProfileSelectionStore.MarkAppliedForCurrentUser();
-                Shutdown(0);
-                return;
-            }
-
-            ThemeManager.ApplyTheme(plan.ThemeChoice);
-            base.OnStartup(e);
-            var profileWindow = new ProfileInitWindow(State.OsFamily);
-            MainWindow = profileWindow;
-            profileWindow.Show();
-            return;
-        }
-
-        if (HasCompletionMarker())
+        if (forceRun && !ShouldRunForceModeForCurrentUser())
         {
             Shutdown(0);
             return;
         }
 
-        if (!IsRunningAsAdmin())
+        if (!forceRun && HasCompletionMarker())
         {
+            Shutdown(0);
+            return;
+        }
+
+        if (!forceRun && !IsRunningAsAdmin())
+        {
+            // If profile selection exists, this is a secondary account flow.
+            // Relaunch in force mode without elevation.
+            if (HasProfileSelection())
+            {
+                RelaunchForceRun();
+                Shutdown(0);
+                return;
+            }
+
             RelaunchAsAdmin(e.Args);
             Shutdown(0);
             return;
         }
 
+        SuppressEdgeFirstRunNoise();
+
+        State.ThemeChoice = DetectWindowsTheme();
         ThemeManager.ApplyTheme(State.ThemeChoice);
         base.OnStartup(e);
         var mainWindow = new MainWindow();
         MainWindow = mainWindow;
         mainWindow.Show();
+    }
+
+    private static bool ShouldRunForceModeForCurrentUser()
+    {
+        try
+        {
+            if (!File.Exists(ProfileInitPaths.SelectionFile))
+                return false;
+        }
+        catch
+        {
+            return false;
+        }
+
+        try
+        {
+            if (ProfileSelectionStore.IsAppliedForCurrentUser())
+                return false;
+        }
+        catch
+        {
+        }
+
+        try
+        {
+            if (File.Exists(ProfileInitPaths.OwnerUserFile))
+            {
+                var owner = File.ReadAllText(ProfileInitPaths.OwnerUserFile)?.Trim();
+                if (!string.IsNullOrWhiteSpace(owner) &&
+                    string.Equals(owner, Environment.UserName, StringComparison.OrdinalIgnoreCase))
+                    return false;
+            }
+        }
+        catch
+        {
+        }
+
+        return true;
     }
 
     private static bool IsRunningAsAdmin()
@@ -115,6 +149,27 @@ public partial class App : Application
         }
     }
 
+    private static void RelaunchForceRun()
+    {
+        try
+        {
+            var exe = Process.GetCurrentProcess().MainModule?.FileName;
+            if (string.IsNullOrWhiteSpace(exe))
+                return;
+
+            var psi = new ProcessStartInfo
+            {
+                FileName = exe,
+                Arguments = "--force-run",
+                UseShellExecute = true
+            };
+            Process.Start(psi);
+        }
+        catch
+        {
+        }
+    }
+
     private static bool HasCompletionMarker()
     {
         try
@@ -130,6 +185,49 @@ public partial class App : Application
         {
             return false;
         }
+    }
+
+    private static bool HasProfileSelection()
+    {
+        try
+        {
+            return File.Exists(ProfileInitPaths.SelectionFile);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static void SuppressEdgeFirstRunNoise()
+    {
+        try
+        {
+            using var edgePolicy = Registry.LocalMachine.CreateSubKey(@"SOFTWARE\Policies\Microsoft\Edge", true);
+            edgePolicy?.SetValue("HideFirstRunExperience", 1, RegistryValueKind.DWord);
+            edgePolicy?.SetValue("BackgroundModeEnabled", 0, RegistryValueKind.DWord);
+            edgePolicy?.SetValue("StartupBoostEnabled", 0, RegistryValueKind.DWord);
+            edgePolicy?.SetValue("PromotionalTabsEnabled", 0, RegistryValueKind.DWord);
+        }
+        catch
+        {
+        }
+    }
+
+    private static string DetectWindowsTheme()
+    {
+        try
+        {
+            using var personalize = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize", false);
+            var apps = personalize?.GetValue("AppsUseLightTheme");
+            if (apps is int i)
+                return i == 1 ? "light" : "dark";
+        }
+        catch
+        {
+        }
+
+        return "dark";
     }
 
     private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)

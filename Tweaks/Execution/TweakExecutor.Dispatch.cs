@@ -21,6 +21,13 @@ public static partial class TweakExecutor
         Log($"START {id}");
         try
         {
+            if (IsTweakAlreadyApplied(id, osFamily, themeChoice))
+            {
+                Log($"SKIP {id}: already applied by state check");
+                Log($"END {id}");
+                return;
+            }
+
             switch (id)
             {
                 case "bootstrap.defender_disable":
@@ -54,7 +61,22 @@ public static partial class TweakExecutor
                     SetWallpaperQuality100();
                     break;
                 case "bootstrap.configure_ru_ru_locale":
+                    ConfigureAutoTimeZone();
+                    break;
+                case "system.configure_ru_ru_locale_utf8":
                     ConfigureRuRuLocale();
+                    break;
+                case "profile.sticky_keys_disable":
+                    ApplyProfileStickyKeys();
+                    break;
+                case "profile.enhance_pointer_precision_disable":
+                    ApplyProfileEnhancePointerPrecision();
+                    break;
+                case "profile.wallpaper_quality_100":
+                    ApplyProfileWallpaperQuality100();
+                    break;
+                case "profile.configure_ru_ru_user_locale":
+                    ApplyProfileRuRuUserLocale();
                     break;
                 case "apps.remove_uwp":
                     RemoveAppxPackages();
@@ -111,6 +133,9 @@ public static partial class TweakExecutor
                     break;
                 case "perf.visualfx_profile":
                     ApplyVisualFxProfile();
+                    break;
+                case "perf.memory_integrity_disable":
+                    DisableMemoryIntegrity();
                     break;
                 case "bootstrap.restore_disable_cleanup":
                     DisableRestoreAndCleanup();

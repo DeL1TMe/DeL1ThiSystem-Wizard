@@ -7,6 +7,7 @@
     <Color x:Key="C.WindowBorder">#566276</Color>
     <Color x:Key="C.PopupBg">#F4F7FB</Color>
     <Color x:Key="C.PopupBorder">#CBD3DE</Color>
+    <Color x:Key="C.ModalBackdrop">#7A0F1320</Color>
     <Color x:Key="C.SecondaryButtonBg">#EEF2F7</Color>
     <Color x:Key="C.ToggleTrack">#9EA8B8</Color>
     <Color x:Key="C.ToggleTrackDisabled">#B5BEC9</Color>
@@ -42,6 +43,7 @@
     <SolidColorBrush x:Key="Brush.WindowBorder" Color="{StaticResource C.WindowBorder}"/>
     <SolidColorBrush x:Key="Brush.PopupBg" Color="{StaticResource C.PopupBg}"/>
     <SolidColorBrush x:Key="Brush.PopupBorder" Color="{StaticResource C.PopupBorder}"/>
+    <SolidColorBrush x:Key="Brush.ModalBackdrop" Color="{StaticResource C.ModalBackdrop}"/>
     <SolidColorBrush x:Key="Brush.SecondaryButtonBg" Color="{StaticResource C.SecondaryButtonBg}"/>
     <SolidColorBrush x:Key="Brush.ToggleTrack" Color="{StaticResource C.ToggleTrack}"/>
     <SolidColorBrush x:Key="Brush.ToggleTrackDisabled" Color="{StaticResource C.ToggleTrackDisabled}"/>

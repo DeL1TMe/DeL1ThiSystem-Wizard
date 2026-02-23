@@ -3,6 +3,7 @@ using System.Security.Principal;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using DeL1ThiSystem.ConfigurationWizard.Resources;
 using Microsoft.Win32;
@@ -16,6 +17,8 @@ public partial class MainWindow : Window
     private const double DesignWidth = 720;
     private const double DesignHeight = 800;
     private bool _allowClose;
+    private bool _interactionLocked;
+    private bool _internetOverlayVisible;
 
     public MainWindow()
     {
@@ -39,6 +42,26 @@ public partial class MainWindow : Window
         AdjustWindowToWorkArea();
         LoadHeaderLogo();
         var app = (App)Application.Current;
+
+        if (app.State.IsForceRun)
+        {
+            Hide();
+            try
+            {
+                var profileInit = new ProfileInitWindow(app.State.OsFamily)
+                {
+                    Owner = this
+                };
+                profileInit.ShowDialog();
+            }
+            finally
+            {
+                _allowClose = true;
+                Close();
+            }
+
+            return;
+        }
 
         if (!app.State.BootstrapApplied)
         {
@@ -117,6 +140,12 @@ public partial class MainWindow : Window
 
     private void Window_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
+        if (_interactionLocked)
+        {
+            e.Cancel = true;
+            return;
+        }
+
         if (_allowClose)
             return;
 
@@ -126,6 +155,9 @@ public partial class MainWindow : Window
 
     private void ShowExitConfirm()
     {
+        if (_interactionLocked)
+            return;
+
         if (ExitConfirmOverlay.Visibility == Visibility.Visible)
             return;
 
@@ -143,6 +175,7 @@ public partial class MainWindow : Window
 
     private void ExitConfirmExit_Click(object sender, RoutedEventArgs e)
     {
+        ProgressPage.CloseSharedLogWindow();
         SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
         _allowClose = true;
         Close();
@@ -150,14 +183,120 @@ public partial class MainWindow : Window
 
     protected override void OnClosed(EventArgs e)
     {
+        ProgressPage.CloseSharedLogWindow();
         SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
         base.OnClosed(e);
     }
 
     private void Header_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
+        if (_interactionLocked)
+            return;
+
         if (e.LeftButton == System.Windows.Input.MouseButtonState.Pressed)
             DragMove();
+    }
+
+    public void SetInteractionLock(bool locked)
+    {
+        _interactionLocked = locked;
+
+        if (locked)
+        {
+            if (ExitConfirmOverlay.Visibility == Visibility.Visible)
+            {
+                ExitConfirmOverlay.Visibility = Visibility.Collapsed;
+                MainContent.IsEnabled = true;
+                MainContent.Effect = null;
+            }
+
+            if (MainContent != null)
+            {
+                MainContent.IsEnabled = false;
+                MainContent.Effect = new BlurEffect { Radius = 6 };
+            }
+
+            if (HeaderBar != null)
+                HeaderBar.Effect = new BlurEffect { Radius = 6 };
+            if (HeaderCloseButton != null)
+            {
+                HeaderCloseButton.IsEnabled = false;
+                HeaderCloseButton.Opacity = 0.45;
+            }
+            return;
+        }
+
+        if (MainContent != null)
+        {
+            MainContent.IsEnabled = true;
+            MainContent.Effect = null;
+        }
+
+        if (HeaderBar != null)
+            HeaderBar.Effect = null;
+        if (HeaderCloseButton != null)
+        {
+            HeaderCloseButton.IsEnabled = true;
+            HeaderCloseButton.Opacity = 1;
+        }
+    }
+
+    public void SetInternetRequiredOverlay(bool visible)
+    {
+        if (_internetOverlayVisible == visible)
+            return;
+
+        _internetOverlayVisible = visible;
+        if (InternetRequiredOverlay == null)
+            return;
+
+        var duration = TimeSpan.FromMilliseconds(180);
+        if (visible)
+        {
+            InternetRequiredOverlay.Visibility = Visibility.Visible;
+
+            if (InternetRequiredBackdrop != null)
+            {
+                InternetRequiredBackdrop.Opacity = 0;
+                var backdropIn = new DoubleAnimation(0.0, 1.0, duration);
+                InternetRequiredBackdrop.BeginAnimation(UIElement.OpacityProperty, backdropIn);
+            }
+
+            if (InternetRequiredBlinkText != null)
+            {
+                var blink = new DoubleAnimation(1.0, 0.35, TimeSpan.FromSeconds(1.1))
+                {
+                    AutoReverse = true,
+                    RepeatBehavior = RepeatBehavior.Forever
+                };
+                InternetRequiredBlinkText.BeginAnimation(UIElement.OpacityProperty, blink);
+            }
+            return;
+        }
+
+        if (InternetRequiredBackdrop != null)
+        {
+            var fadeOut = new DoubleAnimation(1.0, 0.0, duration);
+            fadeOut.Completed += (_, __) =>
+            {
+                if (!_internetOverlayVisible)
+                {
+                    InternetRequiredOverlay.Visibility = Visibility.Collapsed;
+                    InternetRequiredBackdrop.Opacity = 0;
+                }
+            };
+            InternetRequiredBackdrop.BeginAnimation(UIElement.OpacityProperty, fadeOut);
+        }
+        else
+        {
+            InternetRequiredOverlay.Visibility = Visibility.Collapsed;
+        }
+
+        if (InternetRequiredBlinkText != null)
+        {
+            InternetRequiredBlinkText.BeginAnimation(UIElement.OpacityProperty, null);
+            InternetRequiredBlinkText.Opacity = 1.0;
+        }
     }
 
     private void AdjustWindowToWorkArea()

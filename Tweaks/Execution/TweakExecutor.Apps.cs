@@ -14,12 +14,19 @@ namespace DeL1ThiSystem.ConfigurationWizard.Tweaks;
 
 public static partial class TweakExecutor
 {
+    private const string ToolboxExePath = @"C:\Ghost Toolbox\toolbox.updater.x64.exe";
+    private const string AomeiExePath = @"C:\Program Files (x86)\AOMEI\AOMEI Backupper\8.0.0\Backupper.exe";
+    private const string UninstallToolExePath = @"C:\Program Files\Uninstall Tool\UninstallTool.exe";
+    private const string SevenZipExePath = @"C:\Program Files\7-Zip\7zFM.exe";
+    private const string RustDeskExePath = @"C:\Users\Public\Desktop\RustDesk.exe";
+
 
     private static void RemoveAppxPackages()
     {
         RunPowerShell(BuildUwpRemovalScript(0));
         RemoveWindowsStore();
         DisableCortana();
+        DisableCopilotEverywhere();
         CreateUwpAutoRemovalTasks();
     }
 
@@ -270,13 +277,13 @@ foreach ($n in $names) {
     private static void InstallAppsFromFolder()
     {
         const string appsPath = @"C:\Apps";
-        var logPath = Path.Combine(BaseDir, "Install-Apps.log");
+        var logPath = Path.Combine(BaseDir, "Wizard.log");
 
         void LogApp(string message)
         {
             try
             {
-                File.AppendAllText(logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}\r\n");
+                File.AppendAllText(logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}\r\n", new UTF8Encoding(false));
             }
             catch
             {
@@ -288,13 +295,14 @@ foreach ($n in $names) {
         if (!Directory.Exists(appsPath))
         {
             LogApp($"Apps folder not found: {appsPath}");
+            EnsureCommonDesktopShortcuts();
             return;
         }
 
         LogApp($"InternetAvailable(start)={IsInternetAvailable()}");
         if (IsInternetAvailable())
         {
-            LogApp("Internet OK. Installing 7-Zip (if missing) and downloading RustDesk.");
+            LogApp("Internet OK. Installing 7-Zip (if missing) and downloading RustDesk (if missing).");
             InstallSevenZipIfMissing();
             DownloadRustDesk();
         }
@@ -364,6 +372,12 @@ foreach ($n in $names) {
                 }
             }
 
+            if (!ShouldRunInstaller(name))
+            {
+                LogApp($"Skip installer (already installed): {name}");
+                continue;
+            }
+
             try
             {
                 LogApp($"Running: {name} | Args: {finalArgs}");
@@ -385,14 +399,80 @@ foreach ($n in $names) {
             }
         }
 
+        EnsureCommonDesktopShortcuts();
         LogApp("=== Install-Apps finished ===");
+    }
+
+    private static void EnsureCommonDesktopShortcuts()
+    {
+        var script = @"
+try {
+  $w = New-Object -ComObject WScript.Shell
+  $publicDesktop = [Environment]::GetFolderPath('CommonDesktopDirectory')
+  if ([string]::IsNullOrWhiteSpace($publicDesktop)) { $publicDesktop = 'C:\Users\Public\Desktop' }
+  if ([string]::IsNullOrWhiteSpace($publicDesktop)) { return }
+  New-Item -ItemType Directory -Path $publicDesktop -Force | Out-Null
+
+  $userDesktop = [Environment]::GetFolderPath('Desktop')
+
+  function Remove-UserDuplicate([string]$name, [string]$target) {
+    if ([string]::IsNullOrWhiteSpace($userDesktop)) { return }
+    $userShortcut = Join-Path $userDesktop ($name + '.lnk')
+    if (-not (Test-Path -LiteralPath $userShortcut)) { return }
+    try {
+      $existing = $w.CreateShortcut($userShortcut)
+      if ($existing -and $existing.TargetPath -eq $target) {
+        Remove-Item -LiteralPath $userShortcut -Force -ErrorAction SilentlyContinue
+      }
+    } catch {}
+  }
+
+  function Ensure-Shortcut([string]$name, [string]$target, [string]$workDir) {
+    if (-not (Test-Path -LiteralPath $target)) { return }
+    $shortcutPath = Join-Path $publicDesktop ($name + '.lnk')
+    if (Test-Path -LiteralPath $shortcutPath) {
+      try {
+        $existing = $w.CreateShortcut($shortcutPath)
+        if ($existing -and $existing.TargetPath -eq $target) {
+          Remove-UserDuplicate -name $name -target $target
+          return
+        }
+      } catch {}
+      Remove-Item -LiteralPath $shortcutPath -Force -ErrorAction SilentlyContinue
+    }
+    $lnk = $w.CreateShortcut($shortcutPath)
+    $lnk.TargetPath = $target
+    $lnk.WorkingDirectory = $workDir
+    $lnk.IconLocation = $target
+    $lnk.Save()
+    Remove-UserDuplicate -name $name -target $target
+  }
+
+  Ensure-Shortcut -name 'Toolbox' -target 'C:\Ghost Toolbox\toolbox.updater.x64.exe' -workDir 'C:\Ghost Toolbox'
+  Ensure-Shortcut -name 'Uninstall Tool' -target 'C:\Program Files\Uninstall Tool\UninstallTool.exe' -workDir 'C:\Program Files\Uninstall Tool'
+  Ensure-Shortcut -name 'AOMEI Backupper' -target 'C:\Program Files (x86)\AOMEI\AOMEI Backupper\8.0.0\Backupper.exe' -workDir 'C:\Program Files (x86)\AOMEI\AOMEI Backupper\8.0.0'
+
+  foreach ($legacy in @('UninstallTool.lnk')) {
+    foreach ($desktopPath in @($publicDesktop, $userDesktop)) {
+      if ([string]::IsNullOrWhiteSpace($desktopPath)) { continue }
+      $legacyPath = Join-Path $desktopPath $legacy
+      if (Test-Path -LiteralPath $legacyPath) { Remove-Item -LiteralPath $legacyPath -Force -ErrorAction SilentlyContinue }
+    }
+  }
+} catch {
+}
+";
+        RunPowerShell(script);
     }
 
 
     private static void InstallSevenZipIfMissing()
     {
+        if (File.Exists(SevenZipExePath))
+            return;
+
         var script = @"
-if (-not (Get-Command '7z' -ErrorAction SilentlyContinue)) {
+if (-not (Test-Path -LiteralPath 'C:\Program Files\7-Zip\7zFM.exe')) {
   $url = 'https://www.7-zip.org/a/7z2301-x64.exe'
   $installer = Join-Path $env:TEMP '7z.exe'
   try {
@@ -408,6 +488,9 @@ if (-not (Get-Command '7z' -ErrorAction SilentlyContinue)) {
 
     private static void DownloadRustDesk()
     {
+        if (File.Exists(RustDeskExePath))
+            return;
+
         var script = @"
 try {
   $releaseUrl = 'https://api.github.com/repos/rustdesk/rustdesk/releases/latest'
@@ -421,6 +504,26 @@ try {
 }
 ";
         RunPowerShell(script);
+    }
+
+    private static bool ShouldRunInstaller(string installerName)
+    {
+        if (installerName.IndexOf("aomei", StringComparison.OrdinalIgnoreCase) >= 0 ||
+            installerName.IndexOf("backupper", StringComparison.OrdinalIgnoreCase) >= 0)
+            return !File.Exists(AomeiExePath);
+
+        if (installerName.IndexOf("uninstall", StringComparison.OrdinalIgnoreCase) >= 0 &&
+            installerName.IndexOf("tool", StringComparison.OrdinalIgnoreCase) >= 0)
+            return !File.Exists(UninstallToolExePath);
+
+        if (installerName.IndexOf("7z", StringComparison.OrdinalIgnoreCase) >= 0 ||
+            installerName.IndexOf("7-zip", StringComparison.OrdinalIgnoreCase) >= 0)
+            return !File.Exists(SevenZipExePath);
+
+        if (installerName.IndexOf("rustdesk", StringComparison.OrdinalIgnoreCase) >= 0)
+            return !File.Exists(RustDeskExePath);
+
+        return true;
     }
 
 }

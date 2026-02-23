@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Security.Principal;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -158,7 +160,9 @@ public partial class MainPage : Page
             .Where(i => i.IsChecked)
             .Select(i => i.Id)
             .ToArray();
-        ProfileSelectionStore.Save(_state.ThemeChoice, selectedIds);
+        if (!_state.IsForceRun)
+            TrySaveProfileSelection(_state.ThemeChoice, selectedIds);
+        ProfileSelectionStore.MarkAppliedForCurrentUser();
 
         var steps = TweakItems
             .Where(i => i.IsChecked)
@@ -187,6 +191,36 @@ public partial class MainPage : Page
 
         ((MainWindow)Application.Current.MainWindow).Frame.Navigate(
             new ProgressPage(steps, "Применяем выбранные настройки", showFooter: true, showReboot: true, footerText: WizardTexts.SetupFooter));
+    }
+
+    private static void TrySaveProfileSelection(string themeChoice, string[] selectedIds)
+    {
+        try
+        {
+            ProfileSelectionStore.Save(themeChoice, selectedIds);
+            return;
+        }
+        catch (Exception)
+        {
+        }
+
+        try
+        {
+            using var identity = WindowsIdentity.GetCurrent();
+            var principal = new WindowsPrincipal(identity);
+            var isAdmin = principal.IsInRole(WindowsBuiltInRole.Administrator);
+            if (isAdmin)
+            {
+                MessageBox.Show(
+                    "Не удалось сохранить общий профиль применения твиков.",
+                    "DeL1ThiSystem",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
+        }
+        catch
+        {
+        }
     }
 
     private void Toggle_Checked(object sender, RoutedEventArgs e)

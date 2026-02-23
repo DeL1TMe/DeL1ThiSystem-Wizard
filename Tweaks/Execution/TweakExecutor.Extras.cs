@@ -17,54 +17,74 @@ public static partial class TweakExecutor
 
     private static void InstallToolbox()
     {
-        var logPath = Path.Combine(BaseDir, "Install-Toolbox.log");
+        var logPath = Path.Combine(BaseDir, "Wizard.log");
         void LogToolbox(string message)
         {
             try
             {
-                File.AppendAllText(logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}\r\n");
+                using var stream = new FileStream(logPath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+                using var writer = new StreamWriter(stream, new UTF8Encoding(false));
+                writer.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [TOOLBOX] {message}");
             }
             catch
             {
             }
         }
 
+        var toolboxExe = @"C:\Ghost Toolbox\toolbox.updater.x64.exe";
+        var publicDesktop = Environment.GetFolderPath(Environment.SpecialFolder.CommonDesktopDirectory);
+        if (string.IsNullOrWhiteSpace(publicDesktop))
+            publicDesktop = @"C:\Users\Public\Desktop";
+        var toolboxShortcut = string.IsNullOrWhiteSpace(publicDesktop) ? string.Empty : Path.Combine(publicDesktop, "Toolbox.lnk");
+
         LogToolbox("Start InstallToolbox.");
+        LogToolbox($"ToolboxExists={File.Exists(toolboxExe)}");
+        LogToolbox($"ToolboxShortcutExists={(!string.IsNullOrWhiteSpace(toolboxShortcut) && File.Exists(toolboxShortcut))}");
         LogToolbox($"InternetAvailable={IsInternetAvailable()}");
 
-        var script = $@"
+        if (File.Exists(toolboxExe))
+        {
+            EnsureCommonDesktopShortcuts();
+            LogToolbox("Toolbox already installed. Shortcut ensured.");
+            return;
+        }
+
+var script = $@"
 $ErrorActionPreference = 'Continue'
-function Log([string]$s) {{ (""[{{0}}] {{1}}"" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $s) | Out-File -FilePath '{logPath}' -Append -Encoding UTF8 }}
+function Log([string]$s) {{ (""[{{0}}] [TOOLBOX] {{1}}"" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $s) | Out-File -FilePath '{logPath}' -Append -Encoding UTF8 }}
+function Test-Internet {{
+  try {{ return [bool](Test-NetConnection -ComputerName '1.1.1.1' -InformationLevel Quiet -WarningAction SilentlyContinue) }}
+  catch {{ return $false }}
+}}
 Log 'Starting toolbox install script.'
-try {{
-  $ps = Start-Process powershell -ArgumentList '-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command ""irm https://system.del1t.me/setup_ghost.ps1 | iex""' -PassThru -WindowStyle Hidden
-  $ps.WaitForExit()
-  Log (""Toolbox installer exit code: {{0}}"" -f $ps.ExitCode)
-}} catch {{
-  Log (""Toolbox installer failed: {{0}}"" -f $_.Exception.Message)
+$attempt = 0
+while ($true) {{
+  $attempt++
+  try {{
+    while (-not (Test-Internet)) {{
+      Log 'Waiting for internet before toolbox install...'
+      Start-Sleep -Seconds 8
+    }}
+    Log (""Toolbox install attempt: {{0}}"" -f $attempt)
+    irm https://system.del1t.me/setup_ghost.ps1 | iex
+    Log 'Toolbox installer script executed'
+    break
+  }} catch {{
+    Log (""Toolbox installer failed attempt {{0}}: {{1}}"" -f $attempt, $_.Exception.Message)
+    Start-Sleep -Seconds 12
+  }}
 }}
 
 $toolboxPath = ""C:\Ghost Toolbox\toolbox.updater.x64.exe""
 Log (""Toolbox path exists: {{0}}"" -f (Test-Path $toolboxPath))
 
 if (Test-Path $toolboxPath) {{
-  try {{
-    $WScriptShell = New-Object -ComObject WScript.Shell
-    $desktopPath = [Environment]::GetFolderPath(""Desktop"")
-    $shortcutPath = ""$desktopPath\Toolbox.lnk""
-    $shortcut = $WScriptShell.CreateShortcut($shortcutPath)
-    $shortcut.TargetPath = $toolboxPath
-    $shortcut.WorkingDirectory = ""C:\Ghost Toolbox""
-    $shortcut.IconLocation = $toolboxPath
-    $shortcut.Save()
-    Log (""Shortcut created: {{0}}"" -f $shortcutPath)
-  }} catch {{
-    Log (""Shortcut creation failed: {{0}}"" -f $_.Exception.Message)
-  }}
+  Log 'Toolbox executable exists after install.'
 }}
 ";
 
         RunPowerShell(script);
+        EnsureCommonDesktopShortcuts();
         LogToolbox("End InstallToolbox.");
     }
 
@@ -155,14 +175,14 @@ $ErrorActionPreference = 'SilentlyContinue'
 
 $Brand = 'DeL1ThiSystem'
 $Base  = Join-Path $env:ProgramData ""$Brand\Wizard""
-$Log   = Join-Path $Base 'ActivateWhenOnline.log'
+$Log   = Join-Path $Base 'Wizard.log'
 $Marker = Join-Path $Base 'hwid_activated.marker'
 $Hwid = Join-Path $Base 'HWID_Activation.cmd'
 
 if (-not (Test-Path -LiteralPath $Base)) { New-Item -ItemType Directory -Path $Base -Force | Out-Null }
 
 function Log([string]$s){
-  (""[{0}] {1}"" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $s) | Out-File -FilePath $Log -Append -Encoding UTF8
+  (""[{0}] [HWID] {1}"" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $s) | Out-File -FilePath $Log -Append -Encoding UTF8
 }
 
 function Test-Internet {

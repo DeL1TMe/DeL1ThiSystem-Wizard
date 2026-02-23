@@ -11,7 +11,6 @@ public static class ProfileTweakPolicy
         "shell.classic_context_menu",
         "shell.show_file_extensions",
         "shell.hide_task_view",
-        "shell.meet_now_disable",
         "shell.search_box_mode",
         "shell.start_tiles_clear",
         "shell.explorer_launch_to_this_pc",
@@ -19,8 +18,10 @@ public static class ProfileTweakPolicy
         "shell.taskbar_clear_pins",
         "shell.taskbar_end_task",
         "shell.tray_show_all_icons",
-        "shell.remove_edge_desktop_shortcut",
-        "shell.win11_start_recommended_disable"
+        "shell.win11_start_recommended_disable",
+        "profile.sticky_keys_disable",
+        "profile.enhance_pointer_precision_disable",
+        "profile.wallpaper_quality_100"
     };
 
     public static bool IsProfileApplicable(string id) => Allowed.Contains(id);

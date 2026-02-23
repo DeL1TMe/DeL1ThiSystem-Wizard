@@ -11,4 +11,6 @@ public sealed class WizardState
     public string OsFamily { get; set; } = OsInfo.DetectOsFamily();
 
     public bool BootstrapApplied { get; set; } = false;
+
+    public bool IsForceRun { get; set; } = false;
 }

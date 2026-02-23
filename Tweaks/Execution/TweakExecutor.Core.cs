@@ -25,7 +25,9 @@ public static partial class TweakExecutor
     {
         try
         {
-            File.AppendAllText(LogPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}\r\n");
+            using var stream = new FileStream(LogPath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+            using var writer = new StreamWriter(stream, new UTF8Encoding(false));
+            writer.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [TWEAK] {message}");
         }
         catch
         {
@@ -164,9 +166,11 @@ public static partial class TweakExecutor
 
     private static int RunProcessWithTimeout(string fileName, string arguments, int timeoutMs, out bool timedOut)
     {
+        WaitInternetGateIfNeeded();
         timedOut = false;
         int procId = System.Threading.Interlocked.Increment(ref _procSeq);
         Log($"PROC {procId} START: {fileName} {arguments}");
+        var processEncoding = GetPreferredProcessEncoding(fileName);
         var psi = new ProcessStartInfo
         {
             FileName = fileName,
@@ -175,7 +179,9 @@ public static partial class TweakExecutor
             CreateNoWindow = true,
             WindowStyle = ProcessWindowStyle.Hidden,
             RedirectStandardOutput = true,
-            RedirectStandardError = true
+            RedirectStandardError = true,
+            StandardOutputEncoding = processEncoding,
+            StandardErrorEncoding = processEncoding
         };
         using var proc = new Process { StartInfo = psi, EnableRaisingEvents = true };
         proc.OutputDataReceived += (_, e) =>
@@ -210,22 +216,60 @@ public static partial class TweakExecutor
 
     private static void RunPowerShell(string command)
     {
-        var wrapped = "$ProgressPreference='SilentlyContinue'; " + command;
+        WaitInternetGateIfNeeded();
+        var wrapped =
+            "[Console]::InputEncoding=[System.Text.UTF8Encoding]::new($false); " +
+            "[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new($false); " +
+            "$OutputEncoding=[System.Text.UTF8Encoding]::new($false); " +
+            "$ProgressPreference='SilentlyContinue'; " + command;
         var bytes = Encoding.Unicode.GetBytes(wrapped);
         var encoded = Convert.ToBase64String(bytes);
         LogCommand("PS", command);
+        if (encoded.Length > 7000 && TryCreatePowerShellScriptFile(wrapped, out var scriptPath))
+        {
+            try
+            {
+                RunProcess("powershell.exe", $"-NoProfile -ExecutionPolicy Bypass -File \"{scriptPath}\"");
+            }
+            finally
+            {
+                TryDelete(scriptPath);
+            }
+            return;
+        }
+
         RunProcess("powershell.exe", $"-NoProfile -ExecutionPolicy Bypass -EncodedCommand {encoded}");
     }
 
 
     private static void RunPowerShellDetached(string command, string tag)
     {
-        var wrapped = "$ProgressPreference='SilentlyContinue'; " + command;
+        WaitInternetGateIfNeeded();
+        var wrapped =
+            "[Console]::InputEncoding=[System.Text.UTF8Encoding]::new($false); " +
+            "[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new($false); " +
+            "$OutputEncoding=[System.Text.UTF8Encoding]::new($false); " +
+            "$ProgressPreference='SilentlyContinue'; " + command;
         var bytes = Encoding.Unicode.GetBytes(wrapped);
         var encoded = Convert.ToBase64String(bytes);
         LogCommand($"PS-{tag}", command);
         try
         {
+            if (encoded.Length > 7000 && TryCreatePowerShellScriptFile(wrapped, out var scriptPath))
+            {
+                var filePsi = new ProcessStartInfo
+                {
+                    FileName = "powershell.exe",
+                    Arguments = $"-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File \"{scriptPath}\"",
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    WindowStyle = ProcessWindowStyle.Hidden
+                };
+                var fileProc = Process.Start(filePsi);
+                Log($"PS-{tag} START: pid={(fileProc?.Id.ToString() ?? "n/a")} (file mode)");
+                return;
+            }
+
             var psi = new ProcessStartInfo
             {
                 FileName = "powershell.exe",
@@ -246,8 +290,10 @@ public static partial class TweakExecutor
 
     private static void RunProcess(string fileName, string arguments)
     {
+        WaitInternetGateIfNeeded();
         int procId = System.Threading.Interlocked.Increment(ref _procSeq);
         Log($"PROC {procId} START: {fileName} {arguments}");
+        var processEncoding = GetPreferredProcessEncoding(fileName);
         var psi = new ProcessStartInfo
         {
             FileName = fileName,
@@ -256,7 +302,9 @@ public static partial class TweakExecutor
             CreateNoWindow = true,
             WindowStyle = ProcessWindowStyle.Hidden,
             RedirectStandardOutput = true,
-            RedirectStandardError = true
+            RedirectStandardError = true,
+            StandardOutputEncoding = processEncoding,
+            StandardErrorEncoding = processEncoding
         };
         using var proc = new Process { StartInfo = psi, EnableRaisingEvents = true };
         proc.OutputDataReceived += (_, e) =>
@@ -294,6 +342,24 @@ public static partial class TweakExecutor
         }
     }
 
+    private static bool TryCreatePowerShellScriptFile(string wrappedScript, out string scriptPath)
+    {
+        scriptPath = string.Empty;
+        try
+        {
+            var scriptsDir = Path.Combine(BaseDir, "Scripts");
+            Directory.CreateDirectory(scriptsDir);
+            scriptPath = Path.Combine(scriptsDir, $"ps_{Guid.NewGuid():N}.ps1");
+            File.WriteAllText(scriptPath, wrappedScript + Environment.NewLine, new UTF8Encoding(false));
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log($"PS script-file fallback error: {ex.Message}");
+            scriptPath = string.Empty;
+            return false;
+        }
+    }
 
     private static void ForceDelete(string path)
     {
@@ -337,6 +403,25 @@ public static partial class TweakExecutor
         catch
         {
             return false;
+        }
+    }
+
+    private static Encoding GetPreferredProcessEncoding(string fileName)
+    {
+        if (!string.IsNullOrWhiteSpace(fileName))
+        {
+            var lower = fileName.ToLowerInvariant();
+            if (lower.Contains("powershell.exe") || lower.Contains("pwsh.exe"))
+                return new UTF8Encoding(false);
+        }
+
+        try
+        {
+            return Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage);
+        }
+        catch
+        {
+            return new UTF8Encoding(false);
         }
     }
 
