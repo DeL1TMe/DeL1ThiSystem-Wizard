@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Net.Sockets;
 using System.Text;
-using System.Text.Json;
-using System.Text.Json.Nodes;
 using Microsoft.Win32;
 
 namespace DeL1ThiSystem.ConfigurationWizard.Tweaks;
@@ -379,9 +375,18 @@ public static partial class TweakExecutor
 
     private static void SetQword(RegistryHive hive, string subKey, string name, long value)
     {
-        using var baseKey = RegistryKey.OpenBaseKey(hive, RegistryView.Registry64);
-        using var key = baseKey.CreateSubKey(subKey, true);
-        key?.SetValue(name, value, RegistryValueKind.QWord);
+        var path = $"{hive}\\{subKey}";
+        try
+        {
+            LogReg("REG QWORD", path, name, value.ToString(CultureInfo.InvariantCulture));
+            using var baseKey = RegistryKey.OpenBaseKey(hive, RegistryView.Registry64);
+            using var key = baseKey.CreateSubKey(subKey, true);
+            key?.SetValue(name, value, RegistryValueKind.QWord);
+        }
+        catch (Exception ex)
+        {
+            Log($"REG ERROR {path} {name}: {ex.Message}");
+        }
     }
 
     private static void EnsureFileWritable(string path)

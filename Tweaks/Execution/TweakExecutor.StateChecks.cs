@@ -158,39 +158,6 @@ public static partial class TweakExecutor
         return !hasEdgeLinks(user) && !hasEdgeLinks(common) && !hasEdgeLinks(def);
     }
 
-    private static bool IsCommonAppsInstalled()
-    {
-        var aomei = File.Exists(@"C:\Program Files (x86)\AOMEI\AOMEI Backupper\8.0.0\Backupper.exe");
-        var uninstallTool = File.Exists(@"C:\Program Files\Uninstall Tool\UninstallTool.exe");
-        var sevenZip = File.Exists(@"C:\Program Files\7-Zip\7zFM.exe");
-        var rustDesk = File.Exists(@"C:\Users\Public\Desktop\RustDesk.exe");
-        return aomei && uninstallTool && sevenZip && rustDesk;
-    }
-
-    private static bool ScheduledTaskExists(string taskName)
-    {
-        try
-        {
-            var psi = new System.Diagnostics.ProcessStartInfo
-            {
-                FileName = "schtasks.exe",
-                Arguments = $"/Query /TN \"{taskName}\"",
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden
-            };
-            using var proc = System.Diagnostics.Process.Start(psi);
-            if (proc == null)
-                return false;
-            proc.WaitForExit(2000);
-            return proc.ExitCode == 0;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
     private static bool IsDwordValue(RegistryHive hive, string subKey, string name, int expected)
     {
         try

@@ -1,14 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Net.Sockets;
 using System.Text;
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using Microsoft.Win32;
 
 namespace DeL1ThiSystem.ConfigurationWizard.Tweaks;
 
@@ -17,41 +9,27 @@ public static partial class TweakExecutor
 
     private static void InstallToolbox()
     {
-        var logPath = Path.Combine(BaseDir, "Wizard.log");
-        void LogToolbox(string message)
-        {
-            try
-            {
-                using var stream = new FileStream(logPath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
-                using var writer = new StreamWriter(stream, new UTF8Encoding(false));
-                writer.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [TOOLBOX] {message}");
-            }
-            catch
-            {
-            }
-        }
-
         var toolboxExe = @"C:\Ghost Toolbox\toolbox.updater.x64.exe";
         var publicDesktop = Environment.GetFolderPath(Environment.SpecialFolder.CommonDesktopDirectory);
         if (string.IsNullOrWhiteSpace(publicDesktop))
             publicDesktop = @"C:\Users\Public\Desktop";
         var toolboxShortcut = string.IsNullOrWhiteSpace(publicDesktop) ? string.Empty : Path.Combine(publicDesktop, "Toolbox.lnk");
 
-        LogToolbox("Start InstallToolbox.");
-        LogToolbox($"ToolboxExists={File.Exists(toolboxExe)}");
-        LogToolbox($"ToolboxShortcutExists={(!string.IsNullOrWhiteSpace(toolboxShortcut) && File.Exists(toolboxShortcut))}");
-        LogToolbox($"InternetAvailable={IsInternetAvailable()}");
+        Log("TOOLBOX: Start InstallToolbox.");
+        Log($"TOOLBOX: ToolboxExists={File.Exists(toolboxExe)}");
+        Log($"TOOLBOX: ToolboxShortcutExists={(!string.IsNullOrWhiteSpace(toolboxShortcut) && File.Exists(toolboxShortcut))}");
+        Log($"TOOLBOX: InternetAvailable={IsInternetAvailable()}");
 
         if (File.Exists(toolboxExe))
         {
             EnsureCommonDesktopShortcuts();
-            LogToolbox("Toolbox already installed. Shortcut ensured.");
+            Log("TOOLBOX: Toolbox already installed. Shortcut ensured.");
             return;
         }
 
 var script = $@"
 $ErrorActionPreference = 'Continue'
-function Log([string]$s) {{ (""[{{0}}] [TOOLBOX] {{1}}"" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $s) | Out-File -FilePath '{logPath}' -Append -Encoding UTF8 }}
+function Log([string]$s) {{ (""[{{0}}] [TOOLBOX] {{1}}"" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $s) | Out-File -FilePath '{LogPath}' -Append -Encoding UTF8 }}
 function Test-Internet {{
   try {{ return [bool](Test-NetConnection -ComputerName '1.1.1.1' -InformationLevel Quiet -WarningAction SilentlyContinue) }}
   catch {{ return $false }}
@@ -85,7 +63,7 @@ if (Test-Path $toolboxPath) {{
 
         RunPowerShell(script);
         EnsureCommonDesktopShortcuts();
-        LogToolbox("End InstallToolbox.");
+        Log("TOOLBOX: End InstallToolbox.");
     }
 
 

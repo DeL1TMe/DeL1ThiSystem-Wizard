@@ -102,16 +102,4 @@ public static class ProfileInitPlanBuilder
         }
     }
 
-    private static IEnumerable<TSource> DistinctBy<TSource, TKey>(
-        this IEnumerable<TSource> source,
-        Func<TSource, TKey> keySelector,
-        IEqualityComparer<TKey> comparer)
-    {
-        var set = new HashSet<TKey>(comparer);
-        foreach (var item in source)
-        {
-            if (set.Add(keySelector(item)))
-                yield return item;
-        }
-    }
 }
