@@ -27,6 +27,7 @@ public static partial class TweakExecutor
             "bootstrap.wallpaper_quality_100" => IsDwordValue(RegistryHive.CurrentUser, @"Control Panel\Desktop", "JPEGImportQuality", 100),
             "bootstrap.configure_ru_ru_locale" => false,
             "system.configure_ru_ru_locale_utf8" => false,
+            "system.cleanup_ru_ru_local_packages" => false,
 
             "profile.sticky_keys_disable" => IsStringValue(RegistryHive.CurrentUser, @"Control Panel\Accessibility\StickyKeys", "Flags", "10"),
             "profile.enhance_pointer_precision_disable" => IsStringValue(RegistryHive.CurrentUser, @"Control Panel\Mouse", "MouseSpeed", "0")

@@ -47,7 +47,7 @@ public static class TweaksCatalogLoader
             {
                 Id = "system.configure_ru_ru_locale_utf8",
                 Title = "Установить русский язык системы + UTF-8",
-                Description = "Скачивает и применяет ru-RU (Display Language, формат, раскладки) и включает UTF-8 для non-Unicode программ.",
+                Description = "Ставит и применяет русский пакет языка используя локальные пакеты из C:\\Lang\\ru-RU, при отсутствии скачивает их через Microsoft и UUPDump под текущий билд, затем включает UTF-8 для non-Unicode программ.",
                 IsChecked = true,
                 IsEnabled = true,
                 AppliesTo = "10,11",

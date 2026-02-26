@@ -177,6 +177,8 @@ try {
 $base = 'C:\ProgramData\DeL1ThiSystem\Wizard'
 New-Item -ItemType Directory -Path $base -Force | Out-Null
 $log = Join-Path $base 'Wizard.log'
+$cacheRoot = Join-Path $base 'LangCache\ru-RU'
+New-Item -ItemType Directory -Path $cacheRoot -Force | Out-Null
 
 function Log([string]$phase, [string]$msg) {
   Add-Content -Path $log -Encoding UTF8 -Value ('[{0}] [{1}] {2}' -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $phase, $msg)
@@ -223,47 +225,6 @@ function Ensure-ServiceOnline([string]$name, [string]$startup = 'Manual') {
   try { Start-Service -Name $name -ErrorAction SilentlyContinue } catch {}
 }
 
-function Convert-IanaToWindowsTz([string]$iana) {
-  switch ($iana) {
-    'Europe/Kaliningrad' { return 'Kaliningrad Standard Time' }
-    'Europe/Moscow' { return 'Russian Standard Time' }
-    'Europe/Samara' { return 'Russia Time Zone 3' }
-    'Asia/Yekaterinburg' { return 'Ekaterinburg Standard Time' }
-    'Asia/Omsk' { return 'Omsk Standard Time' }
-    'Asia/Krasnoyarsk' { return 'North Asia Standard Time' }
-    'Asia/Irkutsk' { return 'North Asia East Standard Time' }
-    'Asia/Yakutsk' { return 'Yakutsk Standard Time' }
-    'Asia/Vladivostok' { return 'Vladivostok Standard Time' }
-    'Asia/Magadan' { return 'Magadan Standard Time' }
-    'Asia/Sakhalin' { return 'Sakhalin Standard Time' }
-    'Asia/Kamchatka' { return 'Russia Time Zone 11' }
-    default { return '' }
-  }
-}
-
-function Get-WindowsTzFromIp {
-  $votes = @()
-
-  try {
-    $j = Invoke-RestMethod -Uri 'https://ipapi.co/json/' -TimeoutSec 6 -ErrorAction Stop
-    if ($j.timezone) { $votes += [string]$j.timezone }
-  } catch {}
-
-  try {
-    $j2 = Invoke-RestMethod -Uri 'https://worldtimeapi.org/api/ip' -TimeoutSec 6 -ErrorAction Stop
-    if ($j2.timezone) { $votes += [string]$j2.timezone }
-  } catch {}
-
-  try {
-    $j3 = Invoke-RestMethod -Uri 'http://ip-api.com/json/?fields=timezone' -TimeoutSec 6 -ErrorAction Stop
-    if ($j3.timezone) { $votes += [string]$j3.timezone }
-  } catch {}
-
-  if ($votes.Count -eq 0) { return '' }
-
-  $bestIana = ($votes | Group-Object | Sort-Object Count -Descending | Select-Object -First 1).Name
-  return Convert-IanaToWindowsTz $bestIana
-}
 
 function Write-LanguageState([string]$phase, [string]$tag) {
   try {
@@ -282,65 +243,246 @@ function Write-LanguageState([string]$phase, [string]$tag) {
   try { Log $phase ($tag + ' SystemLocale=' + (Get-WinSystemLocale).Name) } catch { Log $phase ($tag + ' SystemLocale error=' + $_.Exception.Message) }
 }
 
+function Invoke-DownloadFile([string]$url, [string]$outFile) {
+  try {
+    Ensure-ServiceOnline 'bits'
+    Start-BitsTransfer -Source $url -Destination $outFile -TransferType Download -Priority Foreground -ErrorAction Stop
+    return $true
+  } catch {
+    try {
+      Invoke-WebRequest -Uri $url -OutFile $outFile -UseBasicParsing -ErrorAction Stop
+      return $true
+    } catch {
+      Log 'DOWNLOAD' ('Failed download ' + $outFile + ': ' + $_.Exception.Message)
+      return $false
+    }
+  }
+}
+
+function Get-EditionToken([string]$editionId) {
+  $token = ($editionId -replace '[^a-zA-Z0-9]', '').ToLowerInvariant()
+  if ([string]::IsNullOrWhiteSpace($token)) { return 'professional' }
+  return $token
+}
+
+function Find-PackageFile([string[]]$roots, [string[]]$patterns) {
+  foreach ($root in $roots) {
+    if ([string]::IsNullOrWhiteSpace($root) -or -not (Test-Path $root)) { continue }
+    $files = Get-ChildItem -Path $root -Recurse -File -ErrorAction SilentlyContinue
+    foreach ($pat in $patterns) {
+      $hit = $files | Where-Object { $_.Name -imatch $pat } | Sort-Object Name | Select-Object -First 1
+      if ($hit) { return $hit.FullName }
+    }
+  }
+  return ''
+}
+
+function Get-MissingPackageKeys([array]$defs, [string[]]$roots) {
+  $missing = @()
+  foreach ($d in $defs) {
+    $found = Find-PackageFile -roots $roots -patterns $d.Patterns
+    if ([string]::IsNullOrWhiteSpace($found) -and $d.Hard) { $missing += $d.Key }
+    if (-not [string]::IsNullOrWhiteSpace($found)) { Log 'INSTALL' ('Found package ' + $d.Key + ': ' + $found) }
+  }
+  return $missing
+}
+
+function Get-UupCandidateId([string]$targetBuild, [string]$buildMajor, [string]$arch) {
+  try {
+    $query = [uri]::EscapeDataString(($targetBuild + ' ' + $arch))
+    $url = 'https://api.uupdump.net/listid.php?search=' + $query + '&sortByDate=1'
+    $resp = Invoke-RestMethod -Uri $url -TimeoutSec 35 -ErrorAction Stop
+    $all = @($resp.response.builds.PSObject.Properties | ForEach-Object { $_.Value })
+    if ($all.Count -eq 0) { return '' }
+    $filtered = $all | Where-Object {
+      $_.arch -eq $arch -and
+      $_.title -notmatch 'Cumulative Update|\.NET Framework|Dynamic Update|Defender'
+    } | Sort-Object created -Descending
+    $exact = $filtered | Where-Object { $_.build -eq $targetBuild } | Select-Object -First 1
+    if ($exact) { $filtered = @($exact) + @($filtered | Where-Object { $_.uuid -ne $exact.uuid }) }
+    foreach ($cand in ($filtered | Select-Object -First 10)) {
+      try {
+        $langs = Invoke-RestMethod -Uri ('https://api.uupdump.net/listlangs.php?id=' + $cand.uuid) -TimeoutSec 20 -ErrorAction Stop
+        if (@($langs.response.langList) -contains 'ru-ru') { return [string]$cand.uuid }
+      } catch {}
+    }
+    $byMajor = $filtered | Where-Object { [string]$_.build -like ($buildMajor + '.*') } | Select-Object -First 1
+    if ($byMajor) { return [string]$byMajor.uuid }
+    return [string]($filtered | Select-Object -First 1).uuid
+  } catch {
+    Log 'DOWNLOAD' ('UUP list failed: ' + $_.Exception.Message)
+    return ''
+  }
+}
+
+function Get-UupFileMap([string]$uupId, [string]$editionToken) {
+  foreach ($ed in @($editionToken, 'professional', 'core')) {
+    if ([string]::IsNullOrWhiteSpace($ed)) { continue }
+    $url = 'https://api.uupdump.net/get.php?id=' + $uupId + '&lang=ru-ru&edition=' + $ed
+    for ($try = 1; $try -le 3; $try++) {
+      try {
+        $resp = Invoke-RestMethod -Uri $url -TimeoutSec 45 -ErrorAction Stop
+        if ($resp.response.files -and $resp.response.files.PSObject.Properties.Count -gt 0) { return $resp.response.files }
+      } catch {
+        Log 'DOWNLOAD' ('UUP get failed edition=' + $ed + ' try=' + $try + ': ' + $_.Exception.Message)
+        Start-Sleep -Seconds (2 * $try)
+      }
+    }
+  }
+  return $null
+}
+
+function Download-MissingFromUup([array]$defs, [string[]]$roots, [string]$targetBuild, [string]$buildMajor, [string]$arch, [string]$editionToken, [string]$cachePath) {
+  $missing = Get-MissingPackageKeys -defs $defs -roots $roots
+  if ($missing.Count -eq 0) { return }
+  Log 'DOWNLOAD' ('Required keys missing: ' + ($missing -join ','))
+  $uupId = Get-UupCandidateId -targetBuild $targetBuild -buildMajor $buildMajor -arch $arch
+  if ([string]::IsNullOrWhiteSpace($uupId)) { return }
+  $fileMap = Get-UupFileMap -uupId $uupId -editionToken $editionToken
+  if ($null -eq $fileMap) { return }
+
+  foreach ($key in $missing) {
+    $def = $defs | Where-Object { $_.Key -eq $key } | Select-Object -First 1
+    if (-not $def) { continue }
+    $candidate = $null
+    foreach ($pat in $def.Patterns) {
+      $candidate = $fileMap.PSObject.Properties | Where-Object { $_.Name -imatch $pat } | Select-Object -First 1
+      if ($candidate) { break }
+    }
+    if (-not $candidate) {
+      Log 'DOWNLOAD' ('UUP has no file for key=' + $key)
+      continue
+    }
+    $targetFile = Join-Path $cachePath $candidate.Name
+    if (Test-Path $targetFile) { continue }
+    if (Invoke-DownloadFile -url ([string]$candidate.Value.url) -outFile $targetFile) {
+      Log 'DOWNLOAD' ('Downloaded: ' + $candidate.Name)
+    }
+  }
+}
+
+function Install-CapabilityWithSources([string]$cap, [string[]]$sources) {
+  try {
+    $state = (Get-WindowsCapability -Online -Name $cap -ErrorAction SilentlyContinue).State
+    if ($state -eq 'Installed') {
+      Log 'INSTALL' ('Capability already installed ' + $cap)
+      return
+    }
+  } catch {}
+
+  foreach ($src in $sources) {
+    if ([string]::IsNullOrWhiteSpace($src) -or -not (Test-Path $src)) { continue }
+    try {
+      Add-WindowsCapability -Online -Name $cap -Source $src -LimitAccess -ErrorAction Stop | Out-String | ForEach-Object {
+        if (-not [string]::IsNullOrWhiteSpace($_)) { Log 'INSTALL' $_.TrimEnd() }
+      }
+      $state = (Get-WindowsCapability -Online -Name $cap -ErrorAction SilentlyContinue).State
+      Log 'INSTALL' ('Capability state after source ' + $cap + ': ' + $state + ' source=' + $src)
+      if ($state -eq 'Installed') { return }
+    } catch {
+      Log 'INSTALL' ('Capability source failed ' + $cap + ' source=' + $src + ' err=' + $_.Exception.Message)
+    }
+  }
+
+  try {
+    Add-WindowsCapability -Online -Name $cap -ErrorAction Continue | Out-String | ForEach-Object {
+      if (-not [string]::IsNullOrWhiteSpace($_)) { Log 'INSTALL' $_.TrimEnd() }
+    }
+    $state = (Get-WindowsCapability -Online -Name $cap -ErrorAction SilentlyContinue).State
+    Log 'INSTALL' ('Capability state after Microsoft fallback ' + $cap + ': ' + $state)
+  } catch {
+    Log 'INSTALL' ('Capability Microsoft fallback failed ' + $cap + ': ' + $_.Exception.Message)
+  }
+}
+
 Log 'INSTALL' 'Locale install started'
 Log 'INSTALL' ('OS=' + [Environment]::OSVersion.VersionString)
 Ensure-ServiceOnline 'wuauserv'
 Ensure-ServiceOnline 'bits'
 Ensure-ServiceOnline 'cryptsvc'
+Ensure-ServiceOnline 'dosvc'
 
-$oemPath = 'C:\Lang\ru-RU'
-if (-not (Test-Path $oemPath)) { $oemPath = 'C:\$OEM$\$1\Lang\ru-RU' }
-if (Test-Path $oemPath) {
-  Log 'INSTALL' ('Offline source path found: ' + $oemPath)
-  $packages = Get-ChildItem -Path $oemPath -Recurse -ErrorAction SilentlyContinue |
-    Where-Object { $_.Name -match 'Microsoft-Windows-Client-LanguagePack-Package_ru-ru.*\.esd$' -or $_.Name -match 'Microsoft-Windows-LanguageFeatures-Basic-ru-ru-Package.*\.cab$' } |
-    Sort-Object Name
+$currentBuild = [string](Get-ItemPropertyValue -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name 'CurrentBuild' -ErrorAction SilentlyContinue)
+if ([string]::IsNullOrWhiteSpace($currentBuild)) {
+  $currentBuild = [string](Get-ItemPropertyValue -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name 'CurrentBuildNumber' -ErrorAction SilentlyContinue)
+}
+$ubr = [string](Get-ItemPropertyValue -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name 'UBR' -ErrorAction SilentlyContinue)
+$editionId = [string](Get-ItemPropertyValue -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name 'EditionID' -ErrorAction SilentlyContinue)
+$arch = if ([Environment]::Is64BitOperatingSystem) { 'amd64' } else { 'x86' }
+$buildFull = if (-not [string]::IsNullOrWhiteSpace($ubr)) { $currentBuild + '.' + $ubr } else { $currentBuild }
+$editionToken = Get-EditionToken -editionId $editionId
+$cachePath = Join-Path $cacheRoot ($buildFull + '_' + $editionToken + '_' + $arch)
+New-Item -ItemType Directory -Path $cachePath -Force | Out-Null
+Log 'INSTALL' ('Detected build=' + $buildFull + ' edition=' + $editionId + ' arch=' + $arch)
 
-  foreach ($pkg in $packages) {
-    $code = Run-Dism 'INSTALL' @('/Online','/Add-Package',('/PackagePath:' + $pkg.FullName),'/NoRestart')
-    Log 'INSTALL' ('Add-Package result for ' + $pkg.Name + ': ' + $code)
-  }
+$localPath = 'C:\Lang\ru-RU'
+$sourceRoots = @($cachePath, $localPath) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) -and (Test-Path $_) }
 
-  $caps = @(
-    'Language.Basic~~~ru-RU~0.0.1.0',
-    'Language.Handwriting~~~ru-RU~0.0.1.0',
-    'Language.OCR~~~ru-RU~0.0.1.0',
-    'Language.Speech~~~ru-RU~0.0.1.0',
-    'Language.TextToSpeech~~~ru-RU~0.0.1.0'
-  )
-  foreach ($cap in $caps) {
-    $code = Run-Dism 'INSTALL' @('/Online','/Add-Capability',('/CapabilityName:' + $cap),('/Source:' + $oemPath),'/LimitAccess','/NoRestart')
-    Log 'INSTALL' ('Add-Capability result for ' + $cap + ': ' + $code)
-  }
-} else {
-  Log 'INSTALL' 'Offline source path not found'
+$packageDefs = @(
+  @{ Key = 'lp'; Hard = $true; Patterns = @('^Microsoft-Windows-Client-LanguagePack-Package.*ru[-_]ru.*\.(cab|esd)$') },
+  @{ Key = 'basic'; Hard = $true; Patterns = @('^Microsoft-Windows-LanguageFeatures-Basic-ru-ru-Package.*\.cab$') },
+  @{ Key = 'shell'; Hard = $true; Patterns = @('^Microsoft-Windows-Required-ShellExperiences-Desktop-Package\.ESD$') },
+  @{ Key = 'edition'; Hard = $true; Patterns = @('^' + [regex]::Escape($editionToken) + '_ru-ru\.esd$', '^[a-z0-9]+_ru-ru\.esd$') },
+  @{ Key = 'ux'; Hard = $true; Patterns = @('^Microsoft-Windows-UserExperience-Desktop-Package.*\.(cab|esd)$') },
+  @{ Key = 'modernAll'; Hard = $true; Patterns = @('^Microsoft\.ModernApps\.Client\.All\.esd$') },
+  @{ Key = 'modernEdition'; Hard = $true; Patterns = @('^Microsoft\.ModernApps\.Client\.' + [regex]::Escape($editionToken) + '\.esd$', '^Microsoft\.ModernApps\.Client\.(professional|core|enterprise|education)\.esd$') },
+  @{ Key = 'hand'; Hard = $true; Patterns = @('^Microsoft-Windows-LanguageFeatures-Handwriting-ru-ru-Package.*\.cab$') },
+  @{ Key = 'ocr'; Hard = $true; Patterns = @('^Microsoft-Windows-LanguageFeatures-OCR-ru-ru-Package.*\.cab$') },
+  @{ Key = 'tts'; Hard = $true; Patterns = @('^Microsoft-Windows-LanguageFeatures-TextToSpeech-ru-ru-Package.*\.cab$') }
+)
+
+$missingBefore = Get-MissingPackageKeys -defs $packageDefs -roots $sourceRoots
+if ($missingBefore.Count -gt 0) {
+  Log 'INSTALL' ('Missing required local keys: ' + ($missingBefore -join ','))
 }
 
-try {
-  $cmd = Get-Command Install-Language -ErrorAction SilentlyContinue
-  if ($cmd) {
-    Log 'INSTALL' 'Install-Language available, running'
-    Install-Language -Language 'ru-RU' -CopyToSettings -ErrorAction Stop | Out-String | ForEach-Object { if (-not [string]::IsNullOrWhiteSpace($_)) { Log 'INSTALL' $_.TrimEnd() } }
-    Log 'INSTALL' 'Install-Language completed'
-  } else {
-    Log 'INSTALL' 'Install-Language not available'
+Download-MissingFromUup -defs $packageDefs -roots $sourceRoots -targetBuild $buildFull -buildMajor $currentBuild -arch $arch -editionToken $editionToken -cachePath $cachePath
+
+$sourceRoots = @($cachePath, $localPath) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) -and (Test-Path $_) }
+$missingAfterUup = Get-MissingPackageKeys -defs $packageDefs -roots $sourceRoots
+if ($missingAfterUup.Count -gt 0) {
+  Log 'INSTALL' ('Still missing after UUP fallback: ' + ($missingAfterUup -join ','))
+  try {
+    $cmd = Get-Command Install-Language -ErrorAction SilentlyContinue
+    if ($cmd) {
+      Log 'INSTALL' 'Install-Language available, running Microsoft fallback'
+      Install-Language -Language 'ru-RU' -CopyToSettings -ErrorAction Stop | Out-String | ForEach-Object { if (-not [string]::IsNullOrWhiteSpace($_)) { Log 'INSTALL' $_.TrimEnd() } }
+      Log 'INSTALL' 'Install-Language completed'
+    } else {
+      Log 'INSTALL' 'Install-Language not available'
+    }
+  } catch {
+    Log 'INSTALL' ('Install-Language error: ' + $_.Exception.Message)
   }
-} catch {
-  Log 'INSTALL' ('Install-Language error: ' + $_.Exception.Message)
+}
+
+$sourceRoots = @($cachePath, $localPath) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) -and (Test-Path $_) }
+$installOrder = @{ lp = 1; basic = 2; shell = 3; ux = 4; modernAll = 5; modernEdition = 6; edition = 7; hand = 8; ocr = 9; tts = 10 }
+$installList = @()
+foreach ($def in $packageDefs) {
+  $pkg = Find-PackageFile -roots $sourceRoots -patterns $def.Patterns
+  if (-not [string]::IsNullOrWhiteSpace($pkg)) {
+    $installList += [pscustomobject]@{
+      Key = $def.Key
+      Path = $pkg
+      Rank = if ($installOrder.ContainsKey($def.Key)) { $installOrder[$def.Key] } else { 999 }
+    }
+  }
+}
+
+$installList = $installList | Sort-Object Rank, Path -Unique
+foreach ($pkg in $installList) {
+  $code = Run-Dism 'INSTALL' @('/Online','/Add-Package',('/PackagePath:' + $pkg.Path),'/NoRestart')
+  Log 'INSTALL' ('Add-Package result key=' + $pkg.Key + ' exit=' + $code)
+}
+
+$missingAfter = Get-MissingPackageKeys -defs $packageDefs -roots $sourceRoots
+if ($missingAfter.Count -gt 0) {
+  Log 'INSTALL' ('Required keys still missing after fallback: ' + ($missingAfter -join ','))
 }
 
 foreach ($cap in @('Language.Basic~~~ru-RU~0.0.1.0','Language.Handwriting~~~ru-RU~0.0.1.0','Language.OCR~~~ru-RU~0.0.1.0','Language.Speech~~~ru-RU~0.0.1.0','Language.TextToSpeech~~~ru-RU~0.0.1.0')) {
-  try {
-    $state = (Get-WindowsCapability -Online -Name $cap -ErrorAction SilentlyContinue).State
-    Log 'INSTALL' ('Capability state before fallback ' + $cap + ': ' + $state)
-    if ($state -ne 'Installed') {
-      Add-WindowsCapability -Online -Name $cap -ErrorAction Continue | Out-String | ForEach-Object { if (-not [string]::IsNullOrWhiteSpace($_)) { Log 'INSTALL' $_.TrimEnd() } }
-      $state2 = (Get-WindowsCapability -Online -Name $cap -ErrorAction SilentlyContinue).State
-      Log 'INSTALL' ('Capability state after fallback ' + $cap + ': ' + $state2)
-    }
-  } catch {
-    Log 'INSTALL' ('Capability check/add error for ' + $cap + ': ' + $_.Exception.Message)
-  }
+  Install-CapabilityWithSources -cap $cap -sources $sourceRoots
 }
 
 Run-Dism 'INSTALL' @('/Online','/Get-Intl') | Out-Null
@@ -523,6 +665,39 @@ try {
 } catch { Log 'APPLY' ('Time zone apply error: ' + $_.Exception.Message) }
 
 Log 'APPLY' 'Auto time zone apply finished'
+";
+
+        RunPowerShell(script);
+    }
+
+    private static void CleanupRuRuLocalPackages()
+    {
+        var script = @"
+$base = 'C:\ProgramData\DeL1ThiSystem\Wizard'
+New-Item -ItemType Directory -Path $base -Force | Out-Null
+$log = Join-Path $base 'Wizard.log'
+
+function Log([string]$phase, [string]$msg) {
+  Add-Content -Path $log -Encoding UTF8 -Value ('[{0}] [{1}] {2}' -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $phase, $msg)
+}
+
+function Remove-PathSafe([string]$path) {
+  try {
+    if (Test-Path $path) {
+      Remove-Item -Path $path -Recurse -Force -ErrorAction Stop
+      Log 'CLEANUP' ('Removed: ' + $path)
+    } else {
+      Log 'CLEANUP' ('Not found: ' + $path)
+    }
+  } catch {
+    Log 'CLEANUP' ('Remove failed: ' + $path + ' err=' + $_.Exception.Message)
+  }
+}
+
+Log 'CLEANUP' 'RU package cleanup started'
+Remove-PathSafe 'C:\Lang\ru-RU'
+Remove-PathSafe 'C:\ProgramData\DeL1ThiSystem\Wizard\LangCache\ru-RU'
+Log 'CLEANUP' 'RU package cleanup finished'
 ";
 
         RunPowerShell(script);

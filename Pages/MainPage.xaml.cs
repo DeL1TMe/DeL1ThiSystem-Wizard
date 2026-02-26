@@ -169,6 +169,14 @@ public partial class MainPage : Page
             .Select(i => (i.Id, i.Title))
             .ToArray();
 
+        var ruSelected = steps.Any(s => string.Equals(s.Id, "system.configure_ru_ru_locale_utf8", StringComparison.OrdinalIgnoreCase));
+        if (!ruSelected)
+        {
+            steps = steps
+                .Concat(new[] { ("system.cleanup_ru_ru_local_packages", "Очистка локальных пакетов ru-RU") })
+                .ToArray();
+        }
+
         var themeStep = ("ui.color_theme", "Применяем тему");
         if (!steps.Any(s => string.Equals(s.Id, themeStep.Item1, StringComparison.OrdinalIgnoreCase)))
             steps = new[] { themeStep }.Concat(steps).ToArray();

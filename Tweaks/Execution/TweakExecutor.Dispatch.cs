@@ -66,6 +66,9 @@ public static partial class TweakExecutor
                 case "system.configure_ru_ru_locale_utf8":
                     ConfigureRuRuLocale();
                     break;
+                case "system.cleanup_ru_ru_local_packages":
+                    CleanupRuRuLocalPackages();
+                    break;
                 case "profile.sticky_keys_disable":
                     ApplyProfileStickyKeys();
                     break;
