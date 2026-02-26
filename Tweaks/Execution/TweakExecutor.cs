@@ -1,16 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Net.Sockets;
-using System.Reflection;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using System.Drawing;
-using Microsoft.Win32;
 
 namespace DeL1ThiSystem.ConfigurationWizard.Tweaks;
 
@@ -24,7 +13,7 @@ public static partial class TweakExecutor
         "DeL1ThiSystem",
         "Wizard");
 
-    private static readonly string LogPath = Path.Combine(BaseDir, "Wizard.log");
+    public static readonly string LogPath = Path.Combine(BaseDir, "Wizard.log");
     private static int _procSeq = 0;
 
     private static readonly string[] ContentDeliveryValues =

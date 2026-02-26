@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -27,12 +27,11 @@ public static class TweaksCatalogLoader
             foreach (var it in g.Items)
             {
                 bool compatible = it.AppliesTo == null || it.AppliesTo.Count == 0 || it.AppliesTo.Contains(osFamily);
-                var description = BuildDescription(it, osFamily, compatible);
                 root.Add(new TweakNode
                 {
                     Id = it.Id,
                     Title = it.Title,
-                    Description = description,
+                    Description = it.Description,
                     IsChecked = compatible && it.Default,
                     IsEnabled = compatible,
                     AppliesTo = string.Join(",", it.AppliesTo ?? new()),
@@ -93,10 +92,5 @@ public static class TweaksCatalogLoader
             ?? throw new FileNotFoundException($"Embedded resource not found: {resourceName}");
         using var r = new StreamReader(s);
         return r.ReadToEnd();
-    }
-
-    private static string BuildDescription(TweakItemJson item, string osFamily, bool compatible)
-    {
-        return item.Description ?? string.Empty;
     }
 }

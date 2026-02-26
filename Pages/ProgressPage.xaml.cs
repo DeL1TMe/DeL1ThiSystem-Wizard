@@ -38,11 +38,7 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
     private CancellationTokenSource? _internetMonitorCts;
     private int _onlineStreak;
     private int _offlineStreak;
-    private readonly string _logPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-        "DeL1ThiSystem",
-        "Wizard",
-        "Wizard.log");
+    private static readonly string _logPath = TweakExecutor.LogPath;
     private MainWindow? _hostWindow;
 
     public event PropertyChangedEventHandler? PropertyChanged;

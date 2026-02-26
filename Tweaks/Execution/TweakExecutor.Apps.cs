@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net.Sockets;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.Win32;
@@ -277,40 +274,26 @@ foreach ($n in $names) {
     private static void InstallAppsFromFolder()
     {
         const string appsPath = @"C:\Apps";
-        var logPath = Path.Combine(BaseDir, "Wizard.log");
-
-        void LogApp(string message)
-        {
-            try
-            {
-                File.AppendAllText(logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}\r\n", new UTF8Encoding(false));
-            }
-            catch
-            {
-            }
-        }
-
-        try { Directory.CreateDirectory(BaseDir); } catch { }
 
         if (!Directory.Exists(appsPath))
         {
-            LogApp($"Apps folder not found: {appsPath}");
+            Log($"APP INSTALL: Apps folder not found: {appsPath}");
             EnsureCommonDesktopShortcuts();
             return;
         }
 
-        LogApp($"InternetAvailable(start)={IsInternetAvailable()}");
+        Log($"APP INSTALL: InternetAvailable(start)={IsInternetAvailable()}");
         if (IsInternetAvailable())
         {
-            LogApp("Internet OK. Installing 7-Zip (if missing) and downloading RustDesk (if missing).");
+            Log("APP INSTALL: Internet OK. Installing 7-Zip (if missing) and downloading RustDesk (if missing).");
             InstallSevenZipIfMissing();
             DownloadRustDesk();
         }
         else
         {
-            LogApp("Internet not available. Skip 7-Zip and RustDesk download.");
+            Log("APP INSTALL: Internet not available. Skip 7-Zip and RustDesk download.");
         }
-        LogApp($"InternetAvailable(after-download)={IsInternetAvailable()}");
+        Log($"APP INSTALL: InternetAvailable(after-download)={IsInternetAvailable()}");
 
         var mapPath = Path.Combine(appsPath, "install-args.json");
         var argMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -324,7 +307,7 @@ foreach ($n in $names) {
             }
             catch (Exception ex)
             {
-                LogApp($"Failed to read install-args.json: {ex.Message}");
+                Log($"APP INSTALL: Failed to read install-args.json: {ex.Message}");
             }
         }
 
@@ -374,13 +357,13 @@ foreach ($n in $names) {
 
             if (!ShouldRunInstaller(name))
             {
-                LogApp($"Skip installer (already installed): {name}");
+                Log($"APP INSTALL: Skip (already installed): {name}");
                 continue;
             }
 
             try
             {
-                LogApp($"Running: {name} | Args: {finalArgs}");
+                Log($"APP INSTALL: Running: {name} | Args: {finalArgs}");
                 var psi = new ProcessStartInfo
                 {
                     FileName = fileName,
@@ -391,16 +374,16 @@ foreach ($n in $names) {
                 };
                 using var proc = Process.Start(psi);
                 proc?.WaitForExit();
-                LogApp($"ExitCode ({name}): {proc?.ExitCode}");
+                Log($"APP INSTALL: ExitCode ({name}): {proc?.ExitCode}");
             }
             catch (Exception ex)
             {
-                LogApp($"ERROR running {name}: {ex}");
+                Log($"APP INSTALL: ERROR running {name}: {ex}");
             }
         }
 
         EnsureCommonDesktopShortcuts();
-        LogApp("=== Install-Apps finished ===");
+        Log("APP INSTALL: === Install-Apps finished ===");
     }
 
     private static void EnsureCommonDesktopShortcuts()

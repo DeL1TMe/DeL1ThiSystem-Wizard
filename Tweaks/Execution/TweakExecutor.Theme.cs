@@ -1,14 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Net.Sockets;
 using System.Drawing;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Nodes;
 using Microsoft.Win32;
 
 namespace DeL1ThiSystem.ConfigurationWizard.Tweaks;
