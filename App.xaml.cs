@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Threading;
 using DeL1ThiSystem.ConfigurationWizard.Pages;
 using DeL1ThiSystem.ConfigurationWizard.Profile;
+using DeL1ThiSystem.ConfigurationWizard.Tweaks;
 using Microsoft.Win32;
 
 namespace DeL1ThiSystem.ConfigurationWizard;
@@ -20,10 +21,14 @@ public partial class App : Application
     {
         var forceRun = e.Args.Any(a => string.Equals(a, "--force-run", StringComparison.OrdinalIgnoreCase));
         State.IsForceRun = forceRun;
+        var isAdmin = IsRunningAsAdmin();
+
+        TweakExecutor.LogWizard($"OnStartup: args=[{string.Join(", ", e.Args)}] forceRun={forceRun} admin={isAdmin}");
 
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         TaskScheduler.UnobservedTaskException += (_, ex) =>
         {
+            TweakExecutor.LogWizard($"UnobservedTaskException: {ex.Exception}");
             try
             {
                 MessageBox.Show(ex.Exception.ToString(), "DeL1ThiSystem - Unobserved exception",
@@ -38,27 +43,31 @@ public partial class App : Application
 
         if (forceRun && !ShouldRunForceModeForCurrentUser())
         {
+            TweakExecutor.LogWizard("Shutdown: force-run mode not needed for current user");
             Shutdown(0);
             return;
         }
 
         if (!forceRun && HasCompletionMarker())
         {
+            TweakExecutor.LogWizard("Shutdown: completion marker exists");
             Shutdown(0);
             return;
         }
 
-        if (!forceRun && !IsRunningAsAdmin())
+        if (!forceRun && !isAdmin)
         {
             // If profile selection exists, this is a secondary account flow.
             // Relaunch in force mode without elevation.
             if (HasProfileSelection())
             {
+                TweakExecutor.LogWizard("Relaunching in force-run mode (profile selection exists)");
                 RelaunchForceRun();
                 Shutdown(0);
                 return;
             }
 
+            TweakExecutor.LogWizard("Relaunching as admin");
             RelaunchAsAdmin(e.Args);
             Shutdown(0);
             return;
@@ -67,11 +76,14 @@ public partial class App : Application
         SuppressEdgeFirstRunNoise();
 
         State.ThemeChoice = DetectWindowsTheme();
+        TweakExecutor.LogSessionStart(State.OsFamily, State.ThemeChoice, forceRun, isAdmin);
+
         ThemeManager.ApplyTheme(State.ThemeChoice);
         base.OnStartup(e);
         var mainWindow = new MainWindow();
         MainWindow = mainWindow;
         mainWindow.Show();
+        TweakExecutor.LogWizard("MainWindow shown");
     }
 
     private static bool ShouldRunForceModeForCurrentUser()
@@ -232,6 +244,7 @@ public partial class App : Application
 
     private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
+        TweakExecutor.LogWizard($"CRASH (DispatcherUnhandledException): {e.Exception}");
         try
         {
             MessageBox.Show(e.Exception.ToString(), "DeL1ThiSystem - Crash",

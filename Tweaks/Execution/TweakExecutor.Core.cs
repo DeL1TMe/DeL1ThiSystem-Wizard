@@ -16,18 +16,44 @@ public static partial class TweakExecutor
         try { Directory.CreateDirectory(BaseDir); } catch { }
     }
 
-
-    private static void Log(string message)
+    private static void LogRaw(string tag, string message)
     {
         try
         {
             using var stream = new FileStream(LogPath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
             using var writer = new StreamWriter(stream, new UTF8Encoding(false));
-            writer.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [TWEAK] {message}");
+            writer.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{tag}] {message}");
         }
         catch
         {
         }
+    }
+
+    private static void Log(string message) => LogRaw("TWEAK", message);
+
+    /// <summary>
+    /// Public logging method for non-tweak components (App, ProgressPage, etc.).
+    /// </summary>
+    public static void LogWizard(string message)
+    {
+        EnsureLogDir();
+        LogRaw("WIZARD", message);
+    }
+
+    /// <summary>
+    /// Writes session header: OS version, build, user, admin status, etc.
+    /// Call once at application startup.
+    /// </summary>
+    public static void LogSessionStart(string osFamily, string themeChoice, bool isForceRun, bool isAdmin)
+    {
+        EnsureLogDir();
+        LogRaw("WIZARD", new string('=', 72));
+        LogRaw("WIZARD", "SESSION START");
+        LogRaw("WIZARD", $"OS: {Environment.OSVersion.VersionString} (Build {Environment.OSVersion.Version.Build})");
+        LogRaw("WIZARD", $"OsFamily: {osFamily} | Theme: {themeChoice} | ForceRun: {isForceRun} | Admin: {isAdmin}");
+        LogRaw("WIZARD", $"User: {Environment.UserName} | Machine: {Environment.MachineName}");
+        LogRaw("WIZARD", $"CLR: {Environment.Version} | 64-bit OS: {Environment.Is64BitOperatingSystem} | 64-bit process: {Environment.Is64BitProcess}");
+        LogRaw("WIZARD", new string('=', 72));
     }
 
 
@@ -142,6 +168,7 @@ public static partial class TweakExecutor
         var ntUser = @"C:\Users\Default\NTUSER.DAT";
         using var baseKey = RegistryKey.OpenBaseKey(RegistryHive.Users, RegistryView.Registry64);
         var alreadyLoaded = baseKey.OpenSubKey(mountName) != null;
+        Log($"DefaultUserHive: alreadyLoaded={alreadyLoaded}");
 
         if (!alreadyLoaded)
             RunProcess("reg.exe", $"load HKU\\{mountName} \"{ntUser}\"");
@@ -151,6 +178,12 @@ public static partial class TweakExecutor
             using var key = baseKey.OpenSubKey(mountName, writable: true);
             if (key != null)
                 action(key);
+            else
+                Log("DefaultUserHive: WARN key is null after load");
+        }
+        catch (Exception ex)
+        {
+            Log($"DefaultUserHive: ERROR {ex.Message}");
         }
         finally
         {

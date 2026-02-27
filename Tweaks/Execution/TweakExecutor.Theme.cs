@@ -9,6 +9,7 @@ public static partial class TweakExecutor
 
     public static void ApplyWindowsTheme(string themeChoice)
     {
+        Log($">> ApplyWindowsTheme (themeChoice={themeChoice})");
         bool light = string.Equals(themeChoice, "light", StringComparison.OrdinalIgnoreCase);
         int lightValue = light ? 1 : 0;
 

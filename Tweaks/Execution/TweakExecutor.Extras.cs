@@ -69,6 +69,7 @@ if (Test-Path $toolboxPath) {{
 
     private static void ActivateHwid()
     {
+        Log(">> ActivateHwid");
         var marker = Path.Combine(BaseDir, "hwid_activated.marker");
         var hwidCmd = Path.Combine(BaseDir, "HWID_Activation.cmd");
         var helperPs = Path.Combine(BaseDir, "ActivateWhenOnline.ps1");

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using Microsoft.Win32;
 
 namespace DeL1ThiSystem.ConfigurationWizard.Tweaks;
@@ -9,13 +10,16 @@ public static partial class TweakExecutor
     public static void Execute(string id, string osFamily, string themeChoice)
     {
         EnsureLogDir();
+        var sw = Stopwatch.StartNew();
         Log($"START {id}");
         try
         {
-            if (IsTweakAlreadyApplied(id, osFamily, themeChoice))
+            var alreadyApplied = IsTweakAlreadyApplied(id, osFamily, themeChoice);
+            Log($"STATE-CHECK {id}: alreadyApplied={alreadyApplied}");
+            if (alreadyApplied)
             {
-                Log($"SKIP {id}: already applied by state check");
-                Log($"END {id}");
+                sw.Stop();
+                Log($"SKIP {id}: already applied ({sw.ElapsedMilliseconds}ms)");
                 return;
             }
 
@@ -199,7 +203,8 @@ public static partial class TweakExecutor
         {
             Log($"ERROR {id}: {ex}");
         }
-        Log($"END {id}");
+        sw.Stop();
+        Log($"END {id} ({sw.ElapsedMilliseconds}ms)");
     }
 
 }
