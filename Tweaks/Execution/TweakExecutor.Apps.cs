@@ -20,6 +20,7 @@ public static partial class TweakExecutor
 
     private static void RemoveAppxPackages()
     {
+        Log(">> RemoveAppxPackages");
         RunPowerShell(BuildUwpRemovalScript(0));
         RemoveWindowsStore();
         DisableCortana();
@@ -119,6 +120,7 @@ Get-AppxProvisionedPackage -Online | Where-Object {{ $_.DisplayName -eq $outlook
 
     private static void RemoveCapabilities()
     {
+        Log(">> RemoveCapabilities");
         var selectors = string.Join(",", CapabilitySelectors.Select(s => $"'{s}'"));
         var script =
             "$selectors = @(" + selectors + ");" +
@@ -131,6 +133,7 @@ Get-AppxProvisionedPackage -Online | Where-Object {{ $_.DisplayName -eq $outlook
 
     private static void RemoveFeatures()
     {
+        Log(">> RemoveFeatures");
         var selectors = string.Join(",", FeatureSelectors.Select(s => $"'{s}'"));
         var script =
             "$selectors = @(" + selectors + ");" +
@@ -143,6 +146,7 @@ Get-AppxProvisionedPackage -Online | Where-Object {{ $_.DisplayName -eq $outlook
 
     private static void RemoveOneDriveArtifacts()
     {
+        Log(">> RemoveOneDriveArtifacts");
         TryDelete(@"C:\Users\Default\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\OneDrive.lnk");
         var oneDrive32 = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\\System32\\OneDriveSetup.exe");
         var oneDrive64 = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\\SysWOW64\\OneDriveSetup.exe");
@@ -163,6 +167,7 @@ Get-AppxProvisionedPackage -Online | Where-Object {{ $_.DisplayName -eq $outlook
 
     private static void MakeEdgeUninstallable()
     {
+        Log(">> MakeEdgeUninstallable");
         var paths = new[]
         {
             @"C:\Windows\System32\IntegratedServicesRegionPolicySet.json",
@@ -361,25 +366,12 @@ foreach ($n in $names) {
                 continue;
             }
 
-            try
-            {
-                Log($"APP INSTALL: Running: {name} | Args: {finalArgs}");
-                var psi = new ProcessStartInfo
-                {
-                    FileName = fileName,
-                    Arguments = finalArgs,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    WindowStyle = ProcessWindowStyle.Hidden
-                };
-                using var proc = Process.Start(psi);
-                proc?.WaitForExit();
-                Log($"APP INSTALL: ExitCode ({name}): {proc?.ExitCode}");
-            }
-            catch (Exception ex)
-            {
-                Log($"APP INSTALL: ERROR running {name}: {ex}");
-            }
+            Log($"APP INSTALL: Running: {name} | File: {fileName} | Args: {finalArgs}");
+            var exitCode = RunProcessWithTimeout(fileName, finalArgs, 300_000, out var timedOut);
+            if (timedOut)
+                Log($"APP INSTALL: TIMEOUT ({name}): killed after 300s");
+            else
+                Log($"APP INSTALL: ExitCode ({name}): {exitCode}");
         }
 
         EnsureCommonDesktopShortcuts();

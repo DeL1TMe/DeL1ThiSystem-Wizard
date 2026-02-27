@@ -9,6 +9,7 @@ public static partial class TweakExecutor
 
     private static void PauseWindowsUpdate()
     {
+        Log(">> PauseWindowsUpdate");
         var now = DateTime.UtcNow;
         var start = now.ToString("yyyy-MM-ddTHH:mm:ssK", CultureInfo.InvariantCulture);
         var end = now.AddDays(7).ToString("yyyy-MM-ddTHH:mm:ssK", CultureInfo.InvariantCulture);
@@ -25,6 +26,7 @@ public static partial class TweakExecutor
 
     private static void DisableConsumerFeatures(string osFamily)
     {
+        Log($">> DisableConsumerFeatures (osFamily={osFamily})");
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\CloudContent", "DisableWindowsConsumerFeatures", 1);
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\CloudContent", "DisableSoftLanding", 1);
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\CloudContent", "DisableThirdPartySuggestions", 1);
@@ -38,6 +40,7 @@ public static partial class TweakExecutor
 
     private static void DisableWidgetsAndNews()
     {
+        Log(">> DisableWidgetsAndNews");
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Dsh", "AllowNewsAndInterests", 0);
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Dsh", "AllowWidgets", 0);
         SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "TaskbarDa", 0);
