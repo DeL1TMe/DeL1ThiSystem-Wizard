@@ -1,10 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -21,12 +19,44 @@ public static partial class TweakExecutor
     private const string RustDeskExePath = @"C:\Users\Public\Desktop\RustDesk.exe";
 
 
+    // ── apps.edge_restrict ─────────────────────────────────────────
+    // Combines: edge_background_disable, edge_startup_boost_disable,
+    //           edge_make_uninstallable, remove_edge_desktop_shortcut
+
+    private static void RestrictEdge()
+    {
+        // Disable background mode
+        SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Edge\Recommended", "BackgroundModeEnabled", 0);
+
+        // Disable startup boost
+        SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Edge\Recommended", "StartupBoostEnabled", 0);
+
+        // Make uninstallable
+        MakeEdgeUninstallable();
+
+        // Remove desktop shortcut
+        RemoveEdgeDesktopShortcut();
+    }
+
+
+    // ── apps.remove_components ─────────────────────────────────────
+    // Combines: remove_capabilities + remove_features
+
+    private static void RemoveSystemComponents()
+    {
+        RemoveCapabilities();
+        RemoveFeatures();
+    }
+
+
+    // ── apps.remove_uwp ────────────────────────────────────────────
+    // Cleaned: removed DisableCortana/DisableCopilotEverywhere calls
+    // (they are now in privacy.disable_tracking)
+
     private static void RemoveAppxPackages()
     {
         RunPowerShell(BuildUwpRemovalScript(0));
         RemoveWindowsStore();
-        DisableCortana();
-        DisableCopilotEverywhere();
         CreateUwpAutoRemovalTasks();
     }
 
@@ -81,27 +111,18 @@ $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIde
 Write-Output ('UWP removal: Admin=' + $isAdmin + ', User=' + $env:USERNAME);
 $prov = Get-AppxProvisionedPackage -Online;
 $provMatches = $prov | Where-Object {{ $_.DisplayName -match $pattern -or $_.PackageName -match $pattern }};
-Write-Output ('UWP provisioned matches: ' + $provMatches.Count);
-if ($provMatches.Count -gt 0) {{
-  Write-Output ('UWP provisioned sample: ' + (($provMatches | Select-Object -First 10 -ExpandProperty PackageName) -join '; '));
-}}
 foreach ($p in $provMatches) {{
   Remove-AppxProvisionedPackage -Online -PackageName $p.PackageName -ErrorAction Continue | Out-Null;
 }}
 
 $installedAll = @();
 try {{ $installedAll = Get-AppxPackage -AllUsers -ErrorAction Stop }} catch {{
-  Write-Output ('Get-AppxPackage -AllUsers failed: ' + $_.Exception.Message);
   $installedAll = @()
 }}
 $installedCurrent = Get-AppxPackage -ErrorAction SilentlyContinue;
 $installed = @($installedAll + $installedCurrent) | Sort-Object PackageFullName -Unique;
 $hasAllUsers = (Get-Command Remove-AppxPackage).Parameters.ContainsKey('AllUsers');
 $installedMatches = $installed | Where-Object {{ $_.Name -match $pattern -or $_.PackageFamilyName -match $pattern }};
-Write-Output ('UWP installed matches: ' + $installedMatches.Count);
-if ($installedMatches.Count -gt 0) {{
-  Write-Output ('UWP installed sample: ' + (($installedMatches | Select-Object -First 10 -ExpandProperty PackageFullName) -join '; '));
-}}
 foreach ($pkg in $installedMatches) {{
   if ($hasAllUsers) {{ Remove-AppxPackage -AllUsers -Package $pkg.PackageFullName -ErrorAction Continue }}
   else {{ Remove-AppxPackage -Package $pkg.PackageFullName -ErrorAction Continue }}
@@ -109,12 +130,10 @@ foreach ($pkg in $installedMatches) {{
 
 $outlook = 'Microsoft.OutlookForWindows';
 Get-AppxPackage -AllUsers -Name $outlook | ForEach-Object {{
-  Write-Output ('Remove installed (Outlook): ' + $_.PackageFullName);
   if ($hasAllUsers) {{ Remove-AppxPackage -AllUsers -Package $_.PackageFullName -ErrorAction Continue }}
   else {{ Remove-AppxPackage -Package $_.PackageFullName -ErrorAction Continue }}
 }}
 Get-AppxProvisionedPackage -Online | Where-Object {{ $_.DisplayName -eq $outlook -or $_.PackageName -match ('^' + [regex]::Escape($outlook)) }} | ForEach-Object {{
-  Write-Output ('Remove provisioned (Outlook): ' + $_.PackageName);
   Remove-AppxProvisionedPackage -Online -PackageName $_.PackageName -ErrorAction Continue | Out-Null;
 }}";
     }
@@ -180,7 +199,6 @@ Get-AppxProvisionedPackage -Online | Where-Object {{ $_.DisplayName -eq $outlook
                 Log($"Edge policy missing: {path}");
                 continue;
             }
-
             if (TryPatchEdgeUninstallPolicy(path))
                 updatedAny = true;
         }
@@ -245,6 +263,7 @@ Get-AppxProvisionedPackage -Online | Where-Object {{ $_.DisplayName -eq $outlook
         }
     }
 
+
     private static void RemoveWindowsStore()
     {
         var script = @"
@@ -267,12 +286,6 @@ foreach ($n in $names) {
         RunPowerShell(script);
     }
 
-    private static void DisableCortana()
-    {
-        SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\Windows Search", "AllowCortana", 0);
-        SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "ShowCortanaButton", 0);
-    }
-
 
     private static void InstallAppsFromFolder()
     {
@@ -285,9 +298,7 @@ foreach ($n in $names) {
             {
                 File.AppendAllText(logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}\r\n", new UTF8Encoding(false));
             }
-            catch
-            {
-            }
+            catch { }
         }
 
         try { Directory.CreateDirectory(BaseDir); } catch { }
@@ -299,18 +310,11 @@ foreach ($n in $names) {
             return;
         }
 
-        LogApp($"InternetAvailable(start)={IsInternetAvailable()}");
         if (IsInternetAvailable())
         {
-            LogApp("Internet OK. Installing 7-Zip (if missing) and downloading RustDesk (if missing).");
             InstallSevenZipIfMissing();
             DownloadRustDesk();
         }
-        else
-        {
-            LogApp("Internet not available. Skip 7-Zip and RustDesk download.");
-        }
-        LogApp($"InternetAvailable(after-download)={IsInternetAvailable()}");
 
         var mapPath = Path.Combine(appsPath, "install-args.json");
         var argMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -451,14 +455,6 @@ try {
   Ensure-Shortcut -name 'Toolbox' -target 'C:\Ghost Toolbox\toolbox.updater.x64.exe' -workDir 'C:\Ghost Toolbox'
   Ensure-Shortcut -name 'Uninstall Tool' -target 'C:\Program Files\Uninstall Tool\UninstallTool.exe' -workDir 'C:\Program Files\Uninstall Tool'
   Ensure-Shortcut -name 'AOMEI Backupper' -target 'C:\Program Files (x86)\AOMEI\AOMEI Backupper\8.0.0\Backupper.exe' -workDir 'C:\Program Files (x86)\AOMEI\AOMEI Backupper\8.0.0'
-
-  foreach ($legacy in @('UninstallTool.lnk')) {
-    foreach ($desktopPath in @($publicDesktop, $userDesktop)) {
-      if ([string]::IsNullOrWhiteSpace($desktopPath)) { continue }
-      $legacyPath = Join-Path $desktopPath $legacy
-      if (Test-Path -LiteralPath $legacyPath) { Remove-Item -LiteralPath $legacyPath -Force -ErrorAction SilentlyContinue }
-    }
-  }
 } catch {
 }
 ";
@@ -478,8 +474,7 @@ if (-not (Test-Path -LiteralPath 'C:\Program Files\7-Zip\7zFM.exe')) {
   try {
     Invoke-WebRequest -Uri $url -OutFile $installer -UseBasicParsing
     Start-Process -FilePath $installer -ArgumentList '/S' -Wait
-  } catch {
-  }
+  } catch {}
 }
 ";
         RunPowerShell(script);
@@ -500,8 +495,7 @@ try {
   $publicDesktop = 'C:\Users\Public\Desktop'
   $outputFile = Join-Path $publicDesktop 'RustDesk.exe'
   Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $outputFile -UseBasicParsing
-} catch {
-}
+} catch {}
 ";
         RunPowerShell(script);
     }

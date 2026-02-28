@@ -1,13 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
+using System;
 using System.IO;
-using System.Linq;
-using System.Net.Sockets;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Nodes;
 using Microsoft.Win32;
 
 namespace DeL1ThiSystem.ConfigurationWizard.Tweaks;
@@ -15,50 +7,121 @@ namespace DeL1ThiSystem.ConfigurationWizard.Tweaks;
 public static partial class TweakExecutor
 {
 
-    private static void ConfigureStartPinsForOs(string osFamily)
+    // ── shell.taskbar_cleanup ──────────────────────────────────────
+    // Combines: hide_task_view, search_box_mode, meet_now_disable,
+    //           taskbar_clear_pins, taskbar_end_task, tray_show_all_icons
+
+    private static void CleanupTaskbar(string osFamily)
     {
+        const string adv = @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced";
+        const string search = @"Software\Microsoft\Windows\CurrentVersion\Search";
+
+        // Hide Task View button
+        SetDword(RegistryHive.CurrentUser, adv, "ShowTaskViewButton", 0);
+        SetDefaultUserDword(adv, "ShowTaskViewButton", 0);
+
+        // Collapse search to icon
+        SetDword(RegistryHive.CurrentUser, search, "SearchboxTaskbarMode", 1);
+        SetDefaultUserDword(search, "SearchboxTaskbarMode", 1);
+
+        // Hide Meet Now (Win10 only)
         if (string.Equals(osFamily, "10", StringComparison.OrdinalIgnoreCase))
         {
-            ClearStartPinsWin10();
-            ClearStartLayoutPolicy();
-            return;
+            const string policies = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer";
+            SetDword(RegistryHive.LocalMachine, policies, "HideSCAMeetNow", 1);
+            SetDword(RegistryHive.CurrentUser, policies, "HideSCAMeetNow", 1);
+            SetDefaultUserDword(policies, "HideSCAMeetNow", 1);
         }
 
-        if (Environment.OSVersion.Version.Build < 22000)
-            return;
+        // Hide Widgets/TaskbarDa (Win11)
+        SetDword(RegistryHive.CurrentUser, adv, "TaskbarDa", 0);
+        SetDefaultUserDword(adv, "TaskbarDa", 0);
 
-        const string json = "{\"pinnedList\":[]}";
-        var key = @"SOFTWARE\Microsoft\PolicyManager\current\device\Start";
-        SetString(RegistryHive.LocalMachine, key, "ConfigureStartPins", json);
-        SetDword(RegistryHive.LocalMachine, key, "ConfigureStartPins_ProviderSet", 1);
-        SetQword(RegistryHive.LocalMachine, key, "ConfigureStartPins_LastWrite", DateTime.UtcNow.ToFileTimeUtc());
-        SetString(RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\PolicyManager\default\device\Start", "ConfigureStartPins", json);
+        // Add "End Task" to taskbar context menu (Win11)
+        if (Environment.OSVersion.Version.Build >= 22000)
+        {
+            const string devSettings = @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\TaskbarDeveloperSettings";
+            SetDword(RegistryHive.CurrentUser, devSettings, "TaskbarEndTask", 1);
+            SetDefaultUserDword(devSettings, "TaskbarEndTask", 1);
+        }
+
+        // Show all tray icons
+        ShowAllTrayIcons();
+
+        // Clear taskbar pins
+        ClearTaskbarPins();
     }
 
+
+    // ── shell.start_menu_cleanup ───────────────────────────────────
+    // Combines: start_tiles_clear, win11_start_recommended_disable
+
+    private static void CleanupStartMenu(string osFamily)
+    {
+        // Clear Start pins/tiles
+        ConfigureStartPinsForOs(osFamily);
+        ResetCurrentUserStartState(osFamily);
+        ScheduleStartCleanupOnce();
+
+        // Disable Win11 recommendations and recent files
+        if (Environment.OSVersion.Version.Build >= 22000)
+        {
+            const string adv = @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced";
+            SetDword(RegistryHive.CurrentUser, adv, "Start_Layout", 1);
+            SetDword(RegistryHive.CurrentUser, adv, "Start_IrisRecommendations", 0);
+            SetDword(RegistryHive.CurrentUser, adv, "Start_TrackDocs", 0);
+
+            SetDefaultUserDword(adv, "Start_Layout", 1);
+            SetDefaultUserDword(adv, "Start_IrisRecommendations", 0);
+            SetDefaultUserDword(adv, "Start_TrackDocs", 0);
+
+            const string explorer = @"Software\Microsoft\Windows\CurrentVersion\Explorer";
+            SetDword(RegistryHive.CurrentUser, explorer, "ShowRecent", 0);
+            SetDword(RegistryHive.CurrentUser, explorer, "ShowFrequent", 0);
+            SetDefaultUserDword(explorer, "ShowRecent", 0);
+            SetDefaultUserDword(explorer, "ShowFrequent", 0);
+
+            const string policies = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer";
+            SetDword(RegistryHive.LocalMachine, policies, "NoRecentDocsHistory", 1);
+            SetDword(RegistryHive.LocalMachine, policies, "ClearRecentDocsOnExit", 1);
+        }
+    }
+
+
+    // ── shell.explorer_settings ────────────────────────────────────
+    // Combines: show_file_extensions, explorer_launch_to_this_pc
+
+    private static void ConfigureExplorerSettings()
+    {
+        const string adv = @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced";
+
+        // Show file extensions
+        SetDword(RegistryHive.CurrentUser, adv, "HideFileExt", 0);
+        SetDefaultUserDword(adv, "HideFileExt", 0);
+
+        // Open Explorer to "This PC"
+        SetDword(RegistryHive.CurrentUser, adv, "LaunchTo", 1);
+        SetDefaultUserDword(adv, "LaunchTo", 1);
+    }
+
+
+    // ── shell.classic_context_menu ─────────────────────────────────
 
     private static void EnableClassicContextMenu()
     {
         var key = @"Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32";
         SetDefaultValue(RegistryHive.CurrentUser, key, "");
+
+        // Also apply to Default User so new profiles get classic menu
+        WithDefaultUserHive(root =>
+        {
+            using var k = root.CreateSubKey(key, true);
+            k?.SetValue(null, "", RegistryValueKind.String);
+        });
     }
 
 
-    private static void DisableMeetNow()
-    {
-        const string key = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer";
-        SetDword(RegistryHive.LocalMachine, key, "HideSCAMeetNow", 1);
-        SetDword(RegistryHive.CurrentUser, key, "HideSCAMeetNow", 1);
-        SetDefaultUserDword(key, "HideSCAMeetNow", 1);
-    }
-
-
-    private static void SetExplorerLaunchToThisPc()
-    {
-        const string key = @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced";
-        SetDword(RegistryHive.CurrentUser, key, "LaunchTo", 1);
-        SetDefaultUserDword(key, "LaunchTo", 1);
-    }
-
+    // ── shell.desktop_icons_minimal ────────────────────────────────
 
     private static void SetDesktopIconsMinimal()
     {
@@ -104,6 +167,29 @@ public static partial class TweakExecutor
     }
 
 
+    // ── Internal helpers ───────────────────────────────────────────
+
+    private static void ShowAllTrayIcons()
+    {
+        if (Environment.OSVersion.Version.Build < 22000)
+        {
+            SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer", "EnableAutoTray", 0);
+            return;
+        }
+
+        using var baseKey = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry64);
+        using var root = baseKey.OpenSubKey(@"Control Panel\NotifyIconSettings", writable: true);
+        if (root == null)
+            return;
+
+        foreach (var name in root.GetSubKeyNames())
+        {
+            using var sub = root.CreateSubKey(name, true);
+            sub?.SetValue("IsPromoted", 1, RegistryValueKind.DWord);
+        }
+    }
+
+
     private static void ClearTaskbarPins()
     {
         var script = @"
@@ -115,6 +201,27 @@ Remove-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explo
 Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue;
 ";
         RunPowerShell(script);
+    }
+
+
+    private static void ConfigureStartPinsForOs(string osFamily)
+    {
+        if (string.Equals(osFamily, "10", StringComparison.OrdinalIgnoreCase))
+        {
+            ClearStartPinsWin10();
+            ClearStartLayoutPolicy();
+            return;
+        }
+
+        if (Environment.OSVersion.Version.Build < 22000)
+            return;
+
+        const string json = "{\"pinnedList\":[]}";
+        var key = @"SOFTWARE\Microsoft\PolicyManager\current\device\Start";
+        SetString(RegistryHive.LocalMachine, key, "ConfigureStartPins", json);
+        SetDword(RegistryHive.LocalMachine, key, "ConfigureStartPins_ProviderSet", 1);
+        SetQword(RegistryHive.LocalMachine, key, "ConfigureStartPins_LastWrite", DateTime.UtcNow.ToFileTimeUtc());
+        SetString(RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\PolicyManager\default\device\Start", "ConfigureStartPins", json);
     }
 
 
@@ -165,22 +272,7 @@ foreach ($p in $policyPaths) {
   Set-ItemProperty -Path $p -Name StartLayoutFile -Value $layoutPath -Type String;
   Set-ItemProperty -Path $p -Name LockedStartLayout -Value 1 -Type DWord;
 }
-$paths = @(
-  'HKCU:\Software\Microsoft\Windows\CurrentVersion\CloudStore\Store\Cache\DefaultAccount',
-  'HKCU:\Software\Microsoft\Windows\CurrentVersion\CloudStore\Store\DefaultAccount'
-);
-foreach ($path in $paths) {
-  if (Test-Path $path) {
-    Get-ChildItem $path -ErrorAction SilentlyContinue | Where-Object { $_.Name -match 'Start' } | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue;
-  }
-}
-$tileDb = Join-Path $env:LOCALAPPDATA 'TileDataLayer\Database';
-if (Test-Path $tileDb) { Remove-Item $tileDb -Recurse -Force -ErrorAction SilentlyContinue; }
-$layouts = @(
-  (Join-Path $env:LOCALAPPDATA 'Microsoft\Windows\Shell\DefaultLayouts.xml'),
-  (Join-Path $env:LOCALAPPDATA 'Microsoft\Windows\Shell\LayoutModification.xml')
-);
-foreach ($l in $layouts) { if (Test-Path $l) { Remove-Item $l -Force -ErrorAction SilentlyContinue; } }
+" + StartStateCleanupScript + @"
 Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue;
 Stop-Process -Name StartMenuExperienceHost -Force -ErrorAction SilentlyContinue;
 Start-Sleep -Seconds 2;
@@ -200,38 +292,13 @@ if (Test-Path $layoutPath) { Remove-Item $layoutPath -Force -ErrorAction Silentl
 
         var script = @"
 Stop-Process -Name explorer,StartMenuExperienceHost,ShellExperienceHost -Force -ErrorAction SilentlyContinue;
-Remove-Item -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\CloudStore\Store\Cache\DefaultAccount' -Recurse -Force -ErrorAction SilentlyContinue;
-Remove-Item -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\CloudStore\Store\DefaultAccount' -Recurse -Force -ErrorAction SilentlyContinue;
-$smh = Join-Path $env:LOCALAPPDATA 'Packages\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\LocalState';
-if (Test-Path $smh) { Remove-Item -Path (Join-Path $smh '*') -Recurse -Force -ErrorAction SilentlyContinue; }
-$tileDb = Join-Path $env:LOCALAPPDATA 'TileDataLayer\Database';
-if (Test-Path $tileDb) { Remove-Item $tileDb -Recurse -Force -ErrorAction SilentlyContinue; }
-";
+" + StartStateCleanupScript;
         RunPowerShell(script);
     }
 
 
-    private static void ScheduleStartCleanupOnce()
-    {
-        var script = @"
-  $taskName = 'DeL1ThiSystem\StartCleanupOnce';
-  $ps = @'
-    $taskName = 'DeL1ThiSystem\StartCleanupOnce';
-    try {
-      schtasks /Delete /TN $taskName /F >$null 2>$null;
-      Start-Sleep -Seconds 1;
-      schtasks /Query /TN $taskName >$null 2>$null;
-      if ($LASTEXITCODE -eq 0) {
-        Log 'Task still exists after schtasks delete; using COM fallback.';
-        $service = New-Object -ComObject 'Schedule.Service';
-        $service.Connect();
-        $folder = $service.GetFolder('\DeL1ThiSystem');
-        $folder.DeleteTask('StartCleanupOnce', 0);
-      } else {
-        Log 'Task removed via schtasks.';
-      }
-    } catch { Log ('Delete failed: {0}' -f $_.Exception.Message) }
-    Stop-Process -Name explorer,StartMenuExperienceHost,ShellExperienceHost -Force -ErrorAction SilentlyContinue;
+    /// <summary>Shared script fragment for cleaning Start menu caches.</summary>
+    private const string StartStateCleanupScript = @"
 Remove-Item -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\CloudStore\Store\Cache\DefaultAccount' -Recurse -Force -ErrorAction SilentlyContinue;
 Remove-Item -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\CloudStore\Store\DefaultAccount' -Recurse -Force -ErrorAction SilentlyContinue;
 $smh = Join-Path $env:LOCALAPPDATA 'Packages\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\LocalState';
@@ -243,23 +310,28 @@ $layouts = @(
   (Join-Path $env:LOCALAPPDATA 'Microsoft\Windows\Shell\LayoutModification.xml')
 );
 foreach ($l in $layouts) { if (Test-Path $l) { Remove-Item $l -Force -ErrorAction SilentlyContinue; } }
-  try {
-    schtasks /Delete /TN $taskName /F >$null 2>$null;
-    Start-Sleep -Seconds 1;
-    schtasks /Query /TN $taskName >$null 2>$null;
-    if ($LASTEXITCODE -eq 0) {
-      $service = New-Object -ComObject 'Schedule.Service';
-      $service.Connect();
-      $folder = $service.GetFolder('\DeL1ThiSystem');
-      $folder.DeleteTask('StartCleanupOnce', 0);
-    } else {
-    }
-  } catch { }
+";
+
+
+    private static void ScheduleStartCleanupOnce()
+    {
+        var script = $@"
+$taskName = 'DeL1ThiSystem\StartCleanupOnce';
+$ps = @'
+$taskName = 'DeL1ThiSystem\StartCleanupOnce';
+try {{
+  schtasks /Delete /TN $taskName /F >$null 2>$null;
+}} catch {{}}
+Stop-Process -Name explorer,StartMenuExperienceHost,ShellExperienceHost -Force -ErrorAction SilentlyContinue;
+{StartStateCleanupScript.Replace("'", "''")}
+try {{
+  schtasks /Delete /TN $taskName /F >$null 2>$null;
+}} catch {{}}
 '@;
 $path = Join-Path $env:ProgramData 'DeL1ThiSystem\Wizard\StartCleanupOnce.ps1';
 New-Item -ItemType Directory -Path (Split-Path $path) -Force | Out-Null;
 $ps | Set-Content -LiteralPath $path -Encoding UTF8;
-  $tr = 'powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ' + [char]34 + $path + [char]34;
+$tr = 'powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ' + [char]34 + $path + [char]34;
 schtasks /Create /F /TN $taskName /RU $env:USERNAME /SC ONLOGON /RL HIGHEST /TR $tr | Out-Null;
 ";
         RunPowerShell(script);
@@ -301,27 +373,6 @@ schtasks /Create /F /TN $taskName /RU $env:USERNAME /SC ONLOGON /RL HIGHEST /TR 
     }
 
 
-    private static void ShowAllTrayIcons()
-    {
-        if (Environment.OSVersion.Version.Build < 22000)
-        {
-            SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer", "EnableAutoTray", 0);
-            return;
-        }
-
-        using var baseKey = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry64);
-        using var root = baseKey.OpenSubKey(@"Control Panel\NotifyIconSettings", writable: true);
-        if (root == null)
-            return;
-
-        foreach (var name in root.GetSubKeyNames())
-        {
-            using var sub = root.CreateSubKey(name, true);
-            sub?.SetValue("IsPromoted", 1, RegistryValueKind.DWord);
-        }
-    }
-
-
     private static void RemoveEdgeDesktopShortcut()
     {
         try
@@ -359,32 +410,6 @@ schtasks /Create /F /TN $taskName /RU $env:USERNAME /SC ONLOGON /RL HIGHEST /TR 
         catch
         {
         }
-    }
-
-
-    private static void ConfigureWin11StartAndRecents()
-    {
-        if (Environment.OSVersion.Version.Build < 22000)
-            return;
-
-        const string adv = @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced";
-        SetDword(RegistryHive.CurrentUser, adv, "Start_Layout", 1);
-        SetDword(RegistryHive.CurrentUser, adv, "Start_IrisRecommendations", 0);
-        SetDword(RegistryHive.CurrentUser, adv, "Start_TrackDocs", 0);
-
-        SetDefaultUserDword(adv, "Start_Layout", 1);
-        SetDefaultUserDword(adv, "Start_IrisRecommendations", 0);
-        SetDefaultUserDword(adv, "Start_TrackDocs", 0);
-
-        const string explorer = @"Software\Microsoft\Windows\CurrentVersion\Explorer";
-        SetDword(RegistryHive.CurrentUser, explorer, "ShowRecent", 0);
-        SetDword(RegistryHive.CurrentUser, explorer, "ShowFrequent", 0);
-        SetDefaultUserDword(explorer, "ShowRecent", 0);
-        SetDefaultUserDword(explorer, "ShowFrequent", 0);
-
-        const string policies = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer";
-        SetDword(RegistryHive.LocalMachine, policies, "NoRecentDocsHistory", 1);
-        SetDword(RegistryHive.LocalMachine, policies, "ClearRecentDocsOnExit", 1);
     }
 
 }

@@ -29,6 +29,8 @@ public sealed class TweakNode
     public string Id { get; set; } = "";
     public string Title { get; set; } = "";
     public string Description { get; set; } = "";
+    public string GroupId { get; set; } = "";
+    public string GroupTitle { get; set; } = "";
 
     public bool IsGroup { get; set; } = false;
 

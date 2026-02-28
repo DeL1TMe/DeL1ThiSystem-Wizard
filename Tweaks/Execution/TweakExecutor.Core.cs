@@ -101,6 +101,23 @@ public static partial class TweakExecutor
     }
 
 
+    private static void SetBinary(RegistryHive hive, string subKey, string name, byte[] value)
+    {
+        var path = $"{hive}\\{subKey}";
+        try
+        {
+            Log($"REG BINARY {path} {name}=[{value.Length} bytes]");
+            using var baseKey = RegistryKey.OpenBaseKey(hive, RegistryView.Registry64);
+            using var key = baseKey.CreateSubKey(subKey, true);
+            key?.SetValue(name, value, RegistryValueKind.Binary);
+        }
+        catch (Exception ex)
+        {
+            Log($"REG ERROR {path} {name}: {ex.Message}");
+        }
+    }
+
+
     private static void SetDefaultValue(RegistryHive hive, string subKey, string value)
     {
         var path = $"{hive}\\{subKey}";
