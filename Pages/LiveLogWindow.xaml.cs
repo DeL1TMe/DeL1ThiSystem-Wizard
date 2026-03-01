@@ -139,14 +139,14 @@ public partial class LiveLogWindow : Window
         if (_logScrollViewer == null)
             return;
 
-        const double threshold = 1.0;
-        var hasTop = _logScrollViewer.VerticalOffset > threshold;
-        var hasBottom = _logScrollViewer.VerticalOffset < (_logScrollViewer.ScrollableHeight - threshold);
+        const double fadeDistance = 48.0;
+        double max = _logScrollViewer.ScrollableHeight;
+        double y = _logScrollViewer.VerticalOffset;
 
         if (TopFadeOverlay != null)
-            TopFadeOverlay.Opacity = hasTop ? 1.0 : 0.0;
+            TopFadeOverlay.Opacity = max <= 0 ? 0 : Math.Clamp(y / fadeDistance, 0, 1);
         if (BottomFadeOverlay != null)
-            BottomFadeOverlay.Opacity = hasBottom ? 1.0 : 0.0;
+            BottomFadeOverlay.Opacity = max <= 0 ? 0 : Math.Clamp((max - y) / fadeDistance, 0, 1);
     }
 
     private static T? FindDescendant<T>(DependencyObject root) where T : DependencyObject

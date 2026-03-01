@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.Globalization;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Security.Principal;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
@@ -52,25 +53,27 @@ public partial class MainPage : Page
     {
         TweakItems.Clear();
         var nodes = TweaksCatalogLoader.LoadAsNodes(_state.OsFamily);
-        var titleComparer = StringComparer.Create(CultureInfo.GetCultureInfo("ru-RU"), ignoreCase: true);
 
         var visibleItems = nodes
             .Where(item =>
                 !string.Equals(item.Stage, "bootstrap", StringComparison.OrdinalIgnoreCase) &&
                 item.IsEnabled)
-            .OrderBy(item => item.Title, titleComparer)
-            .ToList();
+            .ToList(); // preserve catalog order — items are already in group order
 
         foreach (var item in visibleItems)
-        {
             TweakItems.Add(item);
-        }
 
         foreach (var item in visibleItems)
         {
             if (!_state.Tweaks.ContainsKey(item.Id))
                 _state.Tweaks[item.Id] = item.IsChecked;
         }
+
+        // Group by GroupTitle for section headers
+        var view = CollectionViewSource.GetDefaultView(TweakItems);
+        view.GroupDescriptions.Clear();
+        view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(TweakNode.GroupTitle)));
+        TweaksList.ItemsSource = view;
     }
 
     private void LoadThemeImages()
@@ -130,12 +133,12 @@ public partial class MainPage : Page
 
     private void UpdateFadeOverlays()
     {
+        const double fadeDistance = 48.0;
         double max = MainScroll.ScrollableHeight;
         double y = MainScroll.VerticalOffset;
 
-        TopFadeOverlay.Opacity = y <= 1 ? 0 : 1;
-
-        BottomFadeOverlay.Opacity = (max <= 1 || y >= max - 1) ? 0 : 1;
+        TopFadeOverlay.Opacity = max <= 0 ? 0 : Math.Clamp(y / fadeDistance, 0, 1);
+        BottomFadeOverlay.Opacity = max <= 0 ? 0 : Math.Clamp((max - y) / fadeDistance, 0, 1);
     }
 
     private void MainScroll_ScrollChanged(object sender, ScrollChangedEventArgs e)

@@ -51,25 +51,102 @@ public static partial class TweakExecutor
 
     private static void ApplyVisualFxProfile()
     {
-        Log(">> ApplyVisualFxProfile");
-        var key = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects";
-        SetDword(RegistryHive.LocalMachine, $@"{key}\ControlAnimations", "DefaultValue", 0);
-        SetDword(RegistryHive.LocalMachine, $@"{key}\AnimateMinMax", "DefaultValue", 0);
-        SetDword(RegistryHive.LocalMachine, $@"{key}\TaskbarAnimations", "DefaultValue", 0);
-        SetDword(RegistryHive.LocalMachine, $@"{key}\DWMAeroPeekEnabled", "DefaultValue", 0);
-        SetDword(RegistryHive.LocalMachine, $@"{key}\MenuAnimation", "DefaultValue", 0);
-        SetDword(RegistryHive.LocalMachine, $@"{key}\TooltipAnimation", "DefaultValue", 0);
-        SetDword(RegistryHive.LocalMachine, $@"{key}\SelectionFade", "DefaultValue", 0);
-        SetDword(RegistryHive.LocalMachine, $@"{key}\DWMSaveThumbnailEnabled", "DefaultValue", 0);
-        SetDword(RegistryHive.LocalMachine, $@"{key}\CursorShadow", "DefaultValue", 0);
-        SetDword(RegistryHive.LocalMachine, $@"{key}\ListviewShadow", "DefaultValue", 1);
-        SetDword(RegistryHive.LocalMachine, $@"{key}\ThumbnailsOrIcon", "DefaultValue", 1);
-        SetDword(RegistryHive.LocalMachine, $@"{key}\ListviewAlphaSelect", "DefaultValue", 0);
-        SetDword(RegistryHive.LocalMachine, $@"{key}\DragFullWindows", "DefaultValue", 0);
-        SetDword(RegistryHive.LocalMachine, $@"{key}\ComboBoxAnimation", "DefaultValue", 0);
-        SetDword(RegistryHive.LocalMachine, $@"{key}\FontSmoothing", "DefaultValue", 1);
-        SetDword(RegistryHive.LocalMachine, $@"{key}\ListBoxSmoothScrolling", "DefaultValue", 0);
-        SetDword(RegistryHive.LocalMachine, $@"{key}\DropShadow", "DefaultValue", 1);
+        // ── 1. HKCU — actually applies effects to the current user ──
+
+        // Custom visual effects mode
+        SetDword(RegistryHive.CurrentUser,
+            @"Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects",
+            "VisualFXSetting", 3);
+
+        // Desktop: disable drag-full-windows, keep ClearType font smoothing
+        const string desktop = @"Control Panel\Desktop";
+        SetString(RegistryHive.CurrentUser, desktop, "DragFullWindows", "0");
+        SetString(RegistryHive.CurrentUser, desktop, "FontSmoothing", "2");
+
+        // UserPreferencesMask — binary controlling most visual effect toggles
+        // This value disables: menu/combo/listbox/tooltip animations, selection
+        // fade, cursor shadow, animate-minimize; keeps gradient captions and
+        // hot-tracking (standard "performance" profile).
+        var upm = new byte[] { 0x90, 0x12, 0x03, 0x80, 0x10, 0x00, 0x00, 0x00 };
+        SetBinary(RegistryHive.CurrentUser, desktop, "UserPreferencesMask", upm);
+
+        // WindowMetrics: disable minimize animation
+        SetString(RegistryHive.CurrentUser,
+            @"Control Panel\Desktop\WindowMetrics", "MinAnimate", "0");
+
+        // Explorer\Advanced individual toggles
+        const string adv = @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced";
+        SetDword(RegistryHive.CurrentUser, adv, "ListviewShadow", 1);
+        SetDword(RegistryHive.CurrentUser, adv, "ListviewAlphaSelect", 0);
+        SetDword(RegistryHive.CurrentUser, adv, "TaskbarAnimations", 0);
+        SetDword(RegistryHive.CurrentUser, adv, "IconsOnly", 0); // thumbnails on
+
+        // DWM: disable Aero Peek and thumbnail caching
+        const string dwm = @"Software\Microsoft\Windows\DWM";
+        SetDword(RegistryHive.CurrentUser, dwm, "EnableAeroPeek", 0);
+        SetDword(RegistryHive.CurrentUser, dwm, "AlwaysHibernateThumbnails", 0);
+
+        // ── 2. Default User hive — same profile for new accounts ────
+
+        WithDefaultUserHive(root =>
+        {
+            using (var k = root.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects", true))
+                k?.SetValue("VisualFXSetting", 3, RegistryValueKind.DWord);
+
+            using (var k = root.CreateSubKey(@"Control Panel\Desktop", true))
+            {
+                if (k != null)
+                {
+                    k.SetValue("DragFullWindows", "0", RegistryValueKind.String);
+                    k.SetValue("FontSmoothing", "2", RegistryValueKind.String);
+                    k.SetValue("UserPreferencesMask", upm, RegistryValueKind.Binary);
+                }
+            }
+
+            using (var k = root.CreateSubKey(@"Control Panel\Desktop\WindowMetrics", true))
+                k?.SetValue("MinAnimate", "0", RegistryValueKind.String);
+
+            using (var k = root.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", true))
+            {
+                if (k != null)
+                {
+                    k.SetValue("ListviewShadow", 1, RegistryValueKind.DWord);
+                    k.SetValue("ListviewAlphaSelect", 0, RegistryValueKind.DWord);
+                    k.SetValue("TaskbarAnimations", 0, RegistryValueKind.DWord);
+                    k.SetValue("IconsOnly", 0, RegistryValueKind.DWord);
+                }
+            }
+
+            using (var k = root.CreateSubKey(@"Software\Microsoft\Windows\DWM", true))
+            {
+                if (k != null)
+                {
+                    k.SetValue("EnableAeroPeek", 0, RegistryValueKind.DWord);
+                    k.SetValue("AlwaysHibernateThumbnails", 0, RegistryValueKind.DWord);
+                }
+            }
+        });
+
+        // ── 3. HKLM defaults — used by "Let Windows choose" dialog ──
+
+        var vfx = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects";
+        SetDword(RegistryHive.LocalMachine, $@"{vfx}\ControlAnimations", "DefaultValue", 0);
+        SetDword(RegistryHive.LocalMachine, $@"{vfx}\AnimateMinMax", "DefaultValue", 0);
+        SetDword(RegistryHive.LocalMachine, $@"{vfx}\TaskbarAnimations", "DefaultValue", 0);
+        SetDword(RegistryHive.LocalMachine, $@"{vfx}\DWMAeroPeekEnabled", "DefaultValue", 0);
+        SetDword(RegistryHive.LocalMachine, $@"{vfx}\MenuAnimation", "DefaultValue", 0);
+        SetDword(RegistryHive.LocalMachine, $@"{vfx}\TooltipAnimation", "DefaultValue", 0);
+        SetDword(RegistryHive.LocalMachine, $@"{vfx}\SelectionFade", "DefaultValue", 0);
+        SetDword(RegistryHive.LocalMachine, $@"{vfx}\DWMSaveThumbnailEnabled", "DefaultValue", 0);
+        SetDword(RegistryHive.LocalMachine, $@"{vfx}\CursorShadow", "DefaultValue", 0);
+        SetDword(RegistryHive.LocalMachine, $@"{vfx}\ListviewShadow", "DefaultValue", 1);
+        SetDword(RegistryHive.LocalMachine, $@"{vfx}\ThumbnailsOrIcon", "DefaultValue", 1);
+        SetDword(RegistryHive.LocalMachine, $@"{vfx}\ListviewAlphaSelect", "DefaultValue", 0);
+        SetDword(RegistryHive.LocalMachine, $@"{vfx}\DragFullWindows", "DefaultValue", 0);
+        SetDword(RegistryHive.LocalMachine, $@"{vfx}\ComboBoxAnimation", "DefaultValue", 0);
+        SetDword(RegistryHive.LocalMachine, $@"{vfx}\FontSmoothing", "DefaultValue", 1);
+        SetDword(RegistryHive.LocalMachine, $@"{vfx}\ListBoxSmoothScrolling", "DefaultValue", 0);
+        SetDword(RegistryHive.LocalMachine, $@"{vfx}\DropShadow", "DefaultValue", 1);
     }
 
 
@@ -731,17 +808,5 @@ Log 'CLEANUP' 'RU package cleanup finished'
         RunProcess("powercfg.exe", "-change -hibernate-timeout-dc 0");
     }
 
-
-    private static void ApplyDefaultUserContentDelivery()
-    {
-        WithDefaultUserHive(root =>
-        {
-            using var key = root.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager", true);
-            if (key == null)
-                return;
-            foreach (var name in ContentDeliveryValues)
-                key.SetValue(name, 0, RegistryValueKind.DWord);
-        });
-    }
 
 }

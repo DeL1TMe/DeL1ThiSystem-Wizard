@@ -241,12 +241,19 @@
                         </Grid>
                     </Grid>
 
-                    <TextBlock Style="{StaticResource TextSection}" Margin="0,0,0,10">
-                        Выберите необходимые твики:
-                    </TextBlock>
-
-                        <ItemsControl x:Name="TweaksList" ItemsSource="{Binding TweakItems}">
-                            <ItemsControl.ItemTemplate>
+                    <ItemsControl x:Name="TweaksList">
+                        <ItemsControl.GroupStyle>
+                            <GroupStyle>
+                                <GroupStyle.HeaderTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Name}"
+                                                   Style="{StaticResource TextSection}"
+                                                   Margin="0,18,0,10"/>
+                                    </DataTemplate>
+                                </GroupStyle.HeaderTemplate>
+                            </GroupStyle>
+                        </ItemsControl.GroupStyle>
+                        <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                 <Grid Margin="0,0,0,12">
                                     <Grid.Style>

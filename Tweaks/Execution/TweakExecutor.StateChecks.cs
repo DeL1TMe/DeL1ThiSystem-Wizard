@@ -11,6 +11,7 @@ public static partial class TweakExecutor
     {
         return id switch
         {
+            // ── Bootstrap ──────────────────────────────────────────
             "bootstrap.defender_disable" => IsDwordValue(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows Defender Security Center\Notifications", "DisableNotifications", 1)
                                             && IsDwordValue(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows Defender Security Center\Systray", "HideSystray", 1),
             "bootstrap.smartscreen_disable" => IsStringValue(RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer", "SmartScreenEnabled", "Off"),
@@ -26,9 +27,12 @@ public static partial class TweakExecutor
                                                             && IsStringValue(RegistryHive.CurrentUser, @"Control Panel\Mouse", "MouseThreshold2", "0"),
             "bootstrap.wallpaper_quality_100" => IsDwordValue(RegistryHive.CurrentUser, @"Control Panel\Desktop", "JPEGImportQuality", 100),
             "bootstrap.configure_ru_ru_locale" => false,
+
+            // ── Locale (internal steps) ────────────────────────────
             "system.configure_ru_ru_locale_utf8" => false,
             "system.cleanup_ru_ru_local_packages" => false,
 
+            // ── Profile ────────────────────────────────────────────
             "profile.sticky_keys_disable" => IsStringValue(RegistryHive.CurrentUser, @"Control Panel\Accessibility\StickyKeys", "Flags", "10"),
             "profile.enhance_pointer_precision_disable" => IsStringValue(RegistryHive.CurrentUser, @"Control Panel\Mouse", "MouseSpeed", "0")
                                                            && IsStringValue(RegistryHive.CurrentUser, @"Control Panel\Mouse", "MouseThreshold1", "0")
@@ -36,41 +40,43 @@ public static partial class TweakExecutor
             "profile.wallpaper_quality_100" => IsDwordValue(RegistryHive.CurrentUser, @"Control Panel\Desktop", "JPEGImportQuality", 100),
             "profile.configure_ru_ru_user_locale" => false,
 
+            // ── Apps ───────────────────────────────────────────────
+            "apps.edge_restrict" => IsDwordValue(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Edge", "UninstallAllowed", 1)
+                                    && IsDwordValue(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Edge\Recommended", "BackgroundModeEnabled", 0)
+                                    && IsDwordValue(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Edge\Recommended", "StartupBoostEnabled", 0)
+                                    && IsEdgeDesktopShortcutRemoved(),
             "apps.remove_uwp" => false,
-            "apps.remove_capabilities" => false,
-            "apps.remove_features" => false,
+            "apps.remove_components" => false,
             "apps.onedrive_remove" => !File.Exists(Environment.ExpandEnvironmentVariables(@"%SystemRoot%\System32\OneDriveSetup.exe"))
                                       && !File.Exists(Environment.ExpandEnvironmentVariables(@"%SystemRoot%\SysWOW64\OneDriveSetup.exe")),
-            "apps.edge_make_uninstallable" => IsDwordValue(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Edge", "UninstallAllowed", 1),
-            "apps.edge_background_disable" => IsDwordValue(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Edge\Recommended", "BackgroundModeEnabled", 0),
-            "apps.edge_startup_boost_disable" => IsDwordValue(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Edge\Recommended", "StartupBoostEnabled", 0),
 
-            "ui.color_theme" => IsThemeApplied(themeChoice),
+            // ── Privacy ────────────────────────────────────────────
+            "privacy.disable_tracking" => IsDwordValue(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\CloudContent", "DisableWindowsConsumerFeatures", 1)
+                                          && IsDwordValue(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\Windows Search", "DisableWebSearch", 1)
+                                          && IsDwordValue(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Dsh", "AllowWidgets", 0)
+                                          && IsDwordValue(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\WindowsCopilot", "TurnOffWindowsCopilot", 1),
+            "privacy.pause_updates" => IsPauseConfigured(),
 
-            "updates.pause_policy_task" => IsPauseConfigured(),
-            "updates.consumer_features_disable" => IsDwordValue(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\CloudContent", "DisableWindowsConsumerFeatures", 1),
-            "updates.search_suggestions_disable" => IsDwordValue(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\Windows Search", "DisableWebSearch", 1),
-            "updates.widgets_disable" => IsDwordValue(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Dsh", "AllowWidgets", 0),
-
+            // ── Performance ────────────────────────────────────────
             "perf.fast_startup_disable" => IsDwordValue(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Power", "HiberbootEnabled", 0),
             "perf.powercfg_never_sleep" => false,
-            "perf.visualfx_profile" => IsDwordValue(RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\ControlAnimations", "DefaultValue", 0),
+            "perf.visualfx_profile" => IsDwordValue(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects", "VisualFXSetting", 3)
+                                       && IsStringValue(RegistryHive.CurrentUser, @"Control Panel\Desktop", "DragFullWindows", "0"),
             "perf.memory_integrity_disable" => IsDwordValue(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorEnforcedCodeIntegrity", "Enabled", 0),
 
-            "shell.classic_context_menu" => IsStringValue(RegistryHive.CurrentUser, @"Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32", null, string.Empty),
-            "shell.show_file_extensions" => IsDwordValue(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "HideFileExt", 0),
-            "shell.hide_task_view" => IsDwordValue(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "ShowTaskViewButton", 0),
-            "shell.meet_now_disable" => IsDwordValue(RegistryHive.CurrentUser, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer", "HideSCAMeetNow", 1),
-            "shell.search_box_mode" => IsDwordValue(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Search", "SearchboxTaskbarMode", 1),
-            "shell.start_tiles_clear" => false,
-            "shell.explorer_launch_to_this_pc" => IsDwordValue(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "LaunchTo", 1),
+            // ── Shell ──────────────────────────────────────────────
+            "shell.taskbar_cleanup" => IsDwordValue(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "ShowTaskViewButton", 0)
+                                      && IsDwordValue(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Search", "SearchboxTaskbarMode", 1),
+            "shell.start_menu_cleanup" => false, // always re-run; tiles/pins are hard to detect
+            "shell.explorer_settings" => IsDwordValue(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "HideFileExt", 0)
+                                         && IsDwordValue(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "LaunchTo", 1),
             "shell.desktop_icons_minimal" => IsDesktopIconsMinimalApplied(),
-            "shell.taskbar_clear_pins" => false,
-            "shell.taskbar_end_task" => IsDwordValue(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\TaskbarDeveloperSettings", "TaskbarEndTask", 1),
-            "shell.tray_show_all_icons" => IsTrayShowAllApplied(),
-            "shell.remove_edge_desktop_shortcut" => IsEdgeDesktopShortcutRemoved(),
-            "shell.win11_start_recommended_disable" => IsDwordValue(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "Start_IrisRecommendations", 0),
+            "shell.classic_context_menu" => IsStringValue(RegistryHive.CurrentUser, @"Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32", null, string.Empty),
 
+            // ── Theme ──────────────────────────────────────────────
+            "ui.color_theme" => IsThemeApplied(themeChoice),
+
+            // ── Extras ─────────────────────────────────────────────
             "extras.install_apps" => false,
             "extras.install_toolbox" => false,
             "extras.activate_hwid" => File.Exists(Path.Combine(BaseDir, "hwid_activated.marker")),

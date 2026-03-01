@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using Microsoft.Win32;
 
@@ -25,6 +25,7 @@ public static partial class TweakExecutor
 
             switch (id)
             {
+                // ── Bootstrap ──────────────────────────────────────────
                 case "bootstrap.defender_disable":
                     DisableDefenderNotifications();
                     break;
@@ -58,12 +59,19 @@ public static partial class TweakExecutor
                 case "bootstrap.configure_ru_ru_locale":
                     ConfigureAutoTimeZone();
                     break;
+                case "bootstrap.restore_disable_cleanup":
+                    DisableRestoreAndCleanup();
+                    break;
+
+                // ── Locale (internal steps) ────────────────────────────
                 case "system.configure_ru_ru_locale_utf8":
                     ConfigureRuRuLocale();
                     break;
                 case "system.cleanup_ru_ru_local_packages":
                     CleanupRuRuLocalPackages();
                     break;
+
+                // ── Profile (force-run for secondary users) ────────────
                 case "profile.sticky_keys_disable":
                     ApplyProfileStickyKeys();
                     break;
@@ -76,53 +84,30 @@ public static partial class TweakExecutor
                 case "profile.configure_ru_ru_user_locale":
                     ApplyProfileRuRuUserLocale();
                     break;
-                case "apps.remove_uwp":
-                    RemoveAppxPackages();
-                    break;
-                case "apps.remove_capabilities":
-                    RemoveCapabilities();
-                    break;
-                case "apps.remove_features":
-                    RemoveFeatures();
+
+                // ── Apps ───────────────────────────────────────────────
+                case "apps.edge_restrict":
+                    RestrictEdge();
                     break;
                 case "apps.onedrive_remove":
                     RemoveOneDriveArtifacts();
                     break;
-                case "apps.edge_make_uninstallable":
-                    MakeEdgeUninstallable();
+                case "apps.remove_components":
+                    RemoveSystemComponents();
                     break;
-                case "apps.edge_background_disable":
-                    SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Edge\Recommended", "BackgroundModeEnabled", 0);
+                case "apps.remove_uwp":
+                    RemoveAppxPackages();
                     break;
-                case "apps.edge_startup_boost_disable":
-                    SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Edge\Recommended", "StartupBoostEnabled", 0);
+
+                // ── Privacy ────────────────────────────────────────────
+                case "privacy.disable_tracking":
+                    DisableTrackingAndAds(osFamily);
                     break;
-                case "ui.color_theme":
-                    ApplyWindowsTheme(themeChoice);
-                    break;
-                case "updates.pause_policy_task":
+                case "privacy.pause_updates":
                     PauseWindowsUpdate();
                     break;
-                case "updates.consumer_features_disable":
-                    DisableConsumerFeatures(osFamily);
-                    break;
-                case "updates.search_suggestions_disable":
-                    SetDword(RegistryHive.CurrentUser, @"Software\Policies\Microsoft\Windows\Explorer", "DisableSearchBoxSuggestions", 1);
-                    SetDefaultUserDword(@"Software\Policies\Microsoft\Windows\Explorer", "DisableSearchBoxSuggestions", 1);
-                    SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\Windows Search", "AllowSearchHighlights", 0);
-                    SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\SearchSettings", "IsDynamicSearchBoxEnabled", 0);
-                    SetDefaultUserDword(@"Software\Microsoft\Windows\CurrentVersion\SearchSettings", "IsDynamicSearchBoxEnabled", 0);
-                    SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\Windows Search", "DisableWebSearch", 1);
-                    SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\Windows Search", "ConnectedSearchUseWeb", 0);
-                    SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\Windows Search", "ConnectedSearchPrivacy", 3);
-                    SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Search", "BingSearchEnabled", 0);
-                    SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Search", "CortanaConsent", 0);
-                    SetDefaultUserDword(@"Software\Microsoft\Windows\CurrentVersion\Search", "BingSearchEnabled", 0);
-                    SetDefaultUserDword(@"Software\Microsoft\Windows\CurrentVersion\Search", "CortanaConsent", 0);
-                    break;
-                case "updates.widgets_disable":
-                    DisableWidgetsAndNews();
-                    break;
+
+                // ── Performance ────────────────────────────────────────
                 case "perf.fast_startup_disable":
                     SetDword(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Power", "HiberbootEnabled", 0);
                     break;
@@ -135,54 +120,30 @@ public static partial class TweakExecutor
                 case "perf.memory_integrity_disable":
                     DisableMemoryIntegrity();
                     break;
-                case "bootstrap.restore_disable_cleanup":
-                    DisableRestoreAndCleanup();
+
+                // ── Shell ──────────────────────────────────────────────
+                case "shell.taskbar_cleanup":
+                    CleanupTaskbar(osFamily);
                     break;
-                case "shell.classic_context_menu":
-                    EnableClassicContextMenu();
+                case "shell.start_menu_cleanup":
+                    CleanupStartMenu(osFamily);
                     break;
-                case "shell.show_file_extensions":
-                    SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "HideFileExt", 0);
-                    SetDefaultUserDword(@"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "HideFileExt", 0);
-                    break;
-                case "shell.hide_task_view":
-                    SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "ShowTaskViewButton", 0);
-                    SetDefaultUserDword(@"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "ShowTaskViewButton", 0);
-                    break;
-                case "shell.meet_now_disable":
-                    DisableMeetNow();
-                    break;
-                case "shell.search_box_mode":
-                    SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Search", "SearchboxTaskbarMode", 1);
-                    SetDefaultUserDword(@"Software\Microsoft\Windows\CurrentVersion\Search", "SearchboxTaskbarMode", 1);
-                    break;
-                case "shell.start_tiles_clear":
-                    ConfigureStartPinsForOs(osFamily);
-                    ResetCurrentUserStartState(osFamily);
-                    ScheduleStartCleanupOnce();
-                    break;
-                case "shell.explorer_launch_to_this_pc":
-                    SetExplorerLaunchToThisPc();
+                case "shell.explorer_settings":
+                    ConfigureExplorerSettings();
                     break;
                 case "shell.desktop_icons_minimal":
                     SetDesktopIconsMinimal();
                     break;
-                case "shell.taskbar_clear_pins":
-                    ClearTaskbarPins();
+                case "shell.classic_context_menu":
+                    EnableClassicContextMenu();
                     break;
-                case "shell.taskbar_end_task":
-                    SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\TaskbarDeveloperSettings", "TaskbarEndTask", 1);
-                    SetDefaultUserDword(@"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\TaskbarDeveloperSettings", "TaskbarEndTask", 1);
+
+                // ── Theme ──────────────────────────────────────────────
+                case "ui.color_theme":
+                    ApplyWindowsTheme(themeChoice);
                     break;
-                case "shell.tray_show_all_icons":
-                    ShowAllTrayIcons();
-                    break;
-                case "shell.remove_edge_desktop_shortcut":
-                    RemoveEdgeDesktopShortcut();
-                    break;
-                case "shell.win11_start_recommended_disable":
-                    ConfigureWin11StartAndRecents();
-                    break;
+
+                // ── Extras ─────────────────────────────────────────────
                 case "extras.install_apps":
                     InstallAppsFromFolder();
                     break;
@@ -192,6 +153,7 @@ public static partial class TweakExecutor
                 case "extras.activate_hwid":
                     ActivateHwid();
                     break;
+
                 case "noop":
                     break;
                 default:

@@ -31,41 +31,15 @@ public static class TweaksCatalogLoader
                 {
                     Id = it.Id,
                     Title = it.Title,
-                    Description = it.Description,
+                    Description = it.Description ?? string.Empty,
+                    GroupId = g.Id,
+                    GroupTitle = g.Title,
                     IsChecked = compatible && it.Default,
                     IsEnabled = compatible,
                     AppliesTo = string.Join(",", it.AppliesTo ?? new()),
                     Stage = it.Stage
                 });
             }
-        }
-
-        if (!root.Any(n => string.Equals(n.Id, "system.configure_ru_ru_locale_utf8", StringComparison.OrdinalIgnoreCase)))
-        {
-            root.Add(new TweakNode
-            {
-                Id = "system.configure_ru_ru_locale_utf8",
-                Title = "Установить русский язык системы + UTF-8",
-                Description = "Ставит и применяет русский пакет языка используя локальные пакеты из C:\\Lang\\ru-RU, при отсутствии скачивает их через Microsoft и UUPDump под текущий билд, затем включает UTF-8 для non-Unicode программ.",
-                IsChecked = true,
-                IsEnabled = true,
-                AppliesTo = "10,11",
-                Stage = "tweak"
-            });
-        }
-
-        if (!root.Any(n => string.Equals(n.Id, "perf.memory_integrity_disable", StringComparison.OrdinalIgnoreCase)))
-        {
-            root.Add(new TweakNode
-            {
-                Id = "perf.memory_integrity_disable",
-                Title = "Отключить целостность памяти (Core Isolation)",
-                Description = "Отключает Memory Integrity (HVCI).",
-                IsChecked = true,
-                IsEnabled = true,
-                AppliesTo = "10,11",
-                Stage = "tweak"
-            });
         }
 
         return root;
