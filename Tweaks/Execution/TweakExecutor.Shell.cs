@@ -125,6 +125,7 @@ public static partial class TweakExecutor
 
     private static void SetDesktopIconsMinimal()
     {
+        Log(">> SetDesktopIconsMinimal");
         string[] hideIcons =
         {
             "{5399e694-6ce5-4d6c-8fce-1d8870fdcba0}",
@@ -192,6 +193,7 @@ public static partial class TweakExecutor
 
     private static void ClearTaskbarPins()
     {
+        Log(">> ClearTaskbarPins");
         var script = @"
 $taskbar = Join-Path $env:APPDATA 'Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar';
 if (Test-Path $taskbar) {
@@ -367,14 +369,16 @@ schtasks /Create /F /TN $taskName /RU $env:USERNAME /SC ONLOGON /RL HIGHEST /TR 
             using var key = baseKey.OpenSubKey(subKey, true);
             key?.DeleteValue(name, false);
         }
-        catch
+        catch (Exception ex)
         {
+            Log($"TryDeleteRegistryValue failed: {hive}\\{subKey} {name}: {ex.Message}");
         }
     }
 
 
     private static void RemoveEdgeDesktopShortcut()
     {
+        Log(">> RemoveEdgeDesktopShortcut");
         try
         {
             SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Edge", "CreateDesktopShortcutDefault", 0);
@@ -388,8 +392,9 @@ schtasks /Create /F /TN $taskName /RU $env:USERNAME /SC ONLOGON /RL HIGHEST /TR 
             TryDeleteEdgeLinks(userDesktop);
             TryDeleteEdgeLinks(defaultDesktop);
         }
-        catch
+        catch (Exception ex)
         {
+            Log($"RemoveEdgeDesktopShortcut ERROR: {ex.Message}");
         }
     }
 

@@ -38,11 +38,7 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
     private CancellationTokenSource? _internetMonitorCts;
     private int _onlineStreak;
     private int _offlineStreak;
-    private readonly string _logPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-        "DeL1ThiSystem",
-        "Wizard",
-        "Wizard.log");
+    private static readonly string _logPath = TweakExecutor.LogPath;
     private MainWindow? _hostWindow;
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -126,6 +122,7 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
 
     private async Task RunAsync()
     {
+        TweakExecutor.LogWizard($"ProgressPage.RunAsync: {_steps.Length} steps, autoNavigate={_autoNavigate}");
         TweakExecutor.SetInternetGate(WaitForInternetGateFromWorker);
         StartInternetMonitor();
         await EnsureInternetOrBlockAsync();
@@ -137,6 +134,7 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
             for (int i = 0; i < _steps.Length; i++)
             {
                 await EnsureInternetOrBlockAsync();
+                TweakExecutor.LogWizard($"STEP [{i + 1}/{_steps.Length}] {_steps[i].Id} \"{_steps[i].Title}\"");
                 CurrentStepText = _steps[i].Title;
                 StartSlowNoticeTimer();
                 double p = (double)(i) / total;
@@ -149,10 +147,11 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
                 await Task.Delay(150);
             }
 
+            var totalElapsed = (int)(DateTime.UtcNow - start).TotalMilliseconds;
+            TweakExecutor.LogWizard($"ProgressPage.RunAsync: all steps completed in {totalElapsed}ms");
             SetProgress(1);
-            var elapsed = (int)(DateTime.UtcNow - start).TotalMilliseconds;
-            if (elapsed < 800)
-                await Task.Delay(800 - elapsed);
+            if (totalElapsed < 800)
+                await Task.Delay(800 - totalElapsed);
             if (_showReboot)
                 RebootEnabled = true;
             if (_showFooter)
@@ -168,6 +167,7 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
             if (_autoNavigate)
             {
                 _state.BootstrapApplied = true;
+                TweakExecutor.LogWizard("Auto-navigating to Disclaimer page");
                 ((MainWindow)Application.Current.MainWindow).NavigateToDisclaimer();
             }
         }
@@ -284,6 +284,7 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
         if (_internetRequired == visible)
             return;
         _internetRequired = visible;
+        TweakExecutor.LogWizard(visible ? "INTERNET: connection lost — blocking execution" : "INTERNET: connection restored — resuming");
         if (Application.Current.MainWindow is MainWindow mw)
         {
             mw.SetInteractionLock(visible);
@@ -300,6 +301,7 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
 
     private void Reboot_Click(object sender, RoutedEventArgs e)
     {
+        TweakExecutor.LogWizard("User requested reboot");
         try
         {
             CloseSharedLogWindow();
@@ -311,8 +313,9 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
                 CreateNoWindow = true
             });
         }
-        catch
+        catch (Exception ex)
         {
+            TweakExecutor.LogWizard($"Reboot failed: {ex.Message}");
             MessageBox.Show("Не удалось выполнить перезагрузку.", "DeL1ThiSystem", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
@@ -418,15 +421,20 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
             Directory.CreateDirectory(baseDir);
             var marker = Path.Combine(baseDir, $"completed_{Environment.UserName}.marker");
             if (!File.Exists(marker))
+            {
                 File.WriteAllText(marker, DateTime.UtcNow.ToString("O"));
+                TweakExecutor.LogWizard($"Completion marker written: {marker}");
+            }
         }
-        catch
+        catch (Exception ex)
         {
+            TweakExecutor.LogWizard($"TryWriteCompletionMarker ERROR: {ex.Message}");
         }
     }
 
     private static void TryDeleteWizardTask()
     {
+        TweakExecutor.LogWizard("Deleting scheduled task DeL1ThiSystem\\Wizard");
         try
         {
             var psi = new ProcessStartInfo
@@ -439,9 +447,11 @@ public partial class ProgressPage : Page, INotifyPropertyChanged
             };
             using var proc = Process.Start(psi);
             proc?.WaitForExit(3000);
+            TweakExecutor.LogWizard($"Scheduled task delete: exitCode={proc?.ExitCode}");
         }
-        catch
+        catch (Exception ex)
         {
+            TweakExecutor.LogWizard($"TryDeleteWizardTask ERROR: {ex.Message}");
         }
     }
 

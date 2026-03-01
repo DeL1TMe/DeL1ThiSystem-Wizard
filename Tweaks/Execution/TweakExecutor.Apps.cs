@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.Win32;
@@ -55,6 +54,7 @@ public static partial class TweakExecutor
 
     private static void RemoveAppxPackages()
     {
+        Log(">> RemoveAppxPackages");
         RunPowerShell(BuildUwpRemovalScript(0));
         RemoveWindowsStore();
         CreateUwpAutoRemovalTasks();
@@ -141,6 +141,7 @@ Get-AppxProvisionedPackage -Online | Where-Object {{ $_.DisplayName -eq $outlook
 
     private static void RemoveCapabilities()
     {
+        Log(">> RemoveCapabilities");
         var selectors = string.Join(",", CapabilitySelectors.Select(s => $"'{s}'"));
         var script =
             "$selectors = @(" + selectors + ");" +
@@ -153,6 +154,7 @@ Get-AppxProvisionedPackage -Online | Where-Object {{ $_.DisplayName -eq $outlook
 
     private static void RemoveFeatures()
     {
+        Log(">> RemoveFeatures");
         var selectors = string.Join(",", FeatureSelectors.Select(s => $"'{s}'"));
         var script =
             "$selectors = @(" + selectors + ");" +
@@ -165,6 +167,7 @@ Get-AppxProvisionedPackage -Online | Where-Object {{ $_.DisplayName -eq $outlook
 
     private static void RemoveOneDriveArtifacts()
     {
+        Log(">> RemoveOneDriveArtifacts");
         TryDelete(@"C:\Users\Default\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\OneDrive.lnk");
         var oneDrive32 = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\\System32\\OneDriveSetup.exe");
         var oneDrive64 = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\\SysWOW64\\OneDriveSetup.exe");
@@ -185,6 +188,7 @@ Get-AppxProvisionedPackage -Online | Where-Object {{ $_.DisplayName -eq $outlook
 
     private static void MakeEdgeUninstallable()
     {
+        Log(">> MakeEdgeUninstallable");
         var paths = new[]
         {
             @"C:\Windows\System32\IntegratedServicesRegionPolicySet.json",
@@ -290,31 +294,26 @@ foreach ($n in $names) {
     private static void InstallAppsFromFolder()
     {
         const string appsPath = @"C:\Apps";
-        var logPath = Path.Combine(BaseDir, "Wizard.log");
-
-        void LogApp(string message)
-        {
-            try
-            {
-                File.AppendAllText(logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}\r\n", new UTF8Encoding(false));
-            }
-            catch { }
-        }
-
-        try { Directory.CreateDirectory(BaseDir); } catch { }
 
         if (!Directory.Exists(appsPath))
         {
-            LogApp($"Apps folder not found: {appsPath}");
+            Log($"APP INSTALL: Apps folder not found: {appsPath}");
             EnsureCommonDesktopShortcuts();
             return;
         }
 
+        Log($"APP INSTALL: InternetAvailable(start)={IsInternetAvailable()}");
         if (IsInternetAvailable())
         {
+            Log("APP INSTALL: Internet OK. Installing 7-Zip (if missing) and downloading RustDesk (if missing).");
             InstallSevenZipIfMissing();
             DownloadRustDesk();
         }
+        else
+        {
+            Log("APP INSTALL: Internet not available. Skip 7-Zip and RustDesk download.");
+        }
+        Log($"APP INSTALL: InternetAvailable(after-download)={IsInternetAvailable()}");
 
         var mapPath = Path.Combine(appsPath, "install-args.json");
         var argMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -328,7 +327,7 @@ foreach ($n in $names) {
             }
             catch (Exception ex)
             {
-                LogApp($"Failed to read install-args.json: {ex.Message}");
+                Log($"APP INSTALL: Failed to read install-args.json: {ex.Message}");
             }
         }
 
@@ -378,33 +377,20 @@ foreach ($n in $names) {
 
             if (!ShouldRunInstaller(name))
             {
-                LogApp($"Skip installer (already installed): {name}");
+                Log($"APP INSTALL: Skip (already installed): {name}");
                 continue;
             }
 
-            try
-            {
-                LogApp($"Running: {name} | Args: {finalArgs}");
-                var psi = new ProcessStartInfo
-                {
-                    FileName = fileName,
-                    Arguments = finalArgs,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    WindowStyle = ProcessWindowStyle.Hidden
-                };
-                using var proc = Process.Start(psi);
-                proc?.WaitForExit();
-                LogApp($"ExitCode ({name}): {proc?.ExitCode}");
-            }
-            catch (Exception ex)
-            {
-                LogApp($"ERROR running {name}: {ex}");
-            }
+            Log($"APP INSTALL: Running: {name} | File: {fileName} | Args: {finalArgs}");
+            var exitCode = RunProcessWithTimeout(fileName, finalArgs, 300_000, out var timedOut);
+            if (timedOut)
+                Log($"APP INSTALL: TIMEOUT ({name}): killed after 300s");
+            else
+                Log($"APP INSTALL: ExitCode ({name}): {exitCode}");
         }
 
         EnsureCommonDesktopShortcuts();
-        LogApp("=== Install-Apps finished ===");
+        Log("APP INSTALL: === Install-Apps finished ===");
     }
 
     private static void EnsureCommonDesktopShortcuts()

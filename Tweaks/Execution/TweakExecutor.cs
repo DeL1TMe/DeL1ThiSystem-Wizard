@@ -13,7 +13,7 @@ public static partial class TweakExecutor
         "DeL1ThiSystem",
         "Wizard");
 
-    private static readonly string LogPath = Path.Combine(BaseDir, "Wizard.log");
+    public static readonly string LogPath = Path.Combine(BaseDir, "Wizard.log");
     private static int _procSeq = 0;
 
     private static readonly string[] ContentDeliveryValues =

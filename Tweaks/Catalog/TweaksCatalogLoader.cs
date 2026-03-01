@@ -27,7 +27,6 @@ public static class TweaksCatalogLoader
             foreach (var it in g.Items)
             {
                 bool compatible = it.AppliesTo == null || it.AppliesTo.Count == 0 || it.AppliesTo.Contains(osFamily);
-
                 root.Add(new TweakNode
                 {
                     Id = it.Id,

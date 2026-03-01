@@ -8,6 +8,7 @@ public static partial class TweakExecutor
 {
     private static void DisableDefenderNotifications()
     {
+        Log(">> DisableDefenderNotifications");
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows Defender Security Center\Notifications", "DisableNotifications", 1);
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows Defender Security Center\Systray", "HideSystray", 1);
     }
@@ -15,6 +16,7 @@ public static partial class TweakExecutor
 
     private static void DisableSmartScreen()
     {
+        Log(">> DisableSmartScreen");
         SetString(RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer", "SmartScreenEnabled", "Off");
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows\CurrentVersion\WTDS\Components", "ServiceEnabled", 0);
         SetDword(RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows\CurrentVersion\WTDS\Components", "NotifyMalicious", 0);
@@ -27,6 +29,7 @@ public static partial class TweakExecutor
 
     private static void DisableWebContentEvaluation()
     {
+        Log(">> DisableWebContentEvaluation");
         SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\AppHost", "EnableWebContentEvaluation", 0);
         SetDword(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\AppHost", "PreventOverride", 0);
     }
@@ -40,6 +43,7 @@ public static partial class TweakExecutor
 
     private static void EnableRdp()
     {
+        Log(">> EnableRdp");
         RunProcess("netsh.exe", "advfirewall firewall set rule group=\"@FirewallAPI.dll,-28752\" new enable=Yes");
         SetDword(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Terminal Server", "fDenyTSConnections", 0);
     }
@@ -148,7 +152,9 @@ public static partial class TweakExecutor
 
     private static void DisableStickyKeys()
     {
+        Log(">> DisableStickyKeys");
         SetString(RegistryHive.CurrentUser, @"Control Panel\Accessibility\StickyKeys", "Flags", "10");
+        LogReg("REG SZ", @"HKU\.DEFAULT\Control Panel\Accessibility\StickyKeys", "Flags", "10");
         using var baseKey = RegistryKey.OpenBaseKey(RegistryHive.Users, RegistryView.Registry64);
         using var key = baseKey.CreateSubKey(@".DEFAULT\Control Panel\Accessibility\StickyKeys", true);
         key?.SetValue("Flags", "10", RegistryValueKind.String);
@@ -158,6 +164,7 @@ public static partial class TweakExecutor
 
     private static void DisableEnhancePointerPrecision()
     {
+        Log(">> DisableEnhancePointerPrecision");
         SetString(RegistryHive.CurrentUser, @"Control Panel\Mouse", "MouseSpeed", "0");
         SetString(RegistryHive.CurrentUser, @"Control Panel\Mouse", "MouseThreshold1", "0");
         SetString(RegistryHive.CurrentUser, @"Control Panel\Mouse", "MouseThreshold2", "0");
@@ -185,6 +192,7 @@ public static partial class TweakExecutor
 
     private static void DisableMemoryIntegrity()
     {
+        Log(">> DisableMemoryIntegrity");
         SetDword(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorEnforcedCodeIntegrity", "Enabled", 0);
         SetDword(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorEnforcedCodeIntegrity", "WasEnabledBy", 0);
         SetDword(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\DeviceGuard", "EnableVirtualizationBasedSecurity", 0);
@@ -211,6 +219,7 @@ public static partial class TweakExecutor
 
     private static void ApplyProfileRuRuUserLocale()
     {
+        Log(">> ApplyProfileRuRuUserLocale");
         var script = @"
 try {
   $list = New-WinUserLanguageList 'ru-RU'
@@ -243,6 +252,7 @@ try {
 
     private static void ConfigureRuRuLocale()
     {
+        Log(">> ConfigureRuRuLocale");
         var script = @"
 $base = 'C:\ProgramData\DeL1ThiSystem\Wizard'
 New-Item -ItemType Directory -Path $base -Force | Out-Null
@@ -660,6 +670,7 @@ Log 'APPLY' 'Locale apply finished'
 
     private static void ConfigureAutoTimeZone()
     {
+        Log(">> ConfigureAutoTimeZone");
         var script = @"
 $base = 'C:\ProgramData\DeL1ThiSystem\Wizard'
 New-Item -ItemType Directory -Path $base -Force | Out-Null
@@ -742,6 +753,7 @@ Log 'APPLY' 'Auto time zone apply finished'
 
     private static void CleanupRuRuLocalPackages()
     {
+        Log(">> CleanupRuRuLocalPackages");
         var script = @"
 $base = 'C:\ProgramData\DeL1ThiSystem\Wizard'
 New-Item -ItemType Directory -Path $base -Force | Out-Null
@@ -776,6 +788,7 @@ Log 'CLEANUP' 'RU package cleanup finished'
 
     private static void DisableRestoreAndCleanup()
     {
+        Log(">> DisableRestoreAndCleanup");
         RunPowerShell("try { Disable-ComputerRestore -Drive \"$env:SystemDrive\\\" } catch {}");
         if (Directory.Exists(@"C:\Windows.old"))
             RunProcess("cmd.exe", "/c rmdir /s /q C:\\Windows.old");
@@ -786,6 +799,7 @@ Log 'CLEANUP' 'RU package cleanup finished'
 
     private static void SetPowercfgNeverSleep()
     {
+        Log(">> SetPowercfgNeverSleep");
         RunProcess("powercfg.exe", "-change -standby-timeout-ac 0");
         RunProcess("powercfg.exe", "-change -monitor-timeout-ac 0");
         RunProcess("powercfg.exe", "-change -hibernate-timeout-ac 0");
